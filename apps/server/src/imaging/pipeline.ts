@@ -1,5 +1,7 @@
-import sharp from 'sharp';
+import sharp, { type Sharp } from 'sharp';
 import type { FitMode } from '../db/schema.js';
+import type { ImageFormat } from '../device/drivers/types.js';
+import { PALETTES, ditherToPalette, encodeBmp, indicesToRgb } from './dither.js';
 
 export interface CropRect {
   /** Fractions (0..1) of the EXIF-oriented source image. */
@@ -22,7 +24,12 @@ export interface RenderOptions {
   /** Text drawn in a label at the bottom-left, e.g. the photo's date. */
   caption?: string | null;
   quality?: number;
+  /** Baseline JPEG unless the frame asks for something else. */
+  format?: ImageFormat;
 }
+
+export const formatExt = (f: ImageFormat = { type: 'jpeg' }) => (f.type === 'jpeg' ? 'jpg' : f.type);
+export const formatMime = (ext: string) => (ext === 'jpg' ? 'image/jpeg' : ext === 'png' ? 'image/png' : 'image/bmp');
 
 export function targetSize(o: Pick<RenderOptions, 'width' | 'height' | 'landscape'>) {
   const w = Math.min(o.width, o.height);
@@ -69,12 +76,36 @@ export async function renderForFrame(src: Buffer, o: RenderOptions): Promise<Buf
   if (o.caption) composed = await addCaption(composed, o.caption, tw, th);
 
   let out = sharp(composed);
-  if (o.landscape) out = out.rotate(o.rotate);
-  return out
-    .flatten({ background: o.bg })
-    .toColourspace('srgb')
-    .jpeg({ quality: o.quality ?? 92, progressive: false, mozjpeg: false, chromaSubsampling: '4:4:4' })
-    .toBuffer();
+  if (o.landscape && o.rotate) out = out.rotate(o.rotate);
+  out = out.flatten({ background: o.bg }).toColourspace('srgb');
+  if (!o.format || (o.format.type === 'jpeg' && !o.format.palette)) {
+    return out.jpeg({ quality: o.quality ?? 92, progressive: false, mozjpeg: false, chromaSubsampling: '4:4:4' }).toBuffer();
+  }
+  return encode(out, o.format, o.quality);
+}
+
+/**
+ * Final encoding for frames that want PNG/BMP and/or hub-side dithering. Takes any sharp
+ * pipeline already at the panel's size.
+ */
+async function encode(img: Sharp, f: ImageFormat, quality = 92): Promise<Buffer> {
+  const { data: pixels, info } = await img.removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  let data: Buffer = pixels;
+  const palette = f.palette ? PALETTES[f.palette] : null;
+  if (palette) data = indicesToRgb(ditherToPalette(data, info.width, info.height, palette), palette);
+  const raw = () => sharp(data, { raw: { width: info.width, height: info.height, channels: 3 } });
+  if (f.type === 'bmp') return encodeBmp(data, info.width, info.height, f.palette === 'bw');
+  if (f.type === 'png') {
+    // Exact palette colours survive quantisation when there are at most that many.
+    return palette ? raw().png({ palette: true, colours: palette.length, dither: 0, compressionLevel: 9 }).toBuffer() : raw().png().toBuffer();
+  }
+  return raw().jpeg({ quality, progressive: false, mozjpeg: false, chromaSubsampling: '4:4:4' }).toBuffer();
+}
+
+/** Re-encode an already rendered JPEG (e.g. the welcome picture) for a frame's format. */
+export async function convertRender(jpeg: Buffer, f: ImageFormat): Promise<Buffer> {
+  if (f.type === 'jpeg' && !f.palette) return jpeg;
+  return encode(sharp(jpeg).toColourspace('srgb'), f);
 }
 
 const escapeMarkup = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

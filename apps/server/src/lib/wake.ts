@@ -2,7 +2,8 @@ import type { Frame } from '../db/schema.js';
 import { BleError, bleStatus, bleWake } from '../device/ble.js';
 import { DeviceError, FrameClient, type DeviceInfo } from '../device/client.js';
 import { HttpError, type Ctx } from './context.js';
-import { getFrame, infoToFrame, markOnline } from './display.js';
+import { infoToFrame } from '../device/drivers/bloomin8.js';
+import { getFrame, markOnline } from './display.js';
 import { isSimulated } from './simulators.js';
 
 /** Wi-Fi and the HTTP API take a few seconds to come up after the wake pulse. */
@@ -39,6 +40,8 @@ async function awakeNow(frame: Frame) {
  * to come online. A frame that already answers is left alone (no pulse, no battery spent).
  */
 export async function wakeFrame(ctx: Ctx, frame: Frame, timing = { settleMs: WAKE_SETTLE_MS, budgetMs: WAKE_WAIT_MS }) {
+  // Only BLOOMIN8 listens over Bluetooth; other frames wake on their own schedule.
+  if (frame.kind !== 'bloomin8') throw new HttpError(400, 'wake_unsupported');
   let info = await awakeNow(frame);
   if (!info) {
     // Test Canvases have no radio: they are always "woken".
@@ -63,7 +66,7 @@ export async function wakeFrame(ctx: Ctx, frame: Frame, timing = { settleMs: WAK
 
 /** Auto-wake is opt-in per frame and needs a usable adapter. */
 async function canAutoWake(ctx: Ctx, frame: Frame) {
-  if (!frame.bleAutoWake || !frame.bleMac || isSimulated(ctx.db, frame.id)) return false;
+  if (frame.kind !== 'bloomin8' || !frame.bleAutoWake || !frame.bleMac || isSimulated(ctx.db, frame.id)) return false;
   return (await bleStatus()).available;
 }
 

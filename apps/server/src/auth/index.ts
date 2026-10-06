@@ -5,6 +5,7 @@ import { eq, lt } from 'drizzle-orm';
 import { config } from '../config.js';
 import { getSetting, schema, setSetting, type DB } from '../db/index.js';
 import { requestLang, tr } from '../i18n.js';
+import { TRMNL_PATHS } from '../upstream/trmnl.js';
 
 const scrypt = promisify(crypto.scrypt) as (pw: string, salt: Buffer, len: number) => Promise<Buffer>;
 const COOKIE = 'b8hub_session';
@@ -23,10 +24,12 @@ async function verifyPassword(pw: string, stored: string) {
   return crypto.timingSafeEqual(actual, expected);
 }
 
-/** Paths reachable without a session: the device-facing upstream API and the SPA shell. */
+/** Paths reachable without a session: the device-facing APIs (own tokens) and the SPA shell. */
 function isPublic(url: string) {
   return (
     url.startsWith('/eink_pull') ||
+    url.startsWith('/of/v1/') ||
+    TRMNL_PATHS.test(url) ||
     url.startsWith('/eink_signal') ||
     url.startsWith('/u/img/') ||
     url.startsWith('/api/auth/') ||

@@ -2,29 +2,58 @@ import crypto from 'node:crypto';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { desc, eq } from 'drizzle-orm';
 import { schema, setSetting } from '../db/index.js';
-import type { DisplayOptions, Frame } from '../db/schema.js';
+import { SECRET_CONFIG_KEYS, type DisplayOptions, type Frame, type FrameConfig } from '../db/schema.js';
 import { bleStatus, normalizeMac } from '../device/ble.js';
 import { DeviceError, FrameClient, type DeviceInfo, type Playlist } from '../device/client.js';
+import { describeKind, driverFor, isFrameKind, palettes, type DeviceAction, type FrameKind, type ImageFormat } from '../device/drivers/index.js';
+import { infoToFrame } from '../device/drivers/bloomin8.js';
+import { SWITCHBOT_SIZES, SwitchBotApi, type SwitchBotSize } from '../device/drivers/switchbot.js';
 import { discover } from '../device/discovery.js';
-import { HttpError, detectLocalUrl, localUrlSetting, qrUrl, type Ctx } from '../lib/context.js';
+import { HttpError, detectLocalUrl, externalUrlSetting, localUrlSetting, qrUrl, type Ctx } from '../lib/context.js';
 import { prepareCollection } from '../lib/collections.js';
-import { assignmentOptions, chooseNextImage, displayImage, getAssignment, getFrame, infoToFrame, markOnline, pushWelcome } from '../lib/display.js';
+import { assignmentOptions, chooseNextImage, displayImage, getAssignment, getFrame, markOnline, pushWelcome } from '../lib/display.js';
 import { wakeFrame, withWake } from '../lib/wake.js';
 import { nextRun, parseSchedule } from '../lib/schedule.js';
 import { requestLang, tr } from '../i18n.js';
 import { forgetTestCanvas, isSimulated, remember, startTestCanvas } from '../lib/simulators.js';
 
 export async function refreshFrame(ctx: Ctx, frame: Frame, timeoutMs = 5000) {
+  const driver = driverFor(ctx.db, frame);
+  // Pull-only frames can't be asked; what we know comes from their last poll.
+  if (!driver.info) return frame;
   try {
-    const info = await new FrameClient(frame.host, timeoutMs).deviceInfo();
-    markOnline(ctx.db, frame.id, true, infoToFrame(info));
+    const info = await driver.info(timeoutMs);
+    markOnline(ctx.db, frame.id, true, info);
+    if (driver.wakeModel === 'cloud') confirmCloudDelivery(ctx, frame, info.lastInfo);
   } catch {
     markOnline(ctx.db, frame.id, false);
   }
   return getFrame(ctx.db, frame.id);
 }
 
+/** A cloud frame reports the URL it shows: once it is our latest render, that push really landed. */
+function confirmCloudDelivery(ctx: Ctx, frame: Frame, status: Record<string, unknown> | null | undefined) {
+  const url = typeof status?.imageUrl === 'string' ? status.imageUrl : '';
+  if (!frame.currentRender || !url.includes(frame.currentRender)) return;
+  const last = ctx.db.select().from(schema.history).where(eq(schema.history.frameId, frame.id)).orderBy(desc(schema.history.shownAt)).limit(1).get();
+  if (last && last.success === null) ctx.db.update(schema.history).set({ success: true }).where(eq(schema.history.id, last.id)).run();
+}
+
+/** What the UI gets for a frame: no secrets, plus what it can do. */
+export function publicFrame(ctx: Ctx, f: Frame) {
+  const config = Object.fromEntries(Object.entries(f.config ?? {}).filter(([k]) => !(SECRET_CONFIG_KEYS as readonly string[]).includes(k)));
+  return { ...f, config, ...describeKind(f), assignment: getAssignment(ctx.db, f.id) ?? null, simulated: isSimulated(ctx.db, f.id) };
+}
+
+const parseFormat = (v: unknown): ImageFormat | undefined => {
+  const f = v as Partial<ImageFormat> | undefined;
+  if (!f || !['jpeg', 'png', 'bmp'].includes(f.type ?? '')) return undefined;
+  return { type: f.type!, ...(f.palette && palettes.includes(f.palette) ? { palette: f.palette } : {}) };
+};
+
 const ACTIONS = ['wake', 'next', 'sleep', 'reboot', 'clear', 'whistle'] as const;
+/** UI action → what the driver must support. */
+const DEVICE_ACTIONS = { sleep: 'sleep', reboot: 'reboot', whistle: 'identify' } as const satisfies Record<string, DeviceAction>;
 
 /** "192.168.1.6:80" and "192.168.1.6" are the same device. */
 const sameHost = (a: string, b: string) => a.replace(/:80$/, '') === b.replace(/:80$/, '');
@@ -38,6 +67,87 @@ const serialOf = (info: unknown) => {
 function existingFrame(frames: Frame[], host: string, info?: DeviceInfo | null) {
   const sn = serialOf(info);
   return frames.find((f) => sameHost(f.host, host) || (sn && serialOf(f.lastInfo) === sn));
+}
+
+const newToken = () => crypto.randomBytes(18).toString('base64url');
+
+export interface AddFrameBody {
+  kind?: FrameKind;
+  host?: string;
+  name?: string;
+  /** SwitchBot */
+  token?: string;
+  secret?: string;
+  deviceId?: string;
+  size?: SwitchBotSize;
+  /** TRMNL: the device's MAC address (its `ID` header). */
+  mac?: string;
+  /** DIY / TRMNL: panel resolution as hung, and the format it wants. */
+  width?: number;
+  height?: number;
+  format?: ImageFormat;
+}
+
+/** Panel size → stored portrait-first, with the orientation it hangs in. */
+function panel(width?: number, height?: number, fallback = { width: 800, height: 480 }) {
+  const w = Number(width) || fallback.width;
+  const h = Number(height) || fallback.height;
+  return { width: Math.min(w, h), height: Math.max(w, h), orientation: w > h ? ('landscape' as const) : ('portrait' as const) };
+}
+
+const normalizeId = (mac: string) => mac.trim().toUpperCase();
+
+/** Frames that aren't BLOOMIN8s: nothing to probe on the LAN, the details come from the form. */
+async function addOtherFrame(ctx: Ctx, req: FastifyRequest, b: AddFrameBody & { kind: Exclude<FrameKind, 'bloomin8'> }) {
+  const { db } = ctx;
+  const all = db.select().from(schema.frames).all();
+  const base = { upstreamToken: newToken(), createdAt: Date.now(), welcomeShown: false };
+  let values: typeof schema.frames.$inferInsert;
+  if (b.kind === 'switchbot') {
+    if (!b.token?.trim() || !b.secret?.trim() || !b.deviceId?.trim()) throw new HttpError(400, 'switchbot_not_configured');
+    if (!/^https:\/\//.test(externalUrlSetting(db))) throw new HttpError(400, 'switchbot_public_url');
+    const dup = all.find((f) => f.kind === 'switchbot' && f.config?.deviceId === b.deviceId);
+    if (dup) throw new HttpError(409, 'canvas_already_added', { name: dup.name });
+    const config: FrameConfig = { token: b.token.trim(), secret: b.secret.trim(), deviceId: b.deviceId.trim() };
+    // Checks the credentials before saving them.
+    const status = await new SwitchBotApi(config.token!, config.secret!).status(config.deviceId!);
+    const size = SWITCHBOT_SIZES[b.size ?? '13.3'] ?? SWITCHBOT_SIZES['13.3'];
+    values = {
+      ...base,
+      kind: 'switchbot',
+      name: b.name?.trim() || 'SwitchBot AI Art Frame',
+      host: `switchbot:${config.deviceId}`,
+      deviceId: config.deviceId,
+      model: `AI Art Frame ${b.size ?? '13.3'}"`,
+      ...size,
+      orientation: 'landscape',
+      mode: 'push',
+      config,
+      online: true,
+      lastSeen: Date.now(),
+      battery: typeof status.battery === 'number' ? status.battery : null,
+      lastInfo: status as Record<string, unknown>,
+    };
+  } else {
+    const mac = b.kind === 'trmnl' ? normalizeId(b.mac ?? '') : '';
+    if (b.kind === 'trmnl' && !mac) throw new HttpError(400, 'trmnl_mac_missing');
+    const dup = mac && all.find((f) => f.kind === 'trmnl' && f.deviceId === mac);
+    if (dup) throw new HttpError(409, 'canvas_already_added', { name: dup.name });
+    const format = parseFormat(b.format);
+    values = {
+      ...base,
+      kind: b.kind,
+      name: b.name?.trim() || (b.kind === 'trmnl' ? 'TRMNL' : 'Open Frame'),
+      host: b.kind === 'trmnl' ? `trmnl:${mac}` : 'openframe',
+      deviceId: mac || null,
+      ...panel(b.width, b.height),
+      mode: 'pull',
+      config: format ? { format } : {},
+    };
+  }
+  const frame = db.insert(schema.frames).values(values).returning().get();
+  req.log.info({ frame: frame.id, kind: frame.kind }, `${frame.kind} frame "${frame.name}" added`);
+  return frame;
 }
 
 async function addFrame(ctx: Ctx, req: FastifyRequest, host: string, name?: string) {
@@ -55,7 +165,7 @@ async function addFrame(ctx: Ctx, req: FastifyRequest, host: string, name?: stri
     .values({
       name: name?.trim() || String(info?.name ?? host),
       host,
-      upstreamToken: crypto.randomBytes(18).toString('base64url'),
+      upstreamToken: newToken(),
       createdAt: Date.now(),
       online: !!info,
       lastSeen: info ? Date.now() : null,
@@ -70,11 +180,21 @@ async function addFrame(ctx: Ctx, req: FastifyRequest, host: string, name?: stri
 
 export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
   const { db } = ctx;
-  const client = (id: number) => new FrameClient(getFrame(db, id).host);
+  /** On-device galleries, playlists, settings and pull mode only exist on a BLOOMIN8. */
+  const bloomin8 = (frame: Frame) => {
+    if (frame.kind !== 'bloomin8') throw new HttpError(400, 'unsupported_for_kind');
+    return new FrameClient(frame.host);
+  };
+  const client = (id: number) => bloomin8(getFrame(db, id));
 
-  app.get('/api/frames', async () => {
-    const frames = db.select().from(schema.frames).all();
-    return frames.map((f) => ({ ...f, assignment: getAssignment(db, f.id) ?? null, simulated: isSimulated(db, f.id) }));
+  app.get('/api/frames', async () => db.select().from(schema.frames).all().map((f) => publicFrame(ctx, f)));
+
+  // SwitchBot: the account's Art Frames, to pick one when adding it.
+  app.post<{ Body: { token?: string; secret?: string } }>('/api/switchbot/devices', async (req) => {
+    const { token, secret } = req.body ?? {};
+    if (!token?.trim() || !secret?.trim()) throw new HttpError(400, 'switchbot_not_configured');
+    const added = new Set(db.select().from(schema.frames).all().filter((f) => f.kind === 'switchbot').map((f) => f.config?.deviceId));
+    return (await new SwitchBotApi(token.trim(), secret.trim()).artFrames()).filter((d) => !added.has(d.deviceId));
   });
 
   app.post<{ Body: { subnet?: string; scan?: boolean } }>('/api/frames/discover', async (req) => {
@@ -98,10 +218,14 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
     });
   });
 
-  app.post<{ Body: { host: string; name?: string } }>('/api/frames', async (req) => {
-    const host = req.body?.host?.trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+  app.post<{ Body: AddFrameBody }>('/api/frames', async (req) => {
+    const b = req.body ?? {};
+    const kind = b.kind ?? 'bloomin8';
+    if (!isFrameKind(kind)) throw new HttpError(400, 'unknown_kind');
+    if (kind !== 'bloomin8') return publicFrame(ctx, await addOtherFrame(ctx, req, { ...b, kind }));
+    const host = b.host?.trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
     if (!host) throw new HttpError(400, 'host_missing');
-    return getFrame(db, (await addFrame(ctx, req, host, req.body.name)).id);
+    return publicFrame(ctx, getFrame(db, (await addFrame(ctx, req, host, b.name)).id));
   });
 
   // A simulated Canvas living inside the hub, for trying things out without hardware.
@@ -115,25 +239,37 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
       throw err;
     });
     remember(ctx, frame.id, sim, name);
-    return { ...getFrame(db, frame.id), simulated: true };
+    return publicFrame(ctx, getFrame(db, frame.id));
   });
 
 
-  app.get<{ Params: { id: string } }>('/api/frames/:id', async (req) => {
-    const f = getFrame(db, +req.params.id);
-    return { ...f, assignment: getAssignment(db, f.id) ?? null, simulated: isSimulated(db, f.id) };
-  });
+  app.get<{ Params: { id: string } }>('/api/frames/:id', async (req) => publicFrame(ctx, getFrame(db, +req.params.id)));
 
   app.patch<{
     Params: { id: string };
-    Body: Partial<Pick<Frame, 'name' | 'host' | 'orientation' | 'rotate' | 'width' | 'height' | 'bleAutoWake'>> & { pullSchedule?: unknown; bleMac?: string | null };
+    Body: Partial<Pick<Frame, 'name' | 'host' | 'orientation' | 'rotate' | 'width' | 'height' | 'bleAutoWake'>> & {
+      pullSchedule?: unknown;
+      bleMac?: string | null;
+      config?: Partial<Pick<FrameConfig, 'maxPollMinutes' | 'notifyUrl' | 'format' | 'token' | 'secret'>>;
+    };
   }>(
     '/api/frames/:id',
     async (req) => {
       const id = +req.params.id;
-      getFrame(db, id);
+      const frame = getFrame(db, id);
       const b = req.body ?? {};
       const patch: Partial<Frame> = {};
+      if (b.config) {
+        const c = b.config;
+        const next: FrameConfig = { ...frame.config };
+        if (c.maxPollMinutes !== undefined) next.maxPollMinutes = Math.max(1, Math.min(24 * 60, Math.round(Number(c.maxPollMinutes)) || 60));
+        if (c.notifyUrl !== undefined) next.notifyUrl = c.notifyUrl || undefined;
+        if (c.format !== undefined) next.format = parseFormat(c.format);
+        // Secrets are write-only: empty means "keep the saved one".
+        if (c.token) next.token = c.token.trim();
+        if (c.secret) next.secret = c.secret.trim();
+        patch.config = next;
+      }
       if (b.name) patch.name = b.name;
       if (b.host) patch.host = b.host;
       if (b.orientation === 'portrait' || b.orientation === 'landscape') patch.orientation = b.orientation;
@@ -167,8 +303,13 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
 
   app.post<{ Params: { id: string; action: (typeof ACTIONS)[number] } }>('/api/frames/:id/actions/:action', async (req) => {
     const frame = getFrame(db, +req.params.id);
-    const c = new FrameClient(frame.host);
+    const driver = driverFor(db, frame);
     ctx.log.info({ frame: frame.id }, `action "${req.params.action}" on ${frame.name}`);
+    const device = (a: DeviceAction) => {
+      const cap = a === 'next' ? 'deviceNext' : a;
+      if (!driver.action || !driver.capabilities[cap]) throw new HttpError(400, 'unsupported_for_kind');
+      return driver.action(a);
+    };
     // Asleep and auto-wake on: wake over Bluetooth and retry once. Still no answer: it is asleep
     // (the UI then offers Wake instead of Sleep).
     const awake = <T>(fn: () => Promise<T>) =>
@@ -185,7 +326,7 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
         // and the schedule carries on from now. Without one, the Canvas moves on in its own gallery.
         const a = getAssignment(db, frame.id);
         if (!a?.enabled) {
-          await awake(() => c.showNext());
+          await awake(() => device('next'));
           break;
         }
         await prepareCollection(ctx, a.collectionId);
@@ -202,15 +343,19 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
         return { ok: true, playlist, queued: method === 'queued' };
       }
       case 'sleep':
-        await c.sleep();
+        await device('sleep');
         markOnline(db, frame.id, false);
         return { ok: true };
       case 'reboot':
-        await awake(() => c.reboot());
+        await awake(() => device(DEVICE_ACTIONS.reboot));
         break;
       case 'clear': {
         // "Limpiar" = back to the welcome picture; delivered on next wake if the Canvas is asleep.
         db.update(schema.frames).set({ welcomeShown: false, pendingImageId: null, pendingOpts: null }).where(eq(schema.frames.id, frame.id)).run();
+        if (!driver.capabilities.push) {
+          driver.nudge?.().catch(() => {});
+          return { ok: true, queued: true };
+        }
         try {
           await awake(() => pushWelcome(ctx, frame, qrUrl(db, req)));
         } catch (err) {
@@ -220,7 +365,7 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
         return { ok: true };
       }
       case 'whistle':
-        await awake(() => c.whistle());
+        await awake(() => device(DEVICE_ACTIONS.whistle));
         break;
       default:
         throw new HttpError(400, 'unknown_action');
@@ -234,7 +379,8 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
     async (req) => {
       const id = +req.params.id;
       const frame = getFrame(db, id);
-      await withWake(ctx, frame, () => new FrameClient(frame.host).updateSettings(req.body ?? {}));
+      const c = bloomin8(frame);
+      await withWake(ctx, frame, () => c.updateSettings(req.body ?? {}));
       if (req.body?.name) db.update(schema.frames).set({ name: req.body.name }).where(eq(schema.frames.id, id)).run();
       return refreshFrame(ctx, getFrame(db, id));
     },
@@ -312,7 +458,7 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
     '/api/frames/:id/pull',
     async (req) => {
       const frame = getFrame(db, +req.params.id);
-      const c = new FrameClient(frame.host);
+      const c = bloomin8(frame);
       if (req.body.enabled) {
         const url = (req.body.localUrl || detectLocalUrl(db, req).url).replace(/\/+$/, '');
         if (!/^https?:\/\//.test(url)) throw new HttpError(400, 'public_url_missing');
