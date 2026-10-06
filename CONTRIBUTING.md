@@ -48,7 +48,7 @@ npm test                    # vitest
 npm run build               # type-check and build both apps
 ```
 
-No hardware? Use **Añadir Canvas → Crear Canvas de prueba** in the UI, or the
+No hardware? Use **Add Canvas → Create test Canvas** in the UI, or the
 `fake-frame` simulator above.
 
 To build and run the Docker image from your checkout:

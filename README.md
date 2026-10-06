@@ -12,7 +12,7 @@ A single Docker container (Node + SQLite) with a web UI inspired by the official
   - **Pull (recommended)** – uses the frame's *Schedule Pull* protocol: the frame sleeps, wakes at the time the hub tells it, calls `GET /eink_pull`, downloads the image and goes back to sleep. Best battery life. Photos sent while a frame is asleep are queued for its next wake.
 - Manage on-device galleries & playlists, device settings, sleep/reboot/clear
 - Simple admin login, light/dark theme, mobile-friendly (installable PWA)
-- **Test Canvas** button (Añadir Canvas → *Crear Canvas de prueba*): a simulated frame running inside the hub, to try everything without hardware. No extra port needed; it survives restarts.
+- **Test Canvas** button (**Add Canvas** → *Create test Canvas*): a simulated frame running inside the hub, to try everything without hardware. No extra port needed; it survives restarts.
 
 ## Run with Docker
 
@@ -25,7 +25,7 @@ This pulls the released image `registry.gitlab.com/yayitazale/eink-hub:latest`. 
 your checkout instead, copy `docker-compose.override.yml.example` to `docker-compose.override.yml`
 and run `docker compose up -d --build`.
 
-Open `http://<host>:8080`, choose an admin password, then **Añadir Canvas**.
+Open `http://<host>:8080`, choose an admin password, then **Add Canvas**.
 Data (SQLite DB, originals, render cache) lives in `./data`.
 
 `network_mode: host` is used so mDNS discovery works. With bridge networking, add frames by IP.
@@ -36,11 +36,11 @@ Data (SQLite DB, originals, render cache) lives in `./data`.
 
 ### Pull mode
 1. Check **Settings → Hub local URL** is an address the Canvas can reach.
-2. Wake the frame (press its button), open the frame → **Modo** → *Activar pull programado*.
-3. Give the frame a collection under **Programación**. It will wake at each interval, pull the next photo and sleep.
+2. Wake the frame (press its button), open the frame → **Mode** → *Scheduled pull* and press **Save**.
+3. Give the frame a collection under **Schedule**. It will wake at each interval, pull the next photo and sleep.
 
 ### Immich
-Create an API key in Immich (Account settings → API keys) with read access to assets, albums, people and memories, then add it in **Ajustes**. The key stays on the server; the browser only talks to the hub.
+Create an API key in Immich (Account settings → API keys) with read access to assets, albums, people and memories, then add it in **Settings**. The key stays on the server; the browser only talks to the hub.
 
 ## Development
 
