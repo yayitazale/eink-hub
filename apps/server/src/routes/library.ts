@@ -1,9 +1,6 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import sharp from 'sharp';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
-import { config } from '../config.js';
 import { requestLang, tr } from '../i18n.js';
 import { schema } from '../db/index.js';
 import { collectionTypes, fitModes, orderModes, type CollectionType, type DisplayOptions } from '../db/schema.js';
@@ -11,8 +8,9 @@ import { addItems, getCollection, refreshCount, syncCollection } from '../lib/co
 import { HttpError, type Ctx } from '../lib/context.js';
 import { getAssignment, getFrame } from '../lib/display.js';
 import { DEFAULT_SCHEDULE, MEMORIES_SCHEDULE, firstRun, isFrequent, parseSchedule, upcoming } from '../lib/schedule.js';
-import { deleteImage, frameAspect, getCrop, getImage, imageThumbnail, loadSource, renderFor, saveLocalUpload, setCrop } from '../lib/images.js';
-import { thumbnail } from '../imaging/pipeline.js';
+import { deleteImage, frameAspect, getCrop, getImage, imageThumbnail, loadSource, readRender, renderFor, saveLocalUpload, setCrop } from '../lib/images.js';
+import { formatMime, thumbnail } from '../imaging/pipeline.js';
+import { renderTarget } from '../device/drivers/index.js';
 
 export function libraryRoutes(app: FastifyInstance, ctx: Ctx) {
   const { db } = ctx;
@@ -90,18 +88,17 @@ export function libraryRoutes(app: FastifyInstance, ctx: Ctx) {
     const { imageId, frameId, ...opts } = req.body;
     const frame = getFrame(db, frameId);
     const r = await renderFor(ctx, getImage(db, imageId), frame, opts);
-    // Landscape renders are stored rotated for the panel; rotate back so the UI shows it as hung.
-    const buf = frame.orientation === 'landscape' ? await sharp(r.buf).rotate(360 - frame.rotate).jpeg().toBuffer() : r.buf;
-    return reply.header('content-type', 'image/jpeg').send(buf);
+    // Landscape renders for portrait-buffer panels are stored rotated; rotate back so the UI shows it as hung.
+    if (frame.orientation === 'landscape' && renderTarget(frame).rotateBuffer) {
+      return reply.header('content-type', 'image/jpeg').send(await sharp(r.buf).rotate(360 - frame.rotate).jpeg().toBuffer());
+    }
+    return reply.header('content-type', formatMime(r.ext)).send(r.buf);
   });
   app.get<{ Params: { hash: string } }>('/api/renders/:hash', async (req, reply) => {
     if (!/^[a-f0-9]{40}$/.test(req.params.hash)) throw new HttpError(400, 'bad_hash');
-    try {
-      const buf = await fs.readFile(path.join(config.cacheDir, `${req.params.hash}.jpg`));
-      return reply.header('content-type', 'image/jpeg').header('cache-control', 'private, max-age=604800').send(buf);
-    } catch {
-      throw new HttpError(404, 'render_not_found');
-    }
+    const r = await readRender(req.params.hash);
+    if (!r) throw new HttpError(404, 'render_not_found');
+    return reply.header('content-type', formatMime(r.ext)).header('cache-control', 'private, max-age=604800').send(r.buf);
   });
 
   // --- Collections ------------------------------------------------------------------------

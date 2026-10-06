@@ -10,19 +10,22 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { and, eq } from 'drizzle-orm';
 import { config } from '../config.js';
 import { schema } from '../db/index.js';
-import type { DisplayOptions } from '../db/schema.js';
+import type { Frame } from '../db/schema.js';
+import { formatMime } from '../imaging/pipeline.js';
 import { localUrlSetting, qrUrl, type Ctx } from '../lib/context.js';
-import { assignmentOptions, chooseNextImage, getAssignment, renderWelcomeFor } from '../lib/display.js';
-import { getImage, renderFor } from '../lib/images.js';
-import { firstRun, isDue, nextRun } from '../lib/schedule.js';
-import { recordBattery } from '../lib/stats.js';
-import { prepareCollection } from '../lib/collections.js';
+import type { Rendered } from '../lib/images.js';
+import { servePull } from '../lib/pull.js';
 
 const iso = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z');
 
 /** The frame just reached us at this host, so it can reach the image there too. */
 function baseUrl(ctx: Ctx, req: FastifyRequest) {
   return req.headers.host ? `${req.protocol}://${req.headers.host}` : localUrlSetting(ctx.db);
+}
+
+/** Where a frame downloads a render from; the token keeps other people's pictures private. */
+export function imageUrl(ctx: Ctx, req: FastifyRequest, frame: Frame, r: Pick<Rendered, 'hash' | 'ext'>) {
+  return `${baseUrl(ctx, req)}/u/img/${frame.upstreamToken}/${r.hash}_${frame.orientation === 'landscape' ? 'L' : 'P'}.${r.ext}`;
 }
 
 export function upstreamRoutes(app: FastifyInstance, ctx: Ctx) {
@@ -38,79 +41,15 @@ export function upstreamRoutes(app: FastifyInstance, ctx: Ctx) {
       }
 
       const battery = req.query.battery !== undefined ? Number(req.query.battery) : null;
-      ctx.db
-        .update(schema.frames)
-        .set({
-          online: true,
-          lastSeen: now.getTime(),
-          ...(battery !== null && Number.isFinite(battery) ? { battery } : {}),
-          ...(req.query.device_id ? { deviceId: req.query.device_id } : {}),
-        })
-        .where(eq(schema.frames.id, frame.id))
-        .run();
-
-      if (battery !== null && Number.isFinite(battery)) recordBattery(ctx.db, frame.id, battery);
-      const a = getAssignment(ctx.db, frame.id);
-      const active = a?.enabled ? a : undefined;
-      let imageId: number | null = null;
-      let opts: DisplayOptions = assignmentOptions(ctx.db, active);
-
-      // Priority: queued photo > welcome picture (first contact / "Limpiar") > scheduled rotation.
-      const welcome = !frame.pendingImageId && !frame.welcomeShown;
-      // A wake before the scheduled change (button press, reboot) only delivers queued photos.
-      const due = !welcome && !!active && isDue(active.nextChange, now, active.schedule, active);
-      if (frame.pendingImageId) {
-        imageId = frame.pendingImageId;
-        opts = frame.pendingOpts ?? opts;
-      } else if (active && due) {
-        await prepareCollection(ctx, active.collectionId).catch((err) => req.log.warn({ err }, 'collection refresh failed'));
-        imageId = chooseNextImage(ctx.db, frame, active);
-      }
-
-      let next: Date | null;
-      if (active) {
-        next = due || active.nextChange == null ? nextRun(active.schedule, now, active) : new Date(active.nextChange);
-        // A rotation that was due but deferred (welcome shown instead) restarts from now.
-        if (next && next <= now) next = firstRun(active.schedule, now, active);
-        if (due) ctx.db.update(schema.assignments).set({ nextChange: next?.getTime() ?? null }).where(eq(schema.assignments.id, active.id)).run();
-      } else {
-        next = nextRun(frame.pullSchedule, now);
-      }
-      next ??= new Date(now.getTime() + 24 * 3600_000);
-      ctx.db.update(schema.frames).set({ nextWake: next.getTime() }).where(eq(schema.frames.id, frame.id)).run();
-
-      const imageUrl = (hash: string) => `${baseUrl(ctx, req)}/u/img/${token}/${hash}_${frame.orientation === 'landscape' ? 'L' : 'P'}.jpg`;
-
-      if (welcome) {
-        const r = await renderWelcomeFor(ctx.db, frame, qrUrl(ctx.db, req));
-        ctx.db.update(schema.frames).set({ welcomeShown: true, currentImageId: null, currentRender: r.hash }).where(eq(schema.frames.id, frame.id)).run();
-        return { status: 200, type: 'SHOW', data: { image_url: imageUrl(r.hash), next_cron_time: iso(next) } };
-      }
-
-      if (!imageId) return { status: 204, data: { next_cron_time: iso(next) } };
-
-      try {
-        const img = getImage(ctx.db, imageId);
-        const rendered = await renderFor(ctx, img, frame, opts);
-        ctx.db
-          .insert(schema.history)
-          .values({ frameId: frame.id, imageId, shownAt: now.getTime(), method: 'pull', pullId: req.query.pull_id ?? null, battery })
-          .run();
-        ctx.db.update(schema.frames).set({ pendingImageId: null, pendingOpts: null, welcomeShown: true }).where(eq(schema.frames.id, frame.id)).run();
-        req.log.info({ frame: frame.id, imageId, pullId: req.query.pull_id }, `eink_pull: image served to ${frame.name}`);
-        if (active && due) ctx.db.update(schema.assignments).set({ lastChange: now.getTime() }).where(eq(schema.assignments.id, active.id)).run();
-        return {
-          status: 200,
-          type: 'SHOW',
-          data: {
-            image_url: imageUrl(rendered.hash),
-            next_cron_time: iso(next),
-          },
-        };
-      } catch (err) {
-        req.log.error({ err, frame: frame.id, imageId }, 'eink_pull render failed');
-        return { status: 204, data: { next_cron_time: iso(next) } };
-      }
+      const { rendered, next } = await servePull(ctx, frame, {
+        qrUrl: qrUrl(ctx.db, req),
+        pullId: req.query.pull_id,
+        battery,
+        seen: req.query.device_id ? { deviceId: req.query.device_id } : {},
+        now,
+      });
+      if (!rendered) return { status: 204, data: { next_cron_time: iso(next) } };
+      return { status: 200, type: 'SHOW', data: { image_url: imageUrl(ctx, req, frame, rendered), next_cron_time: iso(next) } };
     },
   );
 
@@ -133,13 +72,13 @@ export function upstreamRoutes(app: FastifyInstance, ctx: Ctx) {
 
   // Served as a plain Buffer: Fastify sets Content-Length; no chunking, no compression.
   app.get<{ Params: { token: string; file: string } }>('/u/img/:token/:file', async (req, reply) => {
-    const m = req.params.file.match(/^([a-f0-9]{40})_[PL]\.jpg$/);
+    const m = req.params.file.match(/^([a-f0-9]{40})_[PL]\.(jpg|png|bmp)$/);
     const frame = ctx.db.select().from(schema.frames).where(eq(schema.frames.upstreamToken, req.params.token)).get();
     if (!m || !frame) return reply.code(404).send();
     try {
-      const buf = await fs.readFile(path.join(config.cacheDir, `${m[1]}.jpg`));
+      const buf = await fs.readFile(path.join(config.cacheDir, `${m[1]}.${m[2]}`));
       ctx.db.update(schema.frames).set({ currentRender: m[1] }).where(eq(schema.frames.id, frame.id)).run();
-      return reply.header('content-type', 'image/jpeg').header('cache-control', 'no-transform').send(buf);
+      return reply.header('content-type', formatMime(m[2])).header('cache-control', 'no-transform').send(buf);
     } catch {
       return reply.code(404).send();
     }

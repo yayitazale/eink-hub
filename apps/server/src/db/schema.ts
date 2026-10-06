@@ -1,5 +1,6 @@
 import { sqliteTable, integer, text, real, primaryKey } from 'drizzle-orm/sqlite-core';
 import type { Schedule } from '../lib/schedule.js';
+import type { FrameKind, ImageFormat } from '../device/drivers/types.js';
 
 // Mirrors DEFAULT_SCHEDULE in lib/schedule.ts (inlined to avoid an import cycle).
 const defaultSchedule = (): Schedule => ({ kind: 'days', days: 1, at: '07:00' });
@@ -13,6 +14,23 @@ export interface DisplayOptions {
   /** "On this day" memories: caption reads "X years ago today" instead of the date. */
   memories?: boolean;
 }
+
+/** Per-kind settings that don't deserve a column. */
+export interface FrameConfig {
+  /** SwitchBot: OpenAPI token + secret and the frame's device id. */
+  token?: string;
+  secret?: string;
+  deviceId?: string;
+  /** DIY: the image format the frame asked for in its last poll. */
+  format?: ImageFormat;
+  /** DIY (always on): where to poke it when there is something new. */
+  notifyUrl?: string;
+  /** DIY / TRMNL: longest sleep between polls, so manual photos don't wait for the next rotation. */
+  maxPollMinutes?: number;
+}
+
+/** Secrets never leave the hub. */
+export const SECRET_CONFIG_KEYS = ['token', 'secret'] as const;
 
 export const frames = sqliteTable('frames', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -46,6 +64,9 @@ export const frames = sqliteTable('frames', {
   bleMac: text('ble_mac'),
   /** Wake over Bluetooth before sending when the frame is asleep. Off by default: it costs battery. */
   bleAutoWake: integer('ble_auto_wake', { mode: 'boolean' }).notNull().default(false),
+  /** Which driver talks to it (see device/drivers). */
+  kind: text('kind').$type<FrameKind>().notNull().default('bloomin8'),
+  config: text('config', { mode: 'json' }).$type<FrameConfig>().notNull().default({}),
 });
 
 export const images = sqliteTable('images', {

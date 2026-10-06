@@ -80,7 +80,16 @@ export function SendDialog({ imageId, open, onClose, defaultFrameId }: { imageId
       return api.post<{ method: 'push' | 'queued' }>(`/api/frames/${frame.id}/display`, { imageId, ...options });
     },
     {
-      success: (r) => t(r.method === 'push' ? 'send.sent' : 'send.queued'),
+      success: (r) =>
+        t(
+          r.method === 'push'
+            ? frame?.wakeModel === 'cloud'
+              ? 'send.sent_cloud'
+              : 'send.sent'
+            : frame?.capabilities.push === false
+              ? 'send.queued_pull'
+              : 'send.queued',
+        ),
     },
   );
 

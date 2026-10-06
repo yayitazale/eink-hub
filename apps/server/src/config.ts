@@ -14,6 +14,8 @@ export const config = {
   localUrl: process.env.LOCAL_URL ?? process.env.PUBLIC_URL ?? '',
   /** Optional address people use to open the hub (reverse proxy, Tailscale…); encoded in the welcome QR. */
   externalUrl: process.env.EXTERNAL_URL ?? '',
+  /** Optional public https address for cloud frames (SwitchBot) to download pictures from; defaults to externalUrl. */
+  cloudUrl: process.env.CLOUD_URL ?? '',
   adminPassword: process.env.ADMIN_PASSWORD ?? '',
   authDisabled: ['1', 'true', 'yes'].includes((process.env.AUTH_DISABLED ?? '').toLowerCase()),
   immichUrl: process.env.IMMICH_URL ?? '',

@@ -1,12 +1,12 @@
 import { useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
-import { BatteryFull, BatteryLow, BatteryMedium, CloudDownload, FlaskConical, Frame as FrameIcon, Plus, Radar, Wifi, WifiOff } from 'lucide-react';
-import { api, type DiscoveredFrame, type Frame } from '../lib/api';
+import { Link, useNavigate } from 'react-router-dom';
+import { BatteryFull, BatteryLow, BatteryMedium, Cloud, CloudDownload, Cpu, FlaskConical, Frame as FrameIcon, Plus, Radar, Search, Tablet, Wifi, WifiOff } from 'lucide-react';
+import { api, type DiscoveredFrame, type Frame, type FrameKind, type SwitchBotDevice } from '../lib/api';
 import { relativeTime } from '../lib/format';
 import { useAction, useCollections, useFrames } from '../lib/hooks';
 import { useI18n } from '../i18n';
 import { FrameMockup } from '../components/FrameMockup';
-import { Button, Empty, Field, Modal, Pill, SectionTitle, Spinner, inputClass } from '../components/ui';
+import { Button, Empty, Field, Modal, Pill, SectionTitle, Segmented, Spinner, inputClass } from '../components/ui';
 
 export function Battery({ value }: { value: number | null }) {
   if (value == null) return null;
@@ -21,6 +21,12 @@ export function Battery({ value }: { value: number | null }) {
 
 export function FrameStatus({ frame }: { frame: Frame }) {
   const { t } = useI18n();
+  if (frame.wakeModel === 'cloud')
+    return (
+      <Pill tone={frame.online ? 'ok' : undefined}>
+        <Cloud className="size-3" /> {t('canvas.cloud')}
+      </Pill>
+    );
   if (frame.mode === 'pull')
     return (
       <Pill tone="ok">
@@ -34,6 +40,17 @@ export function FrameStatus({ frame }: { frame: Frame }) {
   ) : (
     <Pill>
       <WifiOff className="size-3" /> {t('canvas.asleep')}
+    </Pill>
+  );
+}
+
+/** Which kind of frame it is, so a mixed collection of frames is easy to tell apart. */
+export function KindPill({ kind }: { kind: FrameKind }) {
+  const { t } = useI18n();
+  const Icon = { bloomin8: FrameIcon, switchbot: Cloud, trmnl: Tablet, openframe: Cpu }[kind];
+  return (
+    <Pill>
+      <Icon className="size-3" /> {t(`kind_short.${kind}`)}
     </Pill>
   );
 }
@@ -66,7 +83,7 @@ function FrameCard({ frame }: { frame: Frame }) {
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1.5">
           <span className="flex gap-1">
-            {frame.simulated && <TestPill />}
+            {frame.simulated ? <TestPill /> : <KindPill kind={frame.kind} />}
             <FrameStatus frame={frame} />
           </span>
           <Battery value={frame.battery} />
@@ -94,6 +111,126 @@ function BrandOption({ selected, onSelect, icon, title, hint }: { selected: bool
   );
 }
 
+/** The project's website (GitLab Pages). */
+export const DOCS_URL = 'https://yayitazale.gitlab.io/eink-hub/';
+
+function SwitchBotForm({
+  name,
+  setName,
+  loading,
+  onAdd,
+}: {
+  name: string;
+  setName: (v: string) => void;
+  loading: boolean;
+  onAdd: (b: { token: string; secret: string; deviceId: string; size: string }) => void;
+}) {
+  const { t } = useI18n();
+  const [token, setToken] = useState('');
+  const [secret, setSecret] = useState('');
+  const [devices, setDevices] = useState<SwitchBotDevice[] | null>(null);
+  const [deviceId, setDeviceId] = useState('');
+  const [size, setSize] = useState<'7.3' | '13.3' | '31.5'>('13.3');
+  const find = useAction(() => api.post<SwitchBotDevice[]>('/api/switchbot/devices', { token, secret }), { invalidate: [] });
+  const found = (d: SwitchBotDevice[]) => {
+    setDevices(d);
+    if (!d[0]) return;
+    setDeviceId(d[0].deviceId);
+    if (!name) setName(d[0].deviceName);
+  };
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-muted">
+        {t('canvas.switchbot_hint')}{' '}
+        <a className="font-semibold text-accent" href={DOCS_URL + 'devices/switchbot'} target="_blank" rel="noreferrer">
+          {t('canvas.docs_link')}
+        </a>
+      </p>
+      <Field label="Token">
+        <input className={inputClass} value={token} onChange={(e) => setToken(e.target.value)} autoComplete="off" />
+      </Field>
+      <Field label="Secret">
+        <input className={inputClass} type="password" value={secret} onChange={(e) => setSecret(e.target.value)} autoComplete="off" />
+      </Field>
+      <Button className="w-full" icon={<Search className="size-4" />} disabled={!token || !secret} loading={find.isPending} onClick={() => find.mutate(undefined, { onSuccess: found })}>
+        {t('canvas.switchbot_find')}
+      </Button>
+      {devices && devices.length === 0 && <p className="text-sm text-muted">{t('canvas.switchbot_none')}</p>}
+      {devices && devices.length > 0 && (
+        <>
+          <Field label={t('canvas.switchbot_device')}>
+            <select className={inputClass} value={deviceId} onChange={(e) => setDeviceId(e.target.value)}>
+              {devices.map((d) => (
+                <option key={d.deviceId} value={d.deviceId}>
+                  {d.deviceName} ({d.deviceType})
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label={t('canvas.switchbot_size')} group>
+            <Segmented
+              fill
+              value={size}
+              onChange={setSize}
+              options={[
+                { value: '7.3', label: '7.3″' },
+                { value: '13.3', label: '13.3″' },
+                { value: '31.5', label: '31.5″' },
+              ]}
+            />
+          </Field>
+          <Field label={t('common.name')}>
+            <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} />
+          </Field>
+          <Button variant="primary" className="w-full" disabled={!deviceId} loading={loading} onClick={() => onAdd({ token, secret, deviceId, size })}>
+            {t('canvas.add')}
+          </Button>
+        </>
+      )}
+    </div>
+  );
+}
+
+function DiyForm({
+  name,
+  setName,
+  loading,
+  onAdd,
+}: {
+  name: string;
+  setName: (v: string) => void;
+  loading: boolean;
+  onAdd: (b: { width: number; height: number }) => void;
+}) {
+  const { t } = useI18n();
+  const [width, setWidth] = useState(800);
+  const [height, setHeight] = useState(480);
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-muted">
+        {t('canvas.diy_hint')}{' '}
+        <a className="font-semibold text-accent" href={DOCS_URL + 'diy/protocol'} target="_blank" rel="noreferrer">
+          {t('canvas.docs_link')}
+        </a>
+      </p>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label={t('canvas.width')}>
+          <input type="number" className={inputClass} value={width} onChange={(e) => setWidth(Number(e.target.value))} />
+        </Field>
+        <Field label={t('canvas.height')}>
+          <input type="number" className={inputClass} value={height} onChange={(e) => setHeight(Number(e.target.value))} />
+        </Field>
+      </div>
+      <Field label={t('canvas.name_optional')}>
+        <input className={inputClass} placeholder="ESP32" value={name} onChange={(e) => setName(e.target.value)} />
+      </Field>
+      <Button variant="primary" className="w-full" disabled={!width || !height} loading={loading} onClick={() => onAdd({ width, height })}>
+        {t('canvas.add')}
+      </Button>
+    </div>
+  );
+}
+
 function AddFrameDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useI18n();
   const [host, setHost] = useState('');
@@ -107,8 +244,14 @@ function AddFrameDialog({ open, onClose }: { open: boolean; onClose: () => void 
     setName(f?.name ?? '');
     setManual(false);
   };
-  const [brand, setBrand] = useState<'bloomin8' | 'simulated'>('bloomin8');
-  const add = useAction((b: { host: string; name?: string }) => api.post<Frame>('/api/frames', b), { success: t('canvas.added') });
+  const [brand, setBrand] = useState<FrameKind | 'simulated'>('bloomin8');
+  const nav = useNavigate();
+  const add = useAction((b: { kind?: FrameKind; host?: string; name?: string } & Record<string, unknown>) => api.post<Frame>('/api/frames', b), {
+    success: t('canvas.added'),
+  });
+  // DIY and TRMNL frames need their token next, which lives on the detail page.
+  const addAndOpen = (b: Parameters<typeof add.mutate>[0]) =>
+    add.mutate(b, { onSuccess: (f) => (f.capabilities.push ? onClose() : nav(`/frames/${f.id}?tab=connection`)) });
   // mDNS and a subnet scan together: mDNS can't cross Docker's bridge network, the scan can.
   const discover = useAction(() => api.post<DiscoveredFrame[]>('/api/frames/discover', { scan: true }), { invalidate: [] });
   const addTest = useAction((b: { name?: string }) => api.post<Frame>('/api/frames/test', b), { success: t('canvas.added') });
@@ -173,13 +316,34 @@ function AddFrameDialog({ open, onClose }: { open: boolean; onClose: () => void 
           <>
           <div className="space-y-3">
             <p className="text-[13px] font-semibold text-ink-2">{t('canvas.brand')}</p>
-            <div className="grid grid-cols-2 gap-3" role="radiogroup">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" role="radiogroup">
               <BrandOption
                 selected={brand === 'bloomin8'}
                 onSelect={() => setBrand('bloomin8')}
                 icon={<FrameIcon className="size-6" />}
                 title="BLOOMIN8"
                 hint={t('canvas.brand_bloomin8_hint')}
+              />
+              <BrandOption
+                selected={brand === 'switchbot'}
+                onSelect={() => setBrand('switchbot')}
+                icon={<Cloud className="size-6" />}
+                title="SwitchBot"
+                hint={t('canvas.brand_switchbot_hint')}
+              />
+              <BrandOption
+                selected={brand === 'trmnl'}
+                onSelect={() => setBrand('trmnl')}
+                icon={<Tablet className="size-6" />}
+                title="TRMNL"
+                hint={t('canvas.brand_trmnl_hint')}
+              />
+              <BrandOption
+                selected={brand === 'openframe'}
+                onSelect={() => setBrand('openframe')}
+                icon={<Cpu className="size-6" />}
+                title={t('canvas.brand_diy')}
+                hint={t('canvas.brand_diy_hint')}
               />
               <BrandOption
                 selected={brand === 'simulated'}
@@ -202,6 +366,23 @@ function AddFrameDialog({ open, onClose }: { open: boolean; onClose: () => void 
                 {t('canvas.add')}
               </Button>
             </div>
+          ) : brand === 'switchbot' ? (
+            <SwitchBotForm name={name} setName={setName} loading={add.isPending} onAdd={(b) => add.mutate({ kind: 'switchbot', name, ...b }, { onSuccess: onClose })} />
+          ) : brand === 'trmnl' ? (
+            <div className="space-y-3">
+              <p className="text-xs text-muted">{t('canvas.trmnl_hint')}</p>
+              <Field label={t('canvas.mac')} hint={t('canvas.mac_hint')}>
+                <input className={inputClass} placeholder="AA:BB:CC:DD:EE:FF" value={host} onChange={(e) => setHost(e.target.value)} />
+              </Field>
+              <Field label={t('canvas.name_optional')}>
+                <input className={inputClass} placeholder="TRMNL" value={name} onChange={(e) => setName(e.target.value)} />
+              </Field>
+              <Button variant="primary" className="w-full" disabled={!host.trim()} loading={add.isPending} onClick={() => addAndOpen({ kind: 'trmnl', mac: host, name })}>
+                {t('canvas.add')}
+              </Button>
+            </div>
+          ) : brand === 'openframe' ? (
+            <DiyForm name={name} setName={setName} loading={add.isPending} onAdd={(b) => addAndOpen({ kind: 'openframe', name, ...b })} />
           ) : (
             <div className="space-y-3">
               <p className="text-xs text-muted">{t('canvas.test_hint')}</p>

@@ -1,0 +1,343 @@
+openapi: 3.1.0
+info:
+  title: E-Ink Hub API
+  version: '1'
+  summary: Device-facing protocols and the main management endpoints of E-Ink Hub.
+  description: |
+    Two families of endpoints:
+
+    - **Device endpoints** (`/of/v1/*`, `/api/display`, `/api/setup`, `/api/log`, `/eink_pull`, `/u/img/*`) are called by frames.
+      They don't use the session: each frame authenticates with its own token.
+    - **Management endpoints** (everything else under `/api/`) are what the web UI uses. They need a session cookie
+      (`POST /api/auth/login`), unless the hub runs with `AUTH_DISABLED=true`. They may change between releases.
+  license:
+    name: MIT
+servers:
+  - url: http://192.168.1.10:8080
+    description: Your hub
+tags:
+  - name: Open Frame
+    description: Protocol for DIY frames. See https://yayitazale.gitlab.io/eink-hub/diy/protocol
+  - name: TRMNL BYOS
+    description: The hub as server for TRMNL firmware. See https://docs.trmnl.com/go/diy/byos
+  - name: BLOOMIN8 pull
+    description: BLOOMIN8 "Schedule Pull" upstream protocol.
+  - name: Pictures
+  - name: Frames
+    description: Management (session required).
+  - name: Library
+    description: Management (session required).
+  - name: Auth
+
+paths:
+  /of/v1/display:
+    get:
+      tags: [Open Frame]
+      summary: What should the frame show now?
+      description: Called on every wake-up. Records the visit and battery, and returns a picture to show (or none) and how long to sleep.
+      security: [{ frameBearer: [] }]
+      parameters:
+        - { name: battery, in: query, schema: { type: integer, minimum: 0, maximum: 100 }, description: Battery level (%) }
+        - { name: rssi, in: query, schema: { type: integer }, description: Wi-Fi signal (dBm) }
+        - { name: fw, in: query, schema: { type: string }, description: Firmware version }
+        - { name: w, in: query, schema: { type: integer }, description: Panel width as hung (px) }
+        - { name: h, in: query, schema: { type: integer }, description: Panel height as hung (px) }
+        - { name: format, in: query, schema: { type: string, enum: [jpeg, png, bmp] }, description: Image format wanted (remembered) }
+        - { name: palette, in: query, schema: { $ref: '#/components/schemas/Palette' }, description: Dither in the hub to this palette (remembered) }
+        - { name: current, in: query, schema: { type: string }, description: id of the picture on screen }
+        - { name: notify_url, in: query, schema: { type: string, format: uri }, description: Always-on frames, where the hub POSTs when there is something new. Empty removes it }
+      responses:
+        '200':
+          description: Show a picture, or nothing.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/OpenFrameShow'
+                  - $ref: '#/components/schemas/OpenFrameNone'
+        '401': { description: Unknown token }
+  /of/v1/log:
+    post:
+      tags: [Open Frame]
+      summary: Write to the hub's log
+      security: [{ frameBearer: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                level: { type: string, enum: [info, warn, error] }
+                message: { type: string, maxLength: 500 }
+      responses:
+        '200': { description: Logged }
+        '401': { description: Unknown token }
+
+  /api/setup:
+    get:
+      tags: [TRMNL BYOS]
+      summary: Exchange the device's MAC for its token
+      description: Only devices added in the hub (by MAC) get a token. Also accepted as POST.
+      parameters:
+        - { name: ID, in: header, required: true, schema: { type: string }, description: MAC address }
+      responses:
+        '200':
+          description: '`status` 200 with `api_key`, or 404 when the MAC is not added in the hub.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: integer, enum: [200, 404] }
+                  api_key: { type: [string, 'null'] }
+                  friendly_id: { type: [string, 'null'] }
+                  image_url: { type: 'null' }
+                  message: { type: string }
+  /api/display:
+    get:
+      tags: [TRMNL BYOS]
+      summary: What should the device show now?
+      parameters:
+        - { name: Access-Token, in: header, required: true, schema: { type: string } }
+        - { name: ID, in: header, schema: { type: string } }
+        - { name: Battery-Voltage, in: header, schema: { type: number }, description: Converted to a percentage (3.0–4.2 V) }
+        - { name: RSSI, in: header, schema: { type: integer } }
+        - { name: FW-Version, in: header, schema: { type: string } }
+        - { name: Width, in: header, schema: { type: integer } }
+        - { name: Height, in: header, schema: { type: integer } }
+        - { name: Model, in: header, schema: { type: string } }
+      responses:
+        '200':
+          description: '`status` 0 = draw `image_url` if `filename` changed; 202 = unknown token.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: integer, enum: [0, 202] }
+                  image_url: { type: [string, 'null'], format: uri }
+                  filename: { type: [string, 'null'], description: Same value when nothing changed, so the device doesn't redraw }
+                  refresh_rate: { type: integer, description: Seconds to sleep }
+                  reset_firmware: { type: boolean }
+                  update_firmware: { type: boolean }
+                  firmware_url: { type: 'null' }
+                  special_function: { type: string }
+  /api/log:
+    post:
+      tags: [TRMNL BYOS]
+      summary: Device logs
+      parameters:
+        - { name: Access-Token, in: header, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                logs: { type: array, items: { type: object } }
+      responses:
+        '200': { description: Logged }
+        '401': { description: Unknown token }
+
+  /eink_pull:
+    get:
+      tags: [BLOOMIN8 pull]
+      summary: Called by a BLOOMIN8 Canvas when it wakes in pull mode
+      description: Business status is in the body; the HTTP status is always 200.
+      parameters:
+        - { name: X-Access-Token, in: header, required: true, schema: { type: string } }
+        - { name: device_id, in: query, schema: { type: string } }
+        - { name: pull_id, in: query, schema: { type: string } }
+        - { name: cron_time, in: query, schema: { type: string } }
+        - { name: battery, in: query, schema: { type: integer } }
+      responses:
+        '200':
+          description: '`status` 200 with `type: SHOW` and `data.image_url`, or 204 with only `data.next_cron_time`.'
+  /eink_signal:
+    get:
+      tags: [BLOOMIN8 pull]
+      summary: The Canvas reports whether it showed the picture
+      parameters:
+        - { name: X-Access-Token, in: header, required: true, schema: { type: string } }
+        - { name: pull_id, in: query, schema: { type: string } }
+        - { name: success, in: query, schema: { type: string, enum: ['0', '1'] } }
+      responses:
+        '200': { description: Recorded }
+
+  /u/img/{token}/{file}:
+    get:
+      tags: [Pictures]
+      summary: Download a rendered picture
+      description: Served with Content-Length, no chunking, no compression. Used by pull frames and by SwitchBot's cloud.
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string }, description: The frame's token }
+        - { name: file, in: path, required: true, schema: { type: string, pattern: '^[a-f0-9]{40}_[PL]\.(jpg|png|bmp)$' } }
+      responses:
+        '200':
+          description: The picture
+          content:
+            image/jpeg: {}
+            image/png: {}
+            image/bmp: {}
+        '404': { description: Unknown token or picture }
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Start a session (sets the `b8hub_session` cookie)
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [password], properties: { password: { type: string } } }
+      responses:
+        '200': { description: Logged in }
+        '401': { description: Wrong password }
+
+  /api/frames:
+    get:
+      tags: [Frames]
+      summary: List frames
+      security: [{ session: [] }]
+      responses:
+        '200':
+          description: Frames
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Frame' } }
+    post:
+      tags: [Frames]
+      summary: Add a frame
+      security: [{ session: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                kind: { $ref: '#/components/schemas/FrameKind' }
+                name: { type: string }
+                host: { type: string, description: BLOOMIN8 only, its IP }
+                token: { type: string, description: SwitchBot only }
+                secret: { type: string, description: SwitchBot only }
+                deviceId: { type: string, description: SwitchBot only }
+                size: { type: string, enum: ['7.3', '13.3', '31.5'], description: SwitchBot only }
+                mac: { type: string, description: TRMNL only }
+                width: { type: integer, description: DIY / TRMNL, as hung }
+                height: { type: integer, description: DIY / TRMNL, as hung }
+                format: { $ref: '#/components/schemas/ImageFormat' }
+      responses:
+        '200':
+          description: The new frame
+          content: { application/json: { schema: { $ref: '#/components/schemas/Frame' } } }
+        '400': { description: Missing or invalid fields }
+        '409': { description: Already added }
+  /api/frames/{id}/display:
+    post:
+      tags: [Frames]
+      summary: Show a photo now (or queue it for the next wake)
+      security: [{ session: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [imageId]
+              properties:
+                imageId: { type: integer }
+                fit: { type: string, enum: [cover, contain, blur] }
+                bg: { type: string, example: '#ffffff' }
+                showDate: { type: boolean }
+      responses:
+        '200':
+          description: '`push` if it was delivered, `queued` if it waits for the frame.'
+          content:
+            application/json:
+              schema: { type: object, properties: { method: { type: string, enum: [push, queued] } } }
+  /api/frames/{id}/actions/{action}:
+    post:
+      tags: [Frames]
+      summary: Run an action
+      description: '`next` runs the schedule now. `clear` shows the welcome picture again. The rest depend on the frame''s capabilities.'
+      security: [{ session: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: action, in: path, required: true, schema: { type: string, enum: [next, clear, wake, sleep, reboot, whistle] } }
+      responses:
+        '200': { description: Done (or `queued` for a sleeping frame) }
+        '400': { description: Not supported by this kind of frame }
+  /api/images:
+    post:
+      tags: [Library]
+      summary: Upload photos
+      security: [{ session: [] }]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema: { type: object, properties: { file: { type: string, format: binary } } }
+      responses:
+        '200': { description: The stored images }
+
+components:
+  securitySchemes:
+    frameBearer:
+      type: http
+      scheme: bearer
+      description: The frame's token, from its Connection tab.
+    session:
+      type: apiKey
+      in: cookie
+      name: b8hub_session
+  schemas:
+    Palette:
+      type: string
+      enum: [bw, gray4, spectra6, acep7]
+    ImageFormat:
+      type: object
+      properties:
+        type: { type: string, enum: [jpeg, png, bmp] }
+        palette: { $ref: '#/components/schemas/Palette' }
+    FrameKind:
+      type: string
+      enum: [bloomin8, switchbot, openframe, trmnl]
+    OpenFrameShow:
+      type: object
+      required: [action, image_url, id, format, width, height, next_poll_s]
+      properties:
+        action: { const: show }
+        image_url: { type: string, format: uri }
+        id: { type: string, description: Send it back as `current` }
+        format: { type: string, enum: [jpeg, png, bmp] }
+        palette: { oneOf: [{ $ref: '#/components/schemas/Palette' }, { type: 'null' }] }
+        width: { type: integer }
+        height: { type: integer }
+        next_poll_s: { type: integer, minimum: 60 }
+    OpenFrameNone:
+      type: object
+      required: [action, next_poll_s]
+      properties:
+        action: { const: none }
+        next_poll_s: { type: integer, minimum: 60 }
+    Frame:
+      type: object
+      properties:
+        id: { type: integer }
+        kind: { $ref: '#/components/schemas/FrameKind' }
+        name: { type: string }
+        width: { type: integer, description: Native resolution, short side }
+        height: { type: integer, description: Native resolution, long side }
+        orientation: { type: string, enum: [portrait, landscape] }
+        battery: { type: [integer, 'null'] }
+        online: { type: boolean }
+        lastSeen: { type: [integer, 'null'] }
+        mode: { type: string, enum: [push, pull] }
+        nextWake: { type: [integer, 'null'] }
+        upstreamToken: { type: string, description: The frame's token for device endpoints }
+        wakeModel: { type: string, enum: [ble, cloud, scheduled-pull, notify] }
+        capabilities:
+          type: object
+          additionalProperties: { type: boolean }
+        config:
+          type: object
+          description: Per-kind settings. Secrets are never returned.

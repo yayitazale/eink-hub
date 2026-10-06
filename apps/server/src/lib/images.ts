@@ -8,7 +8,8 @@ import { basqueDate, hubLang, locales, tr, type Lang } from '../i18n.js';
 import { schema, type DB } from '../db/index.js';
 import type { DisplayOptions, Frame, Image } from '../db/schema.js';
 import { assetSize, type ImmichAsset } from '../immich/client.js';
-import { aspectKey, probeImage, renderForFrame, thumbnail, type CropRect } from '../imaging/pipeline.js';
+import { aspectKey, formatExt, probeImage, renderForFrame, thumbnail, type CropRect } from '../imaging/pipeline.js';
+import { renderTarget } from '../device/drivers/index.js';
 import { HttpError, immichFor, type Ctx } from './context.js';
 
 const RENDER_VERSION = 1;
@@ -180,27 +181,33 @@ export interface Rendered {
   /** Filename sent to / pulled by the device (`_P` / `_L` suffix required). */
   deviceName: string;
   buf: Buffer;
+  /** File extension: jpg, png or bmp. */
+  ext: string;
 }
 
 export async function renderFor(ctx: Ctx, img: Image, frame: Frame, opts: DisplayOptions = {}): Promise<Rendered> {
   const landscape = frame.orientation === 'landscape';
   const crop = opts.crop !== undefined ? opts.crop : getCrop(ctx.db, img.id, frameAspect(frame));
+  const target = renderTarget(frame);
+  const ext = formatExt(target.format);
   const params = {
     v: RENDER_VERSION,
     img: img.id,
     width: frame.width,
     height: frame.height,
     landscape,
-    rotate: frame.rotate,
+    rotate: target.rotateBuffer ? frame.rotate : 0,
     fit: crop ? 'cover' : (opts.fit ?? 'cover'),
     bg: opts.bg ?? '#ffffff',
     crop,
     caption: opts.showDate ? (opts.memories ? yearsAgoCaption : photoDate)(img, hubLang(ctx.db)) : null,
+    // Only when not the default, so existing JPEG renders keep their hash.
+    ...(ext === 'jpg' && !target.format.palette ? {} : { format: target.format }),
   } as const;
   const hash = crypto.createHash('sha1').update(JSON.stringify(params)).digest('hex');
-  const file = path.join(config.cacheDir, `${hash}.jpg`);
-  const deviceName = `h${img.id}_${hash.slice(0, 10)}_${landscape ? 'L' : 'P'}.jpg`;
-  if (await exists(file)) return { hash, file, deviceName, buf: await fs.readFile(file) };
+  const file = path.join(config.cacheDir, `${hash}.${ext}`);
+  const deviceName = `h${img.id}_${hash.slice(0, 10)}_${landscape ? 'L' : 'P'}.${ext}`;
+  if (await exists(file)) return { hash, file, deviceName, ext, buf: await fs.readFile(file) };
 
   const buf = await renderForFrame(await loadSource(ctx, img), {
     width: params.width,
@@ -211,9 +218,22 @@ export async function renderFor(ctx: Ctx, img: Image, frame: Frame, opts: Displa
     bg: params.bg,
     crop: params.crop,
     caption: params.caption,
+    format: target.format,
   });
   await fs.writeFile(file, buf);
-  return { hash, file, deviceName, buf };
+  return { hash, file, deviceName, ext, buf };
+}
+
+/** A cached render by hash, whatever format it was made in. */
+export async function readRender(hash: string): Promise<{ buf: Buffer; ext: string } | null> {
+  for (const ext of ['jpg', 'png', 'bmp']) {
+    try {
+      return { buf: await fs.readFile(path.join(config.cacheDir, `${hash}.${ext}`)), ext };
+    } catch {
+      // try the next format
+    }
+  }
+  return null;
 }
 
 export async function deleteImage(db: DB, img: Image) {

@@ -128,12 +128,14 @@ function HubSettings() {
   const settings = useSettings();
   const [localUrl, setLocalUrl] = useState('');
   const [externalUrl, setExternalUrl] = useState('');
+  const [cloudUrl, setCloudUrl] = useState('');
   useEffect(() => {
     if (!settings.data) return;
     setLocalUrl(settings.data.localUrl);
     setExternalUrl(settings.data.externalUrl);
+    setCloudUrl(settings.data.cloudUrl);
   }, [settings.data]);
-  const save = useAction(() => api.put('/api/settings', { localUrl, externalUrl }), { success: t('common.saved'), invalidate: [['settings']] });
+  const save = useAction(() => api.put('/api/settings', { localUrl, externalUrl, cloudUrl }), { success: t('common.saved'), invalidate: [['settings']] });
   const source = settings.data && localUrl === settings.data.localUrl ? t(`localUrl.${settings.data.localUrlSource}` as MsgKey) : '';
   return (
     <Card className="p-6">
@@ -149,6 +151,9 @@ function HubSettings() {
             value={externalUrl}
             onChange={(e) => setExternalUrl(e.target.value)}
           />
+        </Field>
+        <Field label={t('settings.cloud_url')} hint={t('settings.cloud_url_hint')}>
+          <input className={inputClass} placeholder="https://hub.example.ts.net:8443" value={cloudUrl} onChange={(e) => setCloudUrl(e.target.value)} />
         </Field>
         <Button variant="primary" loading={save.isPending} onClick={() => save.mutate()}>
           {t('common.save')}

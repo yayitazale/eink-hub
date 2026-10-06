@@ -4,7 +4,7 @@ import { statsEnabled } from '../lib/stats.js';
 import { isLang } from '../i18n.js';
 import { ImmichClient, assetOrientation, type ImmichAsset } from '../immich/client.js';
 import { addItems, memoriesDay } from '../lib/collections.js';
-import { HttpError, detectLocalUrl, externalUrlSetting, immichConfig, immichFor, type Ctx } from '../lib/context.js';
+import { HttpError, cloudUrlSetting, detectLocalUrl, externalUrlSetting, immichConfig, immichFor, type Ctx } from '../lib/context.js';
 import { displayImage } from '../lib/display.js';
 import { upsertImmichAssets } from '../lib/images.js';
 
@@ -119,18 +119,21 @@ export function immichRoutes(app: FastifyInstance, ctx: Ctx) {
       localUrl: detected.url,
       localUrlSource: detected.source,
       externalUrl: externalUrlSetting(db),
+      cloudUrl: getSetting(db, 'cloudUrl') ?? '',
+      cloudUrlEffective: cloudUrlSetting(db),
       language: getSetting(db, 'language') ?? null,
       defaultFit: getSetting(db, 'defaultFit') ?? 'cover',
       statsEnabled: statsEnabled(db),
     };
   });
 
-  app.put<{ Body: { immichUrl?: string; immichApiKey?: string; localUrl?: string; externalUrl?: string; defaultFit?: string; language?: string; statsEnabled?: boolean } }>('/api/settings', async (req) => {
+  app.put<{ Body: { immichUrl?: string; immichApiKey?: string; localUrl?: string; externalUrl?: string; cloudUrl?: string; defaultFit?: string; language?: string; statsEnabled?: boolean } }>('/api/settings', async (req) => {
     const b = req.body ?? {};
     if (isLang(b.language)) setSetting(db, 'language', b.language);
     if (b.immichUrl !== undefined) setSetting(db, 'immich.url', b.immichUrl.trim());
     if (b.immichApiKey) setSetting(db, 'immich.apiKey', b.immichApiKey.trim());
     if (b.externalUrl !== undefined) setSetting(db, 'externalUrl', b.externalUrl.trim().replace(/\/+$/, ''));
+    if (b.cloudUrl !== undefined) setSetting(db, 'cloudUrl', b.cloudUrl.trim().replace(/\/+$/, ''));
     if (b.localUrl !== undefined) setSetting(db, 'localUrl', b.localUrl.trim().replace(/\/+$/, ''));
     if (typeof b.statsEnabled === 'boolean') setSetting(db, 'statsEnabled', b.statsEnabled ? '1' : '0');
     if (b.defaultFit) setSetting(db, 'defaultFit', b.defaultFit);

@@ -52,6 +52,12 @@ const es = {
   ble_unavailable: 'El Bluetooth del Hub no está disponible',
   ble_wake_failed: 'No se pudo despertar por Bluetooth: {detail}',
   ble_woke_no_reply: 'Se envió la señal por Bluetooth, pero el Canvas no respondió por Wi-Fi',
+  wake_unsupported: 'Este marco no se puede despertar desde el Hub: se despierta solo según su programación',
+  unsupported_for_kind: 'Este tipo de marco no admite esta acción',
+  unknown_kind: 'Tipo de marco desconocido',
+  switchbot_not_configured: 'Faltan el token, el secret o el dispositivo de SwitchBot',
+  switchbot_public_url: 'SwitchBot descarga la foto desde Internet: configura en Ajustes una dirección pública con https (externa o para marcos en la nube)',
+  trmnl_mac_missing: 'Falta la dirección MAC del dispositivo TRMNL',
 };
 
 export type MsgKey = keyof typeof es;
@@ -104,6 +110,12 @@ const eu: Record<MsgKey, string> = {
   ble_unavailable: 'Hub-aren Bluetootha ez dago eskuragarri',
   ble_wake_failed: 'Ezin izan da Bluetooth bidez esnatu: {detail}',
   ble_woke_no_reply: 'Bluetooth seinalea bidali da, baina Canvasak ez du Wi-Fi bidez erantzun',
+  wake_unsupported: 'Marko hau ezin da Hub-etik esnatu: bere kabuz esnatzen da bere programazioaren arabera',
+  unsupported_for_kind: 'Marko mota honek ez du ekintza hau onartzen',
+  unknown_kind: 'Marko mota ezezaguna',
+  switchbot_not_configured: 'SwitchBot-en tokena, secreta edo gailua falta dira',
+  switchbot_public_url: 'SwitchBot-ek Internetetik deskargatzen du argazkia: konfiguratu https duen helbide publiko bat Ezarpenetan (kanpokoa edo hodeiko markoetarakoa)',
+  trmnl_mac_missing: 'TRMNL gailuaren MAC helbidea falta da',
 };
 
 const en: Record<MsgKey, string> = {
@@ -154,6 +166,12 @@ const en: Record<MsgKey, string> = {
   ble_unavailable: 'The hub’s Bluetooth is not available',
   ble_wake_failed: 'Could not wake over Bluetooth: {detail}',
   ble_woke_no_reply: 'The Bluetooth wake was sent, but the Canvas did not answer over Wi-Fi',
+  wake_unsupported: 'This frame can’t be woken from the hub: it wakes up on its own schedule',
+  unsupported_for_kind: 'This kind of frame doesn’t support that',
+  unknown_kind: 'Unknown kind of frame',
+  switchbot_not_configured: 'The SwitchBot token, secret or device is missing',
+  switchbot_public_url: 'SwitchBot downloads the photo over the internet: set a public https address in Settings (external, or the one for cloud frames)',
+  trmnl_mac_missing: 'The TRMNL device’s MAC address is missing',
 };
 
 const catalogues: Record<Lang, Record<MsgKey, string>> = { es, eu, en };

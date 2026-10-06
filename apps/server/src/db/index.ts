@@ -155,6 +155,11 @@ export const migrations: string[] = [
   );
   CREATE INDEX battery_samples_frame ON battery_samples(frame_id, at DESC);
   `,
+  // v8: other brands and DIY frames. Everything already added is a BLOOMIN8.
+  `
+  ALTER TABLE frames ADD COLUMN kind TEXT NOT NULL DEFAULT 'bloomin8';
+  ALTER TABLE frames ADD COLUMN config TEXT NOT NULL DEFAULT '{}';
+  `,
 ];
 
 function migrate(sqlite: Database.Database) {

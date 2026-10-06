@@ -43,8 +43,37 @@ export interface LogEntry {
   data?: Record<string, unknown>;
 }
 
+export type FrameKind = 'bloomin8' | 'switchbot' | 'openframe' | 'trmnl';
+export type Palette = 'bw' | 'gray4' | 'spectra6' | 'acep7';
+export interface ImageFormat {
+  type: 'jpeg' | 'png' | 'bmp';
+  palette?: Palette;
+}
+
+/** What a kind of frame can do (server: device/drivers/types.ts). */
+export interface Capabilities {
+  push: boolean;
+  pull: boolean;
+  deviceNext: boolean;
+  sleep: boolean;
+  reboot: boolean;
+  identify: boolean;
+  galleries: boolean;
+  deviceSettings: boolean;
+  pullToggle: boolean;
+  bleWake: boolean;
+}
+
 export interface Frame {
   id: number;
+  kind: FrameKind;
+  /** Per-kind settings; secrets (SwitchBot token/secret) are never sent. */
+  config: { deviceId?: string; format?: ImageFormat; notifyUrl?: string; maxPollMinutes?: number };
+  capabilities: Capabilities;
+  /** How a sleeping frame gets a new picture: ble, cloud, scheduled-pull or notify. */
+  wakeModel: 'ble' | 'cloud' | 'scheduled-pull' | 'notify';
+  /** Token DIY / TRMNL frames authenticate with. */
+  upstreamToken: string;
   name: string;
   host: string;
   deviceId: string | null;
@@ -118,6 +147,12 @@ export interface HistoryEntry {
   battery: number | null;
 }
 
+export interface SwitchBotDevice {
+  deviceId: string;
+  deviceName: string;
+  deviceType: string;
+}
+
 export interface DiscoveredFrame {
   host: string;
   name: string;
@@ -132,6 +167,10 @@ export interface Settings {
   localUrlSource: 'settings' | 'env' | 'browser' | 'interface' | 'none';
   /** Optional reverse-proxy / Tailscale address; the welcome QR opens it. */
   externalUrl: string;
+  /** Public https address cloud frames (SwitchBot) download pictures from; empty = externalUrl. */
+  cloudUrl: string;
+  /** What is actually used: cloudUrl, else externalUrl. */
+  cloudUrlEffective: string;
   language: 'es' | 'eu' | 'en' | null;
   defaultFit: FitMode;
   /** Per-Canvas statistics tab on, and battery samples recorded. */

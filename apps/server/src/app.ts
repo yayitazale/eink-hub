@@ -18,6 +18,8 @@ import { logRoutes } from './routes/logs.js';
 import { statsRoutes } from './routes/stats.js';
 import { createLogStream } from './lib/logbuffer.js';
 import { upstreamRoutes } from './upstream/routes.js';
+import { openFrameRoutes } from './upstream/openframe.js';
+import { trmnlRoutes } from './upstream/trmnl.js';
 import { APP_VERSION } from './version.js';
 
 export async function buildApp(db: DB, opts: { logger?: boolean; logDir?: string } = {}) {
@@ -45,6 +47,8 @@ export async function buildApp(db: DB, opts: { logger?: boolean; logDir?: string
   await setupAuth(app, db);
   app.get('/api/health', async () => ({ ok: true, version: APP_VERSION }));
   upstreamRoutes(app, ctx);
+  openFrameRoutes(app, ctx);
+  trmnlRoutes(app, ctx);
   frameRoutes(app, ctx);
   libraryRoutes(app, ctx);
   immichRoutes(app, ctx);

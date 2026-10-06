@@ -46,6 +46,14 @@ export function externalUrlSetting(db: DB): string {
   return trimSlash(getSetting(db, 'externalUrl') ?? config.externalUrl);
 }
 
+/**
+ * Where vendor clouds (SwitchBot) download pictures from: must be public and https. Its own
+ * setting when only /u/img is exposed (e.g. Tailscale Funnel on another port), else the external URL.
+ */
+export function cloudUrlSetting(db: DB): string {
+  return trimSlash(getSetting(db, 'cloudUrl') ?? config.cloudUrl) || externalUrlSetting(db);
+}
+
 /** What the welcome picture's QR code opens: the external address if any, else the LAN one. */
 export function qrUrl(db: DB, req?: FastifyRequest): string {
   return externalUrlSetting(db) || detectLocalUrl(db, req).url;

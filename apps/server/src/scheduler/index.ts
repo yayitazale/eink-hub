@@ -2,6 +2,7 @@ import { Cron } from 'croner';
 import { eq } from 'drizzle-orm';
 import { schema } from '../db/index.js';
 import { DeviceError } from '../device/client.js';
+import { describeKind } from '../device/drivers/index.js';
 import { purgeSessions } from '../auth/index.js';
 import { needsSync, prepareCollection, syncCollection } from '../lib/collections.js';
 import { qrUrl, type Ctx } from '../lib/context.js';
@@ -19,6 +20,7 @@ import { refreshFrame } from '../routes/frames.js';
 export async function tick(ctx: Ctx, now = new Date()) {
   const frames = ctx.db.select().from(schema.frames).where(eq(schema.frames.mode, 'push')).all();
   for (const frame of frames) {
+    if (!describeKind(frame).capabilities.push) continue;
     // Only when there is something to send; never just to poll (battery).
     const awake = (fn: () => Promise<void>) => withWake(ctx, frame, fn, { background: true });
     try {
@@ -57,9 +59,19 @@ export async function housekeeping(ctx: Ctx) {
   pruneBatterySamples(ctx.db);
 }
 
-export async function pollStatus(ctx: Ctx) {
+/** Cloud frames are asked less often: every call counts against the account's daily quota. */
+const CLOUD_POLL_MS = 30 * 60_000;
+const lastCloudPoll = new Map<number, number>();
+
+export async function pollStatus(ctx: Ctx, now = Date.now()) {
   const frames = ctx.db.select().from(schema.frames).where(eq(schema.frames.mode, 'push')).all();
-  await Promise.all(frames.map((f) => refreshFrame(ctx, f, 4000)));
+  const due = frames.filter((f) => {
+    if (describeKind(f).wakeModel !== 'cloud') return true;
+    if (now - (lastCloudPoll.get(f.id) ?? 0) < CLOUD_POLL_MS) return false;
+    lastCloudPoll.set(f.id, now);
+    return true;
+  });
+  await Promise.all(due.map((f) => refreshFrame(ctx, f, 4000)));
 }
 
 export function startScheduler(ctx: Ctx) {

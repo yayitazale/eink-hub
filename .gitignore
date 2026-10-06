@@ -6,3 +6,6 @@ data
 docker-compose.override.yml
 fake-frame.log
 .claude
+# docs-site build output (GitLab Pages artifact)
+/public
+docs-site/.vitepress/cache
