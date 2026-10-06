@@ -1,0 +1,18 @@
+# systemd unit: copy to /etc/systemd/system/openframe.service, edit the two variables, then
+#   sudo systemctl daemon-reload && sudo systemctl enable --now openframe
+[Unit]
+Description=E-Ink Hub Open Frame (Pimoroni Inky)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Environment=HUB_URL=http://192.168.1.10:8080
+Environment=FRAME_TOKEN=paste-the-token-here
+ExecStart=/home/pi/openframe/.venv/bin/python /home/pi/openframe/openframe.py
+WorkingDirectory=/home/pi/openframe
+User=pi
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

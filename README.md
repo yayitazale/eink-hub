@@ -1,7 +1,16 @@
 # <img src="docs/logo.png" alt="" width="40" align="absmiddle" /> E-Ink Hub
 
-Self-hosted control center for e-ink photo frames (currently **BLOOMIN8 E-Ink Canvas**), with **Immich** integration.
+Self-hosted control center for e-ink photo frames, with **Immich** integration.
 A single Docker container (Node + SQLite) with a web UI inspired by the official BLOOMIN8 app.
+
+📖 **Website and documentation: https://yayitazale.gitlab.io/eink-hub/**
+
+| Frame | How | |
+| --- | --- | --- |
+| BLOOMIN8 E-Ink Canvas | Local API, push or scheduled pull, Bluetooth wake | ✅ |
+| SwitchBot AI Art Frame | SwitchBot cloud API (needs an https external URL) | ✅ |
+| TRMNL firmware (TRMNL, Waveshare PhotoPainter, reTerminal…) | The hub is their BYOS server | ✅ |
+| Your own ESP32 / Raspberry Pi frame | [Open Frame protocol](https://yayitazale.gitlab.io/eink-hub/diy/protocol), examples in [`examples/`](examples) | ✅ |
 
 - Discover frames (mDNS / subnet scan) or add them by IP
 - Send any photo with an exact preview: smart auto-crop, manual crop, fit with border, or blurred background
@@ -63,14 +72,16 @@ pull → download → signal loop. It warns if an image isn't baseline JPEG at n
 
 ```
 apps/server   Fastify + Drizzle/better-sqlite3 + sharp
-  src/device      BLOOMIN8 local API client + discovery + Bluetooth wake (BlueZ/D-Bus)
-  src/upstream    /eink_pull, /eink_signal, /u/img (pull protocol)
-  src/imaging     render pipeline (baseline JPEG, native resolution, P/L orientation)
+  src/device      frame drivers (BLOOMIN8, SwitchBot, Open Frame, TRMNL), discovery, Bluetooth wake
+  src/upstream    device-facing endpoints: BLOOMIN8 pull, Open Frame, TRMNL BYOS, /u/img
+  src/imaging     render pipeline (JPEG/PNG/BMP, native resolution, orientation, dithering)
   src/immich      Immich API client
   src/lib         collections sync, image store, rotation/selection
   src/scheduler   push rotation, status polling, collection sync
   scripts/fake-frame.ts
 apps/web      React + Vite + Tailwind + TanStack Query
+docs-site     project website (VitePress), published to GitLab Pages
+examples      DIY Open Frame firmware: ESP32 (PlatformIO) and Raspberry Pi + Inky (Python)
 ```
 
 ## API references
@@ -80,8 +91,9 @@ apps/web      React + Vite + Tailwind + TanStack Query
 
 ## Not yet covered
 - Bluetooth wake is tested against a mocked BlueZ; verify it on real hardware and hosts
-- Pre-dithered uploads (`/image/dataUpload`) — the frame dithers JPEGs itself
+- Pre-dithered uploads to BLOOMIN8 (`/image/dataUpload`) — the frame dithers JPEGs itself
 - Tested against the simulator only; verify resolution/rotation on real hardware
+- SwitchBot and TRMNL support is tested against mocks and the published protocols, not real devices yet
 
 ## Versions and images
 
