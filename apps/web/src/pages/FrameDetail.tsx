@@ -9,11 +9,12 @@ import { isPickerCancelled, phoneWakeSupport, wakeWithThisDevice } from '../lib/
 import { useI18n, type MsgKey } from '../i18n';
 import { FrameMockup } from '../components/FrameMockup';
 import { AssignmentEditor } from '../components/AssignmentEditor';
+import { StatsTab } from '../components/StatsTab';
 import { SchedulePicker } from '../components/SchedulePicker';
 import { Button, Card, Field, Pill, Segmented, Spinner, Toggle, cx, inputClass } from '../components/ui';
 import { Battery, FrameStatus, TestPill } from './Frames';
 
-type Tab = 'schedule' | 'mode' | 'history' | 'device' | 'settings';
+type Tab = 'schedule' | 'mode' | 'history' | 'stats' | 'device' | 'settings';
 
 function Info({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -364,6 +365,7 @@ export function FrameDetail() {
   );
   const refresh = useAction(() => api.post(`/api/frames/${id}/refresh`), {});
   const ble = useBleStatus();
+  const settings = useSettings();
   const wake = useAction(() => api.post(`/api/frames/${id}/actions/wake`), { success: t('detail.woken') });
   // Pulse from this phone, then wait for the Canvas to show up on Wi-Fi.
   const phoneWake = useAction(
@@ -471,6 +473,7 @@ export function FrameDetail() {
               { value: 'schedule', label: t('nav.schedule') },
               { value: 'mode', label: t('detail.tab_mode') },
               { value: 'history', label: t('detail.tab_history') },
+              ...(settings.data?.statsEnabled ? [{ value: 'stats' as const, label: t('detail.tab_stats') }] : []),
               { value: 'device', label: t('detail.tab_device') },
               { value: 'settings', label: t('nav.settings') },
             ]}
@@ -479,6 +482,7 @@ export function FrameDetail() {
             {tab === 'schedule' && <AssignmentEditor key={f.assignment?.id ?? 'new'} frame={f} />}
             {tab === 'mode' && <ModeTab frame={f} />}
             {tab === 'history' && <HistoryTab frame={f} />}
+            {tab === 'stats' && settings.data?.statsEnabled && <StatsTab frame={f} />}
             {tab === 'device' && <DeviceTab frame={f} />}
             {tab === 'settings' && <SettingsTab frame={f} />}
           </Card>

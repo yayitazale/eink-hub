@@ -134,6 +134,8 @@ export interface Settings {
   externalUrl: string;
   language: 'es' | 'eu' | 'en' | null;
   defaultFit: FitMode;
+  /** Per-Canvas statistics tab on, and battery samples recorded. */
+  statsEnabled: boolean;
 }
 
 export class ApiError extends Error {

@@ -8,6 +8,7 @@ import { qrUrl, type Ctx } from '../lib/context.js';
 import { assignmentOptions, chooseNextImage, getAssignment, markOnline, pushImage, pushWelcome } from '../lib/display.js';
 import { getImage } from '../lib/images.js';
 import { isDue, nextRun } from '../lib/schedule.js';
+import { pruneBatterySamples } from '../lib/stats.js';
 import { withWake } from '../lib/wake.js';
 import { refreshFrame } from '../routes/frames.js';
 
@@ -53,6 +54,7 @@ export async function housekeeping(ctx: Ctx) {
     if (needsSync(c)) await syncCollection(ctx, c);
   }
   purgeSessions(ctx.db);
+  pruneBatterySamples(ctx.db);
 }
 
 export async function pollStatus(ctx: Ctx) {

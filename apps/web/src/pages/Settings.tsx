@@ -6,7 +6,7 @@ import { useAction, useSettings } from '../lib/hooks';
 import { APP_VERSION, CHANGELOG_URL } from '../lib/version';
 import { languages, useI18n, type Lang, type MsgKey } from '../i18n';
 import { ServerLogs } from '../components/ServerLogs';
-import { Button, Card, Field, SectionTitle, Segmented, Spinner, inputClass, useToast } from '../components/ui';
+import { Button, Card, Field, SectionTitle, Segmented, Spinner, Toggle, inputClass, useToast } from '../components/ui';
 
 type Tab = 'general' | 'immich' | 'security' | 'logs';
 
@@ -158,6 +158,20 @@ function HubSettings() {
   );
 }
 
+function StatsSettings() {
+  const { t } = useI18n();
+  const settings = useSettings();
+  const save = useAction((on: boolean) => api.put('/api/settings', { statsEnabled: on }), { invalidate: [['settings'], ['frames']] });
+  return (
+    <Card className="p-6">
+      <h2 className="text-lg font-bold">{t('settings.stats')}</h2>
+      <div className="mt-5">
+        <Toggle label={t('settings.stats_toggle')} hint={t('settings.stats_hint')} checked={!!settings.data?.statsEnabled} onChange={(on) => save.mutate(on)} />
+      </div>
+    </Card>
+  );
+}
+
 function PasswordSettings() {
   const { t } = useI18n();
   const [current, setCurrent] = useState('');
@@ -222,6 +236,7 @@ export function SettingsPage() {
         <div className="grid max-w-2xl gap-6">
           <LanguageSettings />
           <HubSettings />
+          <StatsSettings />
           {/* The sidebar shows the version on desktop; on mobile this is the only place. */}
           <a href={CHANGELOG_URL} target="_blank" rel="noreferrer" className="text-[12px] font-semibold text-muted hover:text-ink md:hidden">
             E-Ink Hub v{APP_VERSION}

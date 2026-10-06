@@ -12,6 +12,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pickNext } from './selection.js';
+import { recordBattery } from './stats.js';
 import { withWake } from './wake.js';
 
 export const HUB_GALLERY = 'hub';
@@ -43,6 +44,7 @@ export function infoToFrame(info: DeviceInfo): Partial<Frame> {
 }
 
 export function markOnline(db: DB, frameId: number, online: boolean, extra: Partial<Frame> = {}) {
+  if (typeof extra.battery === 'number') recordBattery(db, frameId, extra.battery);
   db.update(schema.frames)
     .set({ online, ...(online ? { lastSeen: Date.now() } : {}), ...extra })
     .where(eq(schema.frames.id, frameId))

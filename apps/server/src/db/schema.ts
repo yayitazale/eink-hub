@@ -137,6 +137,12 @@ export const history = sqliteTable('history', {
   battery: integer('battery'),
 });
 
+export const batterySamples = sqliteTable('battery_samples', {
+  frameId: integer('frame_id').notNull(),
+  at: integer('at').notNull(),
+  level: integer('level').notNull(),
+});
+
 export const settings = sqliteTable('settings', {
   key: text('key').primaryKey(),
   value: text('value').notNull(),

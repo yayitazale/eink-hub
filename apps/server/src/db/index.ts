@@ -146,6 +146,15 @@ export const migrations: string[] = [
   ALTER TABLE frames ADD COLUMN ble_mac TEXT;
   ALTER TABLE frames ADD COLUMN ble_auto_wake INTEGER NOT NULL DEFAULT 0;
   `,
+  // v7: battery level over time, recorded only while Settings → statistics is on.
+  `
+  CREATE TABLE battery_samples (
+    frame_id INTEGER NOT NULL,
+    at INTEGER NOT NULL,
+    level INTEGER NOT NULL
+  );
+  CREATE INDEX battery_samples_frame ON battery_samples(frame_id, at DESC);
+  `,
 ];
 
 function migrate(sqlite: Database.Database) {
