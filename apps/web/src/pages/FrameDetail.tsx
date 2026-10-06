@@ -12,7 +12,7 @@ import { AssignmentEditor } from '../components/AssignmentEditor';
 import { StatsTab } from '../components/StatsTab';
 import { SchedulePicker } from '../components/SchedulePicker';
 import { Button, Card, Field, Pill, Segmented, Spinner, Toggle, cx, inputClass } from '../components/ui';
-import { Battery, DOCS_URL, FrameStatus, TestPill } from './Frames';
+import { Battery, DOCS_URL, FrameStatus, KindPill, TestPill } from './Frames';
 
 type Tab = 'schedule' | 'mode' | 'connection' | 'history' | 'stats' | 'device' | 'settings';
 const TABS: Tab[] = ['schedule', 'mode', 'connection', 'history', 'stats', 'device', 'settings'];
@@ -148,7 +148,7 @@ function ConnectionTab({ frame }: { frame: Frame }) {
   );
 
   if (frame.kind === 'switchbot') {
-    const external = settings.data?.externalUrl ?? '';
+    const external = settings.data?.cloudUrlEffective ?? '';
     return (
       <div className="space-y-5">
         <p className="text-sm text-muted">{t('connection.switchbot_intro')}</p>
@@ -559,7 +559,7 @@ export function FrameDetail() {
             <div className="min-w-0">
               <h1 className="text-[28px] font-bold tracking-tight [overflow-wrap:anywhere]">{f.name}</h1>
               <div className="mt-1 flex items-center gap-3">
-                {f.simulated && <TestPill />}
+                {f.simulated ? <TestPill /> : <KindPill kind={f.kind} />}
                 <FrameStatus frame={f} />
                 <Battery value={f.battery} />
               </div>

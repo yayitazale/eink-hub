@@ -56,7 +56,7 @@ const es = {
   unsupported_for_kind: 'Este tipo de marco no admite esta acción',
   unknown_kind: 'Tipo de marco desconocido',
   switchbot_not_configured: 'Faltan el token, el secret o el dispositivo de SwitchBot',
-  switchbot_public_url: 'SwitchBot descarga la foto desde Internet: configura en Ajustes una URL externa con https',
+  switchbot_public_url: 'SwitchBot descarga la foto desde Internet: configura en Ajustes una dirección pública con https (externa o para marcos en la nube)',
   trmnl_mac_missing: 'Falta la dirección MAC del dispositivo TRMNL',
 };
 
@@ -114,7 +114,7 @@ const eu: Record<MsgKey, string> = {
   unsupported_for_kind: 'Marko mota honek ez du ekintza hau onartzen',
   unknown_kind: 'Marko mota ezezaguna',
   switchbot_not_configured: 'SwitchBot-en tokena, secreta edo gailua falta dira',
-  switchbot_public_url: 'SwitchBot-ek Internetetik deskargatzen du argazkia: konfiguratu https duen kanpo-URL bat Ezarpenetan',
+  switchbot_public_url: 'SwitchBot-ek Internetetik deskargatzen du argazkia: konfiguratu https duen helbide publiko bat Ezarpenetan (kanpokoa edo hodeiko markoetarakoa)',
   trmnl_mac_missing: 'TRMNL gailuaren MAC helbidea falta da',
 };
 
@@ -170,7 +170,7 @@ const en: Record<MsgKey, string> = {
   unsupported_for_kind: 'This kind of frame doesn’t support that',
   unknown_kind: 'Unknown kind of frame',
   switchbot_not_configured: 'The SwitchBot token, secret or device is missing',
-  switchbot_public_url: 'SwitchBot downloads the photo over the internet: set an https external URL in Settings',
+  switchbot_public_url: 'SwitchBot downloads the photo over the internet: set a public https address in Settings (external, or the one for cloud frames)',
   trmnl_mac_missing: 'The TRMNL device’s MAC address is missing',
 };
 

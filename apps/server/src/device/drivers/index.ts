@@ -1,6 +1,6 @@
 import type { DB } from '../../db/index.js';
 import type { Frame } from '../../db/schema.js';
-import { externalUrlSetting } from '../../lib/context.js';
+import { cloudUrlSetting } from '../../lib/context.js';
 import { Bloomin8Driver } from './bloomin8.js';
 import { OpenFrameDriver, TrmnlDriver } from './pull.js';
 import { SWITCHBOT_CAPABILITIES, SwitchBotDriver } from './switchbot.js';
@@ -14,7 +14,7 @@ export const isFrameKind = (v: unknown): v is FrameKind => frameKinds.includes(v
 export function driverFor(db: DB, frame: Frame): FrameDriver {
   switch (frame.kind) {
     case 'switchbot':
-      return new SwitchBotDriver(frame, { publicUrl: externalUrlSetting(db) });
+      return new SwitchBotDriver(frame, { publicUrl: cloudUrlSetting(db) });
     case 'openframe':
       return new OpenFrameDriver(frame);
     case 'trmnl':

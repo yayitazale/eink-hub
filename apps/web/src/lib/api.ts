@@ -167,6 +167,10 @@ export interface Settings {
   localUrlSource: 'settings' | 'env' | 'browser' | 'interface' | 'none';
   /** Optional reverse-proxy / Tailscale address; the welcome QR opens it. */
   externalUrl: string;
+  /** Public https address cloud frames (SwitchBot) download pictures from; empty = externalUrl. */
+  cloudUrl: string;
+  /** What is actually used: cloudUrl, else externalUrl. */
+  cloudUrlEffective: string;
   language: 'es' | 'eu' | 'en' | null;
   defaultFit: FitMode;
   /** Per-Canvas statistics tab on, and battery samples recorded. */

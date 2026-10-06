@@ -44,6 +44,17 @@ export function FrameStatus({ frame }: { frame: Frame }) {
   );
 }
 
+/** Which kind of frame it is, so a mixed collection of frames is easy to tell apart. */
+export function KindPill({ kind }: { kind: FrameKind }) {
+  const { t } = useI18n();
+  const Icon = { bloomin8: FrameIcon, switchbot: Cloud, trmnl: Tablet, openframe: Cpu }[kind];
+  return (
+    <Pill>
+      <Icon className="size-3" /> {t(`kind_short.${kind}`)}
+    </Pill>
+  );
+}
+
 export function TestPill() {
   const { t } = useI18n();
   return (
@@ -72,7 +83,7 @@ function FrameCard({ frame }: { frame: Frame }) {
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1.5">
           <span className="flex gap-1">
-            {frame.simulated && <TestPill />}
+            {frame.simulated ? <TestPill /> : <KindPill kind={frame.kind} />}
             <FrameStatus frame={frame} />
           </span>
           <Battery value={frame.battery} />

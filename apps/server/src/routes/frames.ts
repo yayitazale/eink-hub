@@ -9,7 +9,7 @@ import { describeKind, driverFor, isFrameKind, palettes, type DeviceAction, type
 import { infoToFrame } from '../device/drivers/bloomin8.js';
 import { SWITCHBOT_SIZES, SwitchBotApi, type SwitchBotSize } from '../device/drivers/switchbot.js';
 import { discover } from '../device/discovery.js';
-import { HttpError, detectLocalUrl, externalUrlSetting, localUrlSetting, qrUrl, type Ctx } from '../lib/context.js';
+import { HttpError, cloudUrlSetting, detectLocalUrl, localUrlSetting, qrUrl, type Ctx } from '../lib/context.js';
 import { prepareCollection } from '../lib/collections.js';
 import { assignmentOptions, chooseNextImage, displayImage, getAssignment, getFrame, markOnline, pushWelcome } from '../lib/display.js';
 import { wakeFrame, withWake } from '../lib/wake.js';
@@ -105,7 +105,7 @@ async function addOtherFrame(ctx: Ctx, req: FastifyRequest, b: AddFrameBody & { 
   let values: typeof schema.frames.$inferInsert;
   if (b.kind === 'switchbot') {
     if (!b.token?.trim() || !b.secret?.trim() || !b.deviceId?.trim()) throw new HttpError(400, 'switchbot_not_configured');
-    if (!/^https:\/\//.test(externalUrlSetting(db))) throw new HttpError(400, 'switchbot_public_url');
+    if (!/^https:\/\//.test(cloudUrlSetting(db))) throw new HttpError(400, 'switchbot_public_url');
     const dup = all.find((f) => f.kind === 'switchbot' && f.config?.deviceId === b.deviceId);
     if (dup) throw new HttpError(409, 'canvas_already_added', { name: dup.name });
     const config: FrameConfig = { token: b.token.trim(), secret: b.secret.trim(), deviceId: b.deviceId.trim() };

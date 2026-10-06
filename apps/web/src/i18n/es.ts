@@ -405,7 +405,7 @@ export const es = {
   'palette.spectra6': 'Spectra 6 colores, tramado',
   'palette.acep7': 'ACeP 7 colores, tramado',
   'connection.switchbot_intro': 'El Hub envía las fotos a la nube de SwitchBot, que las descarga desde la URL externa del Hub y se las pasa al marco en su siguiente conexión.',
-  'connection.switchbot_no_url': 'No hay una URL externa con https (Ajustes). SwitchBot no podrá descargar las fotos hasta que la haya.',
+  'connection.switchbot_no_url': 'No hay una dirección pública con https (Ajustes). SwitchBot no podrá descargar las fotos hasta que la haya.',
   'connection.device_id': 'Id del dispositivo SwitchBot',
   'connection.secret_keep': 'Déjalo vacío para mantener el guardado.',
   'connection.trmnl_intro': 'En la configuración Wi-Fi del dispositivo, elige un servidor personalizado e introduce esta dirección. El Hub lo vincula por su MAC.',
@@ -421,6 +421,12 @@ export const es = {
   'connection.notify_url': 'Se le avisa en',
   'send.sent_cloud': 'Enviado a la nube de SwitchBot: el marco la mostrará en su próxima conexión.',
   'send.queued_pull': 'En cola: el marco la recogerá la próxima vez que se despierte.',
+  'settings.cloud_url': 'Dirección pública para marcos en la nube (opcional)',
+  'settings.cloud_url_hint': 'La nube de SwitchBot descarga las fotos desde aquí: debe ser https y accesible desde Internet. Basta con exponer /u/img. Si está vacía, se usa la dirección pública de arriba.',
+  'kind_short.bloomin8': 'BLOOMIN8',
+  'kind_short.switchbot': 'SwitchBot',
+  'kind_short.trmnl': 'TRMNL',
+  'kind_short.openframe': 'DIY',
 };
 
 export type Messages = Record<keyof typeof es, string>;
