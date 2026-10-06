@@ -1,7 +1,8 @@
 import { desc, eq } from 'drizzle-orm';
 import { schema, type DB } from '../db/index.js';
 import type { Assignment, DisplayOptions, Frame, Image } from '../db/schema.js';
-import { DeviceError, FrameClient } from '../device/client.js';
+import { normalizeMac } from '../device/ble.js';
+import { DeviceError, FrameClient, type DeviceInfo } from '../device/client.js';
 import { HttpError, type Ctx } from './context.js';
 import { getImage, renderFor, type Rendered } from './images.js';
 import { renderWelcome } from '../imaging/welcome.js';
@@ -11,6 +12,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pickNext } from './selection.js';
+import { withWake } from './wake.js';
 
 export const HUB_GALLERY = 'hub';
 const HUB_GALLERY_KEEP = 20;
@@ -23,6 +25,21 @@ export function getFrame(db: DB, id: number): Frame {
 
 export function getAssignment(db: DB, frameId: number): Assignment | undefined {
   return db.select().from(schema.assignments).where(eq(schema.assignments.frameId, frameId)).get();
+}
+
+export function infoToFrame(info: DeviceInfo): Partial<Frame> {
+  const w = Number(info.width) || undefined;
+  const h = Number(info.height) || undefined;
+  const bleMac = normalizeMac(info.bt_mac);
+  return {
+    model: info.screen_model ?? info.board_model ?? null,
+    firmware: info.version ?? null,
+    battery: typeof info.battery === 'number' ? info.battery : null,
+    lastInfo: info,
+    // Store native resolution portrait-first regardless of how the device reports it.
+    ...(w && h ? { width: Math.min(w, h), height: Math.max(w, h) } : {}),
+    ...(bleMac ? { bleMac } : {}),
+  };
 }
 
 export function markOnline(db: DB, frameId: number, online: boolean, extra: Partial<Frame> = {}) {
@@ -116,14 +133,14 @@ export async function pushWelcome(ctx: Ctx, frame: Frame, hubUrl: string) {
 }
 
 /**
- * Show an image now if the frame is reachable; otherwise queue it so the next
- * pull (or the scheduler's next push retry) delivers it.
+ * Show an image now if the frame is reachable (waking it over Bluetooth if auto-wake is on);
+ * otherwise queue it so the next pull (or the scheduler's next push retry) delivers it.
  */
 export async function displayImage(ctx: Ctx, frameId: number, imageId: number, opts: DisplayOptions) {
   const frame = getFrame(ctx.db, frameId);
   const img = getImage(ctx.db, imageId);
   try {
-    await pushImage(ctx, frame, img, opts);
+    await withWake(ctx, frame, () => pushImage(ctx, frame, img, opts));
     return { method: 'push' as const };
   } catch (err) {
     if (!(err instanceof DeviceError && err.offline)) throw err;

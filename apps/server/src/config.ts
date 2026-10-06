@@ -20,6 +20,10 @@ export const config = {
   immichApiKey: process.env.IMMICH_API_KEY ?? '',
   webDist: process.env.WEB_DIST ?? path.resolve(import.meta.dirname, '../../web/dist'),
   schedulerEnabled: process.env.SCHEDULER_DISABLED !== 'true',
+  /** Bluetooth wake through the host's BlueZ (needs /run/dbus mounted). On unless BLE_DISABLED=true. */
+  bleEnabled: process.env.BLE_DISABLED !== 'true',
+  /** D-Bus system bus socket; DBUS_SYSTEM_BUS_ADDRESS (unix:path=…) wins, as in dbus-next. */
+  dbusSocket: (process.env.DBUS_SYSTEM_BUS_ADDRESS ?? '').match(/unix:path=([^,;]+)/)?.[1] ?? '/run/dbus/system_bus_socket',
 };
 
 export function ensureDirs() {

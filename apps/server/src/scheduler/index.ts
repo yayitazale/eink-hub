@@ -8,6 +8,7 @@ import { qrUrl, type Ctx } from '../lib/context.js';
 import { assignmentOptions, chooseNextImage, getAssignment, markOnline, pushImage, pushWelcome } from '../lib/display.js';
 import { getImage } from '../lib/images.js';
 import { isDue, nextRun } from '../lib/schedule.js';
+import { withWake } from '../lib/wake.js';
 import { refreshFrame } from '../routes/frames.js';
 
 /**
@@ -17,13 +18,16 @@ import { refreshFrame } from '../routes/frames.js';
 export async function tick(ctx: Ctx, now = new Date()) {
   const frames = ctx.db.select().from(schema.frames).where(eq(schema.frames.mode, 'push')).all();
   for (const frame of frames) {
+    // Only when there is something to send; never just to poll (battery).
+    const awake = (fn: () => Promise<void>) => withWake(ctx, frame, fn, { background: true });
     try {
       if (!frame.welcomeShown) {
-        await pushWelcome(ctx, frame, qrUrl(ctx.db));
+        await awake(() => pushWelcome(ctx, frame, qrUrl(ctx.db)));
         continue;
       }
       if (frame.pendingImageId) {
-        await pushImage(ctx, frame, getImage(ctx.db, frame.pendingImageId), frame.pendingOpts ?? {});
+        const pending = getImage(ctx.db, frame.pendingImageId);
+        await awake(() => pushImage(ctx, frame, pending, frame.pendingOpts ?? {}));
         continue;
       }
       const a = getAssignment(ctx.db, frame.id);
@@ -31,7 +35,7 @@ export async function tick(ctx: Ctx, now = new Date()) {
       await prepareCollection(ctx, a.collectionId);
       const imageId = chooseNextImage(ctx.db, frame, a);
       if (!imageId) continue;
-      await pushImage(ctx, frame, getImage(ctx.db, imageId), assignmentOptions(ctx.db, a));
+      await awake(() => pushImage(ctx, frame, getImage(ctx.db, imageId), assignmentOptions(ctx.db, a)));
       ctx.db
         .update(schema.assignments)
         .set({ lastChange: now.getTime(), nextChange: nextRun(a.schedule, now, a)?.getTime() ?? null })

@@ -26,6 +26,8 @@ export interface DeviceInfo {
   gallery?: string;
   playlist?: string;
   play_type?: number;
+  /** Bluetooth address without separators, e.g. "F49042163F47". */
+  bt_mac?: string;
   [key: string]: unknown;
 }
 

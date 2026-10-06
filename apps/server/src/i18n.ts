@@ -46,6 +46,11 @@ const es = {
   memory_year_ago: 'Un día como hoy hace 1 año',
   memory_years_ago: 'Un día como hoy hace {n} años',
   test_canvas_name: 'Canvas de prueba',
+  ble_no_mac: 'No se conoce la dirección Bluetooth de este Canvas',
+  ble_mac_invalid: 'Dirección Bluetooth no válida (AA:BB:CC:DD:EE:FF)',
+  ble_unavailable: 'El Bluetooth del Hub no está disponible',
+  ble_wake_failed: 'No se pudo despertar por Bluetooth: {detail}',
+  ble_woke_no_reply: 'Se envió la señal por Bluetooth, pero el Canvas no respondió por Wi-Fi',
 };
 
 export type MsgKey = keyof typeof es;
@@ -92,6 +97,11 @@ const eu: Record<MsgKey, string> = {
   memory_year_ago: 'Duela urte bat, gaur bezalako egun batean',
   memory_years_ago: 'Duela {n} urte, gaur bezalako egun batean',
   test_canvas_name: 'Proba-Canvasa',
+  ble_no_mac: 'Ez da ezagutzen Canvas honen Bluetooth helbidea',
+  ble_mac_invalid: 'Bluetooth helbide baliogabea (AA:BB:CC:DD:EE:FF)',
+  ble_unavailable: 'Hub-aren Bluetootha ez dago eskuragarri',
+  ble_wake_failed: 'Ezin izan da Bluetooth bidez esnatu: {detail}',
+  ble_woke_no_reply: 'Bluetooth seinalea bidali da, baina Canvasak ez du Wi-Fi bidez erantzun',
 };
 
 const en: Record<MsgKey, string> = {
@@ -136,6 +146,11 @@ const en: Record<MsgKey, string> = {
   memory_year_ago: 'On this day 1 year ago',
   memory_years_ago: 'On this day {n} years ago',
   test_canvas_name: 'Test Canvas',
+  ble_no_mac: 'The Bluetooth address of this Canvas is unknown',
+  ble_mac_invalid: 'Invalid Bluetooth address (AA:BB:CC:DD:EE:FF)',
+  ble_unavailable: 'The hub’s Bluetooth is not available',
+  ble_wake_failed: 'Could not wake over Bluetooth: {detail}',
+  ble_woke_no_reply: 'The Bluetooth wake was sent, but the Canvas did not answer over Wi-Fi',
 };
 
 const catalogues: Record<Lang, Record<MsgKey, string>> = { es, eu, en };

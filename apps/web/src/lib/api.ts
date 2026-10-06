@@ -58,7 +58,16 @@ export interface Frame {
   assignment: Assignment | null;
   /** A simulated Canvas running inside the hub. */
   simulated?: boolean;
+  /** Bluetooth address used to wake it ("AA:BB:CC:DD:EE:FF"). */
+  bleMac: string | null;
+  /** Wake over the hub's Bluetooth before sending when asleep. */
+  bleAutoWake: boolean;
 }
+
+/** Whether the hub itself can use the host's Bluetooth. */
+export type BleStatus =
+  | { available: true; adapter: string }
+  | { available: false; reason: 'disabled' | 'no_dbus' | 'no_bluez' | 'no_adapter' | 'powered_off'; detail?: string };
 
 export interface Image {
   id: number;

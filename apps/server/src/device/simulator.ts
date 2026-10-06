@@ -96,6 +96,8 @@ export async function startSimulator(o: SimulatorOptions = {}): Promise<Simulato
     height,
     sta_ssid: 'fake',
     sta_ip: `127.0.0.1:${port}`,
+    // Locally administered address, so it can never be a real Canvas.
+    bt_mac: `0200000${port.toString(16).padStart(5, '0')}`.toUpperCase(),
     image: state.currentPath,
     next_time: state.pull.next_cron_time,
     gallery: 'default',
