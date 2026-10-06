@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { CheckCircle2, Images, ScrollText, ShieldCheck, SlidersHorizontal, XCircle } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { useAction, useSettings } from '../lib/hooks';
 import { APP_VERSION, CHANGELOG_URL } from '../lib/version';
 import { languages, useI18n, type Lang, type MsgKey } from '../i18n';
-import { Button, Card, Field, SectionTitle, Spinner, inputClass, useToast } from '../components/ui';
+import { ServerLogs } from '../components/ServerLogs';
+import { Button, Card, Field, SectionTitle, Segmented, Spinner, inputClass, useToast } from '../components/ui';
+
+type Tab = 'general' | 'immich' | 'security' | 'logs';
 
 function LanguageSettings() {
   const { t, lang, setLang } = useI18n();
@@ -193,20 +196,49 @@ function PasswordSettings() {
 export function SettingsPage() {
   const { t } = useI18n();
   const settings = useSettings();
+  const [tab, setTab] = useState<Tab>('general');
   if (settings.isLoading) return <Spinner />;
+  const label = (icon: ReactNode, text: string) => (
+    <span className="inline-flex items-center gap-1.5">
+      {icon}
+      {text}
+    </span>
+  );
   return (
     <>
       <SectionTitle title={t('nav.settings')} />
-      <div className="grid max-w-2xl gap-6">
-        <LanguageSettings />
-        <ImmichSettings />
-        <HubSettings />
-        <PasswordSettings />
-        {/* The sidebar shows the version on desktop; on mobile this is the only place. */}
-        <a href={CHANGELOG_URL} target="_blank" rel="noreferrer" className="text-[12px] font-semibold text-muted hover:text-ink md:hidden">
-          E-Ink Hub v{APP_VERSION}
-        </a>
-      </div>
+      <Segmented
+        value={tab}
+        onChange={setTab}
+        className="mb-6 max-w-full overflow-x-auto scrollbar-none"
+        options={[
+          { value: 'general', label: label(<SlidersHorizontal className="size-3.5" />, t('settings.tab_general')) },
+          { value: 'immich', label: label(<Images className="size-3.5" />, 'Immich') },
+          { value: 'security', label: label(<ShieldCheck className="size-3.5" />, t('settings.tab_security')) },
+          { value: 'logs', label: label(<ScrollText className="size-3.5" />, t('settings.tab_logs')) },
+        ]}
+      />
+      {tab === 'general' && (
+        <div className="grid max-w-2xl gap-6">
+          <LanguageSettings />
+          <HubSettings />
+          {/* The sidebar shows the version on desktop; on mobile this is the only place. */}
+          <a href={CHANGELOG_URL} target="_blank" rel="noreferrer" className="text-[12px] font-semibold text-muted hover:text-ink md:hidden">
+            E-Ink Hub v{APP_VERSION}
+          </a>
+        </div>
+      )}
+      {tab === 'immich' && (
+        <div className="max-w-2xl">
+          <ImmichSettings />
+        </div>
+      )}
+      {tab === 'security' && (
+        <div className="max-w-2xl">
+          <PasswordSettings />
+        </div>
+      )}
+      {tab === 'logs' && <ServerLogs />}
     </>
   );
 }

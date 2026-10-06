@@ -6,7 +6,7 @@ import { restoreTestCanvases, stopTestCanvases } from './lib/simulators.js';
 
 ensureDirs();
 const db = openDb(config.dbPath);
-const { app, ctx } = await buildApp(db);
+const { app, ctx } = await buildApp(db, { logDir: config.dataDir });
 const stopScheduler = config.schedulerEnabled ? startScheduler(ctx) : () => {};
 
 for (const sig of ['SIGINT', 'SIGTERM'] as const) {

@@ -93,6 +93,7 @@ export async function pushImage(ctx: Ctx, frame: Frame, img: Image, opts: Displa
     pendingImageId: null,
     pendingOpts: null,
   });
+  ctx.log.info({ frame: frame.id, imageId: img.id }, `image pushed to ${frame.name}`);
   pruneHubGallery(client).catch((err) => ctx.log.debug({ err }, 'hub gallery prune failed'));
 }
 
@@ -130,6 +131,7 @@ export async function pushWelcome(ctx: Ctx, frame: Frame, hubUrl: string) {
   const r = await renderWelcomeFor(ctx.db, frame, hubUrl);
   await new FrameClient(frame.host).upload(r.buf, r.deviceName, { gallery: HUB_GALLERY, showNow: true });
   markOnline(ctx.db, frame.id, true, { welcomeShown: true, currentImageId: null, currentRender: r.hash });
+  ctx.log.info({ frame: frame.id }, `welcome picture shown on ${frame.name}`);
 }
 
 /**

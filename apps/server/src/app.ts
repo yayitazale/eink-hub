@@ -14,12 +14,14 @@ import { requestLang, tr } from './i18n.js';
 import { frameRoutes } from './routes/frames.js';
 import { immichRoutes } from './routes/immich.js';
 import { libraryRoutes } from './routes/library.js';
+import { logRoutes } from './routes/logs.js';
+import { createLogStream } from './lib/logbuffer.js';
 import { upstreamRoutes } from './upstream/routes.js';
 import { APP_VERSION } from './version.js';
 
-export async function buildApp(db: DB, opts: { logger?: boolean } = {}) {
+export async function buildApp(db: DB, opts: { logger?: boolean; logDir?: string } = {}) {
   const app = Fastify({
-    logger: opts.logger === false ? false : { level: process.env.LOG_LEVEL ?? 'info' },
+    logger: opts.logger === false ? false : { level: process.env.LOG_LEVEL ?? 'info', stream: createLogStream(opts.logDir) },
     trustProxy: true,
     bodyLimit: 10 * 1024 * 1024,
   });
@@ -45,6 +47,7 @@ export async function buildApp(db: DB, opts: { logger?: boolean } = {}) {
   frameRoutes(app, ctx);
   libraryRoutes(app, ctx);
   immichRoutes(app, ctx);
+  logRoutes(app, ctx);
 
   if (fs.existsSync(path.join(config.webDist, 'index.html'))) {
     await app.register(fastifyStatic, { root: config.webDist, wildcard: false });

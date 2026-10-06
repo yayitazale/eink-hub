@@ -34,6 +34,15 @@ export interface Assignment {
   lastChange: number | null;
 }
 
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export interface LogEntry {
+  t: number;
+  level: LogLevel;
+  msg: string;
+  frame?: number;
+  data?: Record<string, unknown>;
+}
+
 export interface Frame {
   id: number;
   name: string;

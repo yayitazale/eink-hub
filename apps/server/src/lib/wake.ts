@@ -47,6 +47,7 @@ export async function wakeFrame(ctx: Ctx, frame: Frame, timing = { settleMs: WAK
     const status = await bleStatus();
     if (!status.available) throw new HttpError(503, 'ble_unavailable');
     try {
+      ctx.log.info({ frame: frame.id }, `bluetooth wake pulse sent to ${frame.name}`);
       await bleWake(frame.bleMac);
     } catch (err) {
       if (err instanceof BleError) throw new HttpError(502, 'ble_wake_failed', { detail: err.message });
@@ -56,6 +57,7 @@ export async function wakeFrame(ctx: Ctx, frame: Frame, timing = { settleMs: WAK
     if (!info) throw new HttpError(504, 'ble_woke_no_reply');
   }
   markOnline(ctx.db, frame.id, true, infoToFrame(info));
+  ctx.log.info({ frame: frame.id }, `${frame.name} is awake`);
   return getFrame(ctx.db, frame.id);
 }
 

@@ -168,6 +168,7 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
   app.post<{ Params: { id: string; action: (typeof ACTIONS)[number] } }>('/api/frames/:id/actions/:action', async (req) => {
     const frame = getFrame(db, +req.params.id);
     const c = new FrameClient(frame.host);
+    ctx.log.info({ frame: frame.id }, `action "${req.params.action}" on ${frame.name}`);
     // Asleep and auto-wake on: wake over Bluetooth and retry once. Still no answer: it is asleep
     // (the UI then offers Wake instead of Sleep).
     const awake = <T>(fn: () => Promise<T>) =>
@@ -192,6 +193,7 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
         const playlist = db.select({ name: schema.collections.name }).from(schema.collections).where(eq(schema.collections.id, a.collectionId)).get()?.name;
         if (!imageId) throw new HttpError(409, 'playlist_empty', { name: playlist ?? '' });
         const { method } = await displayImage(ctx, frame.id, imageId, assignmentOptions(db, a));
+        ctx.log.info({ frame: frame.id, imageId, playlist, method }, `manual schedule trigger on ${frame.name}`);
         const now = new Date();
         db.update(schema.assignments)
           .set({ lastChange: now.getTime(), nextChange: nextRun(a.schedule, now, a)?.getTime() ?? null })

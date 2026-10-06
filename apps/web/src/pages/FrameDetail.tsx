@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Bluetooth, Eraser, Moon, Play, RefreshCw, RotateCcw, SkipForward, Smartphone, Trash2 } from 'lucide-react';
+import { ArrowLeft, Bluetooth, Download, Eraser, Moon, Play, RefreshCw, RotateCcw, SkipForward, Smartphone, Trash2 } from 'lucide-react';
 import { api, thumbUrl, type Frame, type HistoryEntry, type Schedule } from '../lib/api';
 import { dateTime, relativeTime } from '../lib/format';
 import { useAction, useBleStatus, useFrame, useSettings } from '../lib/hooks';
@@ -442,9 +442,14 @@ export function FrameDetail() {
                 <Battery value={f.battery} />
               </div>
             </div>
-            <Button size="sm" variant="ghost" icon={<RefreshCw className="size-4" />} loading={refresh.isPending} onClick={() => refresh.mutate()}>
-              {t('detail.refresh')}
-            </Button>
+            <div className="flex gap-1">
+              <Button size="sm" variant="ghost" icon={<Download className="size-4" />} title={t('detail.download_log_hint')} onClick={() => (window.location.href = `/api/frames/${id}/log`)}>
+                {t('detail.download_log')}
+              </Button>
+              <Button size="sm" variant="ghost" icon={<RefreshCw className="size-4" />} loading={refresh.isPending} onClick={() => refresh.mutate()}>
+                {t('detail.refresh')}
+              </Button>
+            </div>
           </div>
 
           <Card className="grid grid-cols-2 gap-4 p-5 sm:grid-cols-4">

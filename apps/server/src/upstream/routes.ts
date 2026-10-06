@@ -95,6 +95,7 @@ export function upstreamRoutes(app: FastifyInstance, ctx: Ctx) {
           .values({ frameId: frame.id, imageId, shownAt: now.getTime(), method: 'pull', pullId: req.query.pull_id ?? null, battery })
           .run();
         ctx.db.update(schema.frames).set({ pendingImageId: null, pendingOpts: null, welcomeShown: true }).where(eq(schema.frames.id, frame.id)).run();
+        req.log.info({ frame: frame.id, imageId, pullId: req.query.pull_id }, `eink_pull: image served to ${frame.name}`);
         if (active && due) ctx.db.update(schema.assignments).set({ lastChange: now.getTime() }).where(eq(schema.assignments.id, active.id)).run();
         return {
           status: 200,
