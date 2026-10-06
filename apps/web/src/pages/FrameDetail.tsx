@@ -350,9 +350,18 @@ export function FrameDetail() {
   const id = Number(useParams().id);
   const frame = useFrame(id);
   const [tab, setTab] = useState<Tab>('schedule');
-  const action = useAction((a: string) => api.post<{ ok: boolean; queued?: boolean }>(`/api/frames/${id}/actions/${a}`), {
-    success: (r) => t(r?.queued ? 'detail.clear_queued' : 'common.done'),
-  });
+  const action = useAction(
+    (a: string) => api.post<{ ok: boolean; queued?: boolean; playlist?: string }>(`/api/frames/${id}/actions/${a}`).then((r) => ({ ...r, a })),
+    {
+      success: (r) => {
+        const name = r.playlist ?? '';
+        if (r.a === 'next') return r.playlist ? t(r.queued ? 'detail.next_queued' : 'detail.next_done', { name }) : t('detail.next_gallery');
+        if (r.a === 'clear') return t(r.queued ? 'detail.clear_queued' : 'detail.clear_done');
+        if (r.a === 'reboot') return t('detail.reboot_done');
+        return t('common.done');
+      },
+    },
+  );
   const refresh = useAction(() => api.post(`/api/frames/${id}/refresh`), {});
   const ble = useBleStatus();
   const wake = useAction(() => api.post(`/api/frames/${id}/actions/wake`), { success: t('detail.woken') });
