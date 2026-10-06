@@ -1,4 +1,4 @@
-# E-Ink Hub
+# <img src="docs/logo.png" alt="" width="40" align="absmiddle" /> E-Ink Hub
 
 Self-hosted control center for e-ink photo frames (currently **BLOOMIN8 E-Ink Canvas**), with **Immich** integration.
 A single Docker container (Node + SQLite) with a web UI inspired by the official BLOOMIN8 app.

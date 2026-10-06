@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Bluetooth, Eraser, Moon, Play, RefreshCw, RotateCcw, SkipForward, Smartphone, Trash2 } from 'lucide-react';
+import { ArrowLeft, Bluetooth, Download, Eraser, Moon, Play, RefreshCw, RotateCcw, SkipForward, Smartphone, Trash2 } from 'lucide-react';
 import { api, thumbUrl, type Frame, type HistoryEntry, type Schedule } from '../lib/api';
 import { dateTime, relativeTime } from '../lib/format';
 import { useAction, useBleStatus, useFrame, useSettings } from '../lib/hooks';
@@ -9,11 +9,12 @@ import { isPickerCancelled, phoneWakeSupport, wakeWithThisDevice } from '../lib/
 import { useI18n, type MsgKey } from '../i18n';
 import { FrameMockup } from '../components/FrameMockup';
 import { AssignmentEditor } from '../components/AssignmentEditor';
+import { StatsTab } from '../components/StatsTab';
 import { SchedulePicker } from '../components/SchedulePicker';
 import { Button, Card, Field, Pill, Segmented, Spinner, Toggle, cx, inputClass } from '../components/ui';
 import { Battery, FrameStatus, TestPill } from './Frames';
 
-type Tab = 'schedule' | 'mode' | 'history' | 'device' | 'settings';
+type Tab = 'schedule' | 'mode' | 'history' | 'stats' | 'device' | 'settings';
 
 function Info({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -350,11 +351,21 @@ export function FrameDetail() {
   const id = Number(useParams().id);
   const frame = useFrame(id);
   const [tab, setTab] = useState<Tab>('schedule');
-  const action = useAction((a: string) => api.post<{ ok: boolean; queued?: boolean }>(`/api/frames/${id}/actions/${a}`), {
-    success: (r) => t(r?.queued ? 'detail.clear_queued' : 'common.done'),
-  });
+  const action = useAction(
+    (a: string) => api.post<{ ok: boolean; queued?: boolean; playlist?: string }>(`/api/frames/${id}/actions/${a}`).then((r) => ({ ...r, a })),
+    {
+      success: (r) => {
+        const name = r.playlist ?? '';
+        if (r.a === 'next') return r.playlist ? t(r.queued ? 'detail.next_queued' : 'detail.next_done', { name }) : t('detail.next_gallery');
+        if (r.a === 'clear') return t(r.queued ? 'detail.clear_queued' : 'detail.clear_done');
+        if (r.a === 'reboot') return t('detail.reboot_done');
+        return t('common.done');
+      },
+    },
+  );
   const refresh = useAction(() => api.post(`/api/frames/${id}/refresh`), {});
   const ble = useBleStatus();
+  const settings = useSettings();
   const wake = useAction(() => api.post(`/api/frames/${id}/actions/wake`), { success: t('detail.woken') });
   // Pulse from this phone, then wait for the Canvas to show up on Wi-Fi.
   const phoneWake = useAction(
@@ -433,9 +444,14 @@ export function FrameDetail() {
                 <Battery value={f.battery} />
               </div>
             </div>
-            <Button size="sm" variant="ghost" icon={<RefreshCw className="size-4" />} loading={refresh.isPending} onClick={() => refresh.mutate()}>
-              {t('detail.refresh')}
-            </Button>
+            <div className="flex gap-1">
+              <Button size="sm" variant="ghost" icon={<Download className="size-4" />} title={t('detail.download_log_hint')} onClick={() => (window.location.href = `/api/frames/${id}/log`)}>
+                {t('detail.download_log')}
+              </Button>
+              <Button size="sm" variant="ghost" icon={<RefreshCw className="size-4" />} loading={refresh.isPending} onClick={() => refresh.mutate()}>
+                {t('detail.refresh')}
+              </Button>
+            </div>
           </div>
 
           <Card className="grid grid-cols-2 gap-4 p-5 sm:grid-cols-4">
@@ -457,6 +473,7 @@ export function FrameDetail() {
               { value: 'schedule', label: t('nav.schedule') },
               { value: 'mode', label: t('detail.tab_mode') },
               { value: 'history', label: t('detail.tab_history') },
+              ...(settings.data?.statsEnabled ? [{ value: 'stats' as const, label: t('detail.tab_stats') }] : []),
               { value: 'device', label: t('detail.tab_device') },
               { value: 'settings', label: t('nav.settings') },
             ]}
@@ -465,6 +482,7 @@ export function FrameDetail() {
             {tab === 'schedule' && <AssignmentEditor key={f.assignment?.id ?? 'new'} frame={f} />}
             {tab === 'mode' && <ModeTab frame={f} />}
             {tab === 'history' && <HistoryTab frame={f} />}
+            {tab === 'stats' && settings.data?.statsEnabled && <StatsTab frame={f} />}
             {tab === 'device' && <DeviceTab frame={f} />}
             {tab === 'settings' && <SettingsTab frame={f} />}
           </Card>

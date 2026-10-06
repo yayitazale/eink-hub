@@ -2,7 +2,7 @@ import type { Schedule } from './api';
 import type { TFunction } from '../i18n';
 
 /** Active BCP 47 locale; set by the I18nProvider whenever the language changes. */
-let locale = 'es-ES';
+let locale = 'en-GB';
 export function setFormatLocale(l: string) {
   locale = l;
 }

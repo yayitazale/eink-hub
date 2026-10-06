@@ -168,7 +168,8 @@ export function Modal({
   onClose: () => void;
   title: string;
   children: ReactNode;
-  wide?: boolean;
+  /** `true`: room for a cropper (4xl); `'md'`: a form next to a small preview (2xl). */
+  wide?: boolean | 'md';
 }) {
   const { t } = useI18n();
   useEffect(() => {
@@ -183,7 +184,7 @@ export function Modal({
       <div
         className={cx(
           'flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[28px] bg-surface shadow-lift sm:rounded-[28px]',
-          wide ? 'sm:max-w-4xl' : 'sm:max-w-lg',
+          wide === 'md' ? 'sm:max-w-2xl' : wide ? 'sm:max-w-4xl' : 'sm:max-w-lg',
         )}
         onClick={(e) => e.stopPropagation()}
       >

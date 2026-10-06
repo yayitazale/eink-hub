@@ -15,6 +15,7 @@ import { localUrlSetting, qrUrl, type Ctx } from '../lib/context.js';
 import { assignmentOptions, chooseNextImage, getAssignment, renderWelcomeFor } from '../lib/display.js';
 import { getImage, renderFor } from '../lib/images.js';
 import { firstRun, isDue, nextRun } from '../lib/schedule.js';
+import { recordBattery } from '../lib/stats.js';
 import { prepareCollection } from '../lib/collections.js';
 
 const iso = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z');
@@ -48,6 +49,7 @@ export function upstreamRoutes(app: FastifyInstance, ctx: Ctx) {
         .where(eq(schema.frames.id, frame.id))
         .run();
 
+      if (battery !== null && Number.isFinite(battery)) recordBattery(ctx.db, frame.id, battery);
       const a = getAssignment(ctx.db, frame.id);
       const active = a?.enabled ? a : undefined;
       let imageId: number | null = null;
@@ -95,6 +97,7 @@ export function upstreamRoutes(app: FastifyInstance, ctx: Ctx) {
           .values({ frameId: frame.id, imageId, shownAt: now.getTime(), method: 'pull', pullId: req.query.pull_id ?? null, battery })
           .run();
         ctx.db.update(schema.frames).set({ pendingImageId: null, pendingOpts: null, welcomeShown: true }).where(eq(schema.frames.id, frame.id)).run();
+        req.log.info({ frame: frame.id, imageId, pullId: req.query.pull_id }, `eink_pull: image served to ${frame.name}`);
         if (active && due) ctx.db.update(schema.assignments).set({ lastChange: now.getTime() }).where(eq(schema.assignments.id, active.id)).run();
         return {
           status: 200,

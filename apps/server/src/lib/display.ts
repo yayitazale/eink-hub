@@ -12,6 +12,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pickNext } from './selection.js';
+import { recordBattery } from './stats.js';
 import { withWake } from './wake.js';
 
 export const HUB_GALLERY = 'hub';
@@ -43,6 +44,7 @@ export function infoToFrame(info: DeviceInfo): Partial<Frame> {
 }
 
 export function markOnline(db: DB, frameId: number, online: boolean, extra: Partial<Frame> = {}) {
+  if (typeof extra.battery === 'number') recordBattery(db, frameId, extra.battery);
   db.update(schema.frames)
     .set({ online, ...(online ? { lastSeen: Date.now() } : {}), ...extra })
     .where(eq(schema.frames.id, frameId))
@@ -93,6 +95,7 @@ export async function pushImage(ctx: Ctx, frame: Frame, img: Image, opts: Displa
     pendingImageId: null,
     pendingOpts: null,
   });
+  ctx.log.info({ frame: frame.id, imageId: img.id }, `image pushed to ${frame.name}`);
   pruneHubGallery(client).catch((err) => ctx.log.debug({ err }, 'hub gallery prune failed'));
 }
 
@@ -130,6 +133,7 @@ export async function pushWelcome(ctx: Ctx, frame: Frame, hubUrl: string) {
   const r = await renderWelcomeFor(ctx.db, frame, hubUrl);
   await new FrameClient(frame.host).upload(r.buf, r.deviceName, { gallery: HUB_GALLERY, showNow: true });
   markOnline(ctx.db, frame.id, true, { welcomeShown: true, currentImageId: null, currentRender: r.hash });
+  ctx.log.info({ frame: frame.id }, `welcome picture shown on ${frame.name}`);
 }
 
 /**

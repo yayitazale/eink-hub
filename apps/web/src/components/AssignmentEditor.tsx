@@ -3,7 +3,8 @@ import { History } from 'lucide-react';
 import { api, type Assignment, type FitMode, type Frame, type OrderMode, type Schedule } from '../lib/api';
 import { useAction, useCollections } from '../lib/hooks';
 import { SchedulePicker } from './SchedulePicker';
-import { useI18n } from '../i18n';
+import { useI18n, type MsgKey } from '../i18n';
+import { BgPicker } from './BgPicker';
 import { Button, Field, Segmented, Toggle, inputClass } from './ui';
 
 const DEFAULT_SCHEDULE: Schedule = { kind: 'days', days: 1, at: '07:00' };
@@ -20,6 +21,7 @@ export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: (
   const [from, setFrom] = useState(a?.activeFrom ?? '08:00');
   const [to, setTo] = useState(a?.activeTo ?? '23:00');
   const [fit, setFit] = useState<FitMode>(a?.fit ?? 'cover');
+  const [bg, setBg] = useState(a?.bg ?? '#ffffff');
   const [showDate, setShowDate] = useState(a?.showDate ?? false);
   const [enabled, setEnabled] = useState(a?.enabled ?? true);
 
@@ -46,6 +48,7 @@ export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: (
         activeFrom: hourly && windowOn ? from : null,
         activeTo: hourly && windowOn ? to : null,
         fit,
+        bg,
         showDate,
         enabled,
       }),
@@ -104,7 +107,8 @@ export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: (
             </Field>
           )}
 
-          <Field label={t('assign.fit')} hint={t('assign.fit_hint')} group>
+          <Field label={t('assign.fit')} group>
+            <p className="mb-2 text-xs text-muted">{t('assign.fit_hint')}</p>
             <Segmented
               fill
               value={fit}
@@ -115,6 +119,12 @@ export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: (
                 { value: 'blur', label: t('fit.blur') },
               ]}
             />
+            <p className="mt-2 text-sm text-muted">{t(`send.${fit === 'cover' ? 'auto' : fit}_hint` as MsgKey)}</p>
+            {fit === 'contain' && (
+              <div className="mt-3">
+                <BgPicker value={bg} onChange={setBg} />
+              </div>
+            )}
           </Field>
 
           <div className="space-y-4 rounded-2xl bg-surface-2 p-4">

@@ -20,7 +20,7 @@ export const isLang = (v: unknown): v is Lang => languages.some((l) => l.code ==
 const localeOf = (lang: Lang) => languages.find((l) => l.code === lang)!.locale;
 
 /** Current language for code outside React (API client header). */
-let current: Lang = 'es';
+let current: Lang = 'en';
 export const currentLang = () => current;
 
 function initialLang(): Lang {
@@ -29,7 +29,7 @@ function initialLang(): Lang {
     if (isLang(saved)) return saved;
   } catch {}
   const nav = navigator.language.slice(0, 2).toLowerCase();
-  return isLang(nav) ? nav : 'es';
+  return isLang(nav) ? nav : 'en';
 }
 
 function apply(lang: Lang) {

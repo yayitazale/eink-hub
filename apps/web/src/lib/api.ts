@@ -34,6 +34,15 @@ export interface Assignment {
   lastChange: number | null;
 }
 
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export interface LogEntry {
+  t: number;
+  level: LogLevel;
+  msg: string;
+  frame?: number;
+  data?: Record<string, unknown>;
+}
+
 export interface Frame {
   id: number;
   name: string;
@@ -125,6 +134,8 @@ export interface Settings {
   externalUrl: string;
   language: 'es' | 'eu' | 'en' | null;
   defaultFit: FitMode;
+  /** Per-Canvas statistics tab on, and battery samples recorded. */
+  statsEnabled: boolean;
 }
 
 export class ApiError extends Error {
