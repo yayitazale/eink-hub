@@ -24,7 +24,13 @@ ENV NODE_ENV=production \
     PORT=8080 \
     TZ=Europe/Madrid
 # Fonts for text drawn on photos (date captions); the slim image has none.
-RUN apt-get update && apt-get install -y --no-install-recommends fontconfig fonts-inter && rm -rf /var/lib/apt/lists/*
+# `upgrade` pulls Debian security fixes newer than the base image.
+# npm, npx, corepack and yarn are only needed to build: removing them from the
+# runtime image drops the CVEs in their own bundled dependencies.
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends fontconfig fonts-inter \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-* \
+    && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/apps/server/package.json ./apps/server/
