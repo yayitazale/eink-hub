@@ -8,17 +8,18 @@ export function FrameMockup({
   src,
   className,
 }: {
-  frame: Pick<Frame, 'orientation' | 'currentRender' | 'currentImageId' | 'width' | 'height'>;
+  frame: Pick<Frame, 'orientation' | 'currentRender' | 'currentImageId' | 'width' | 'height'> & { kind?: Frame['kind'] };
   src?: string | null;
   className?: string;
 }) {
   const landscape = frame.orientation === 'landscape';
   const short = Math.min(frame.width, frame.height);
   const long = Math.max(frame.width, frame.height);
-  // Renders are stored portrait; for landscape frames show the un-rotated thumbnail instead.
+  // BLOOMIN8 renders are stored portrait; for landscape ones show the un-rotated thumbnail instead.
+  const rotated = landscape && (frame.kind ?? 'bloomin8') === 'bloomin8';
   const image =
     src ??
-    (frame.currentRender && !landscape
+    (frame.currentRender && !rotated
       ? renderUrl(frame.currentRender)
       : frame.currentImageId
         ? thumbUrl(frame.currentImageId)

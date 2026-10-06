@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Bluetooth, Download, Eraser, Moon, Play, RefreshCw, RotateCcw, SkipForward, Smartphone, Trash2 } from 'lucide-react';
-import { api, thumbUrl, type Frame, type HistoryEntry, type Schedule } from '../lib/api';
+import { ArrowLeft, Bluetooth, Copy, Download, Eraser, Moon, Play, RefreshCw, RotateCcw, SkipForward, Smartphone, Trash2 } from 'lucide-react';
+import { api, thumbUrl, type Frame, type HistoryEntry, type ImageFormat, type Schedule } from '../lib/api';
 import { dateTime, relativeTime } from '../lib/format';
 import { useAction, useBleStatus, useFrame, useSettings } from '../lib/hooks';
 import { isPickerCancelled, phoneWakeSupport, wakeWithThisDevice } from '../lib/webBluetooth';
@@ -12,9 +12,10 @@ import { AssignmentEditor } from '../components/AssignmentEditor';
 import { StatsTab } from '../components/StatsTab';
 import { SchedulePicker } from '../components/SchedulePicker';
 import { Button, Card, Field, Pill, Segmented, Spinner, Toggle, cx, inputClass } from '../components/ui';
-import { Battery, FrameStatus, TestPill } from './Frames';
+import { Battery, DOCS_URL, FrameStatus, TestPill } from './Frames';
 
-type Tab = 'schedule' | 'mode' | 'history' | 'stats' | 'device' | 'settings';
+type Tab = 'schedule' | 'mode' | 'connection' | 'history' | 'stats' | 'device' | 'settings';
+const TABS: Tab[] = ['schedule', 'mode', 'connection', 'history', 'stats', 'device', 'settings'];
 
 function Info({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -95,6 +96,115 @@ function ModeTab({ frame }: { frame: Frame }) {
 
       {!unchangedPush && <p className="text-xs text-muted">{t('mode.wake_first')}</p>}
       <Button variant="primary" loading={save.isPending} disabled={unchangedPush || (mode === 'pull' && !scheduleOk)} onClick={() => save.mutate()}>
+        {t('common.save')}
+      </Button>
+    </div>
+  );
+}
+
+function CopyField({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  const { t } = useI18n();
+  return (
+    <Field label={label} hint={hint}>
+      <div className="flex gap-2">
+        <input className={cx(inputClass, 'font-mono text-xs')} readOnly value={value} onFocus={(e) => e.target.select()} />
+        <Button size="sm" variant="ghost" aria-label={t('common.copy')} onClick={() => navigator.clipboard?.writeText(value)}>
+          <Copy className="size-4" />
+        </Button>
+      </div>
+    </Field>
+  );
+}
+
+const FORMATS: { value: string; format: ImageFormat }[] = [
+  { value: 'jpeg', format: { type: 'jpeg' } },
+  { value: 'png', format: { type: 'png' } },
+  { value: 'png:spectra6', format: { type: 'png', palette: 'spectra6' } },
+  { value: 'png:acep7', format: { type: 'png', palette: 'acep7' } },
+  { value: 'png:gray4', format: { type: 'png', palette: 'gray4' } },
+  { value: 'bmp:bw', format: { type: 'bmp', palette: 'bw' } },
+  { value: 'bmp', format: { type: 'bmp' } },
+];
+const formatKey = (f?: ImageFormat) => (f ? (f.palette ? `${f.type}:${f.palette}` : f.type) : '');
+
+/** How a non-BLOOMIN8 frame reaches the hub: token and URLs for DIY / TRMNL, credentials for SwitchBot. */
+function ConnectionTab({ frame }: { frame: Frame }) {
+  const { t } = useI18n();
+  const settings = useSettings();
+  const hub = (settings.data?.localUrl || window.location.origin).replace(/\/+$/, '');
+  const [maxPoll, setMaxPoll] = useState(frame.config.maxPollMinutes ?? 60);
+  const [format, setFormat] = useState(formatKey(frame.config.format) || (frame.kind === 'trmnl' ? 'bmp:bw' : 'jpeg'));
+  const [token, setToken] = useState('');
+  const [secret, setSecret] = useState('');
+  const save = useAction(
+    () =>
+      api.patch(`/api/frames/${frame.id}`, {
+        config:
+          frame.kind === 'switchbot'
+            ? { token, secret }
+            : { maxPollMinutes: maxPoll, format: FORMATS.find((x) => x.value === format)?.format },
+      }),
+    { success: t('common.saved') },
+  );
+
+  if (frame.kind === 'switchbot') {
+    const external = settings.data?.externalUrl ?? '';
+    return (
+      <div className="space-y-5">
+        <p className="text-sm text-muted">{t('connection.switchbot_intro')}</p>
+        {!external.startsWith('https://') && <p className="rounded-2xl bg-accent/10 p-4 text-sm text-ink-2">{t('connection.switchbot_no_url')}</p>}
+        <CopyField label={t('connection.device_id')} value={frame.config.deviceId ?? ''} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Token" hint={t('connection.secret_keep')}>
+            <input className={inputClass} value={token} onChange={(e) => setToken(e.target.value)} autoComplete="off" />
+          </Field>
+          <Field label="Secret" hint={t('connection.secret_keep')}>
+            <input className={inputClass} type="password" value={secret} onChange={(e) => setSecret(e.target.value)} autoComplete="off" />
+          </Field>
+        </div>
+        <Button variant="primary" disabled={!token && !secret} loading={save.isPending} onClick={() => save.mutate()}>
+          {t('common.save')}
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm text-muted">
+        {t(frame.kind === 'trmnl' ? 'connection.trmnl_intro' : 'connection.diy_intro')}{' '}
+        <a className="font-semibold text-accent" href={DOCS_URL + (frame.kind === 'trmnl' ? 'devices/trmnl' : 'diy/protocol')} target="_blank" rel="noreferrer">
+          {t('canvas.docs_link')}
+        </a>
+      </p>
+      {frame.kind === 'trmnl' ? (
+        <>
+          <CopyField label={t('connection.server_url')} value={hub} hint={t('connection.trmnl_server_hint')} />
+          <CopyField label="MAC" value={frame.deviceId ?? ''} />
+        </>
+      ) : (
+        <>
+          <CopyField label={t('connection.endpoint')} value={`${hub}/of/v1/display`} />
+          <CopyField label="Token" value={frame.upstreamToken} hint={t('connection.token_hint')} />
+        </>
+      )}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label={t('connection.format')} hint={t('connection.format_hint')}>
+          <select className={inputClass} value={format} onChange={(e) => setFormat(e.target.value)}>
+            {FORMATS.map((x) => (
+              <option key={x.value} value={x.value}>
+                {x.format.type.toUpperCase()}
+                {x.format.palette ? ` · ${t(`palette.${x.format.palette}` as MsgKey)}` : ''}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label={t('connection.max_poll')} hint={t('connection.max_poll_hint')}>
+          <input type="number" min={1} max={1440} className={inputClass} value={maxPoll} onChange={(e) => setMaxPoll(Number(e.target.value))} />
+        </Field>
+      </div>
+      {frame.config.notifyUrl && <Info label={t('connection.notify_url')} value={frame.config.notifyUrl} />}
+      <Button variant="primary" loading={save.isPending} onClick={() => save.mutate()}>
         {t('common.save')}
       </Button>
     </div>
@@ -258,6 +368,7 @@ function SettingsTab({ frame }: { frame: Frame }) {
   const info = frame.lastInfo ?? {};
   const [name, setName] = useState(frame.name);
   const [host, setHost] = useState(frame.host);
+  const caps = frame.capabilities;
   const [orientation, setOrientation] = useState(frame.orientation);
   const [rotate, setRotate] = useState(String(frame.rotate) as '90' | '270');
   const [sleep, setSleep] = useState(Number(info.sleep_duration ?? 0) / 60 || '');
@@ -283,9 +394,11 @@ function SettingsTab({ frame }: { frame: Frame }) {
         <Field label={t('common.name')}>
           <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
-        <Field label={t('canvasSettings.host')}>
-          <input className={inputClass} value={host} onChange={(e) => setHost(e.target.value)} />
-        </Field>
+        {frame.kind === 'bloomin8' && (
+          <Field label={t('canvasSettings.host')}>
+            <input className={inputClass} value={host} onChange={(e) => setHost(e.target.value)} />
+          </Field>
+        )}
         <Field label={t('canvasSettings.orientation')} group>
           <Segmented
             fill
@@ -297,7 +410,7 @@ function SettingsTab({ frame }: { frame: Frame }) {
             ]}
           />
         </Field>
-        {orientation === 'landscape' && (
+        {orientation === 'landscape' && frame.kind === 'bloomin8' && (
           <Field label={t('canvasSettings.rotation')} group>
             <Segmented
               fill
@@ -315,6 +428,7 @@ function SettingsTab({ frame }: { frame: Frame }) {
         {t('common.save')}
       </Button>
 
+      {caps.deviceSettings && (
       <div className="border-t border-line pt-6">
         <h4 className="mb-3 font-bold">{t('canvasSettings.device')}</h4>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -329,8 +443,9 @@ function SettingsTab({ frame }: { frame: Frame }) {
           {t('canvasSettings.send')}
         </Button>
       </div>
+      )}
 
-      <BluetoothSettings frame={frame} />
+      {caps.bleWake && <BluetoothSettings frame={frame} />}
 
       <div className="border-t border-line pt-6">
         <Button
@@ -350,7 +465,8 @@ export function FrameDetail() {
   const { t } = useI18n();
   const id = Number(useParams().id);
   const frame = useFrame(id);
-  const [tab, setTab] = useState<Tab>('schedule');
+  const [params] = useSearchParams();
+  const [tab, setTab] = useState<Tab>(TABS.includes(params.get('tab') as Tab) ? (params.get('tab') as Tab) : 'schedule');
   const action = useAction(
     (a: string) => api.post<{ ok: boolean; queued?: boolean; playlist?: string }>(`/api/frames/${id}/actions/${a}`).then((r) => ({ ...r, a })),
     {
@@ -390,7 +506,8 @@ export function FrameDetail() {
   const f = frame.data;
   const info = f.lastInfo ?? {};
   // How this Canvas can be woken from here: the hub's Bluetooth first (no device picker), else this phone's.
-  const wakeVia = f.bleMac && (f.simulated || ble.data?.available) ? 'hub' : !f.simulated && phoneWakeSupport() === 'ok' ? 'phone' : null;
+  const caps = f.capabilities;
+  const wakeVia = !caps.bleWake ? null : f.bleMac && (f.simulated || ble.data?.available) ? 'hub' : !f.simulated && phoneWakeSupport() === 'ok' ? 'phone' : null;
   const waking = wake.isPending || phoneWake.isPending;
 
   return (
@@ -422,15 +539,18 @@ export function FrameDetail() {
                 {t('detail.wake')}
               </Button>
             ) : (
-              f.online && (
+              f.online &&
+              caps.sleep && (
                 <Button size="sm" icon={<Moon className="size-4" />} onClick={() => action.mutate('sleep')}>
                   {t('detail.sleep')}
                 </Button>
               )
             )}
-            <Button size="sm" icon={<RotateCcw className="size-4" />} onClick={() => confirm(t('detail.confirm_reboot')) && action.mutate('reboot')}>
-              {t('detail.reboot')}
-            </Button>
+            {caps.reboot && (
+              <Button size="sm" icon={<RotateCcw className="size-4" />} onClick={() => confirm(t('detail.confirm_reboot')) && action.mutate('reboot')}>
+                {t('detail.reboot')}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -456,12 +576,21 @@ export function FrameDetail() {
 
           <Card className="grid grid-cols-2 gap-4 p-5 sm:grid-cols-4">
             <Info label={t('detail.resolution')} value={`${f.width}×${f.height}`} />
-            <Info label="IP" value={f.host} />
+            {f.kind === 'bloomin8' ? <Info label="IP" value={f.host} /> : <Info label={t('detail.kind')} value={t(`kind.${f.kind}` as MsgKey)} />}
             <Info label={t('detail.last_seen')} value={relativeTime(f.lastSeen)} />
             <Info label={t(f.mode === 'pull' ? 'detail.next_wake' : 'detail.firmware')} value={f.mode === 'pull' ? dateTime(f.nextWake) : f.firmware} />
             <Info label={t('detail.model')} value={f.model} />
-            <Info label="Wi-Fi" value={info.sta_ssid as string} />
-            <Info label={t('detail.free')} value={info.free_size ? `${Math.round(Number(info.free_size) / 1e6)} MB` : undefined} />
+            {f.kind === 'bloomin8' ? (
+              <>
+                <Info label="Wi-Fi" value={info.sta_ssid as string} />
+                <Info label={t('detail.free')} value={info.free_size ? `${Math.round(Number(info.free_size) / 1e6)} MB` : undefined} />
+              </>
+            ) : (
+              <>
+                <Info label={t('detail.firmware')} value={f.firmware} />
+                <Info label={t('detail.wake_model')} value={t(`wake.${f.wakeModel}` as MsgKey)} />
+              </>
+            )}
             <Info label={t('detail.pending')} value={t(f.pendingImageId ? 'detail.pending_photo' : 'detail.pending_none')} />
           </Card>
 
@@ -471,19 +600,21 @@ export function FrameDetail() {
             className="max-w-full overflow-x-auto scrollbar-none"
             options={[
               { value: 'schedule', label: t('nav.schedule') },
-              { value: 'mode', label: t('detail.tab_mode') },
+              ...(caps.pullToggle ? [{ value: 'mode' as const, label: t('detail.tab_mode') }] : []),
+              ...(f.kind !== 'bloomin8' ? [{ value: 'connection' as const, label: t('detail.tab_connection') }] : []),
               { value: 'history', label: t('detail.tab_history') },
               ...(settings.data?.statsEnabled ? [{ value: 'stats' as const, label: t('detail.tab_stats') }] : []),
-              { value: 'device', label: t('detail.tab_device') },
+              ...(caps.galleries ? [{ value: 'device' as const, label: t('detail.tab_device') }] : []),
               { value: 'settings', label: t('nav.settings') },
             ]}
           />
           <Card className="p-6">
             {tab === 'schedule' && <AssignmentEditor key={f.assignment?.id ?? 'new'} frame={f} />}
-            {tab === 'mode' && <ModeTab frame={f} />}
+            {tab === 'mode' && caps.pullToggle && <ModeTab frame={f} />}
+            {tab === 'connection' && <ConnectionTab frame={f} />}
             {tab === 'history' && <HistoryTab frame={f} />}
             {tab === 'stats' && settings.data?.statsEnabled && <StatsTab frame={f} />}
-            {tab === 'device' && <DeviceTab frame={f} />}
+            {tab === 'device' && caps.galleries && <DeviceTab frame={f} />}
             {tab === 'settings' && <SettingsTab frame={f} />}
           </Card>
         </div>
