@@ -11,6 +11,7 @@ A single Docker container (Node + SQLite) with a web UI inspired by the official
   - **Push** – the hub uploads to the frame (`/upload?show_now=1`). Instant, but the frame must be awake.
   - **Pull (recommended)** – uses the frame's *Schedule Pull* protocol: the frame sleeps, wakes at the time the hub tells it, calls `GET /eink_pull`, downloads the image and goes back to sleep. Best battery life. Photos sent while a frame is asleep are queued for its next wake.
 - Manage on-device galleries & playlists, device settings, sleep/reboot/clear
+- **Bluetooth wake**: wake a sleeping frame without touching it, from the server's Bluetooth (Linux) or from your phone's browser, optionally before every send. See [docs/bluetooth.md](docs/bluetooth.md)
 - Simple admin login, light/dark theme, mobile-friendly (installable PWA)
 - **Test Canvas** button (**Add Canvas** → *Create test Canvas*): a simulated frame running inside the hub, to try everything without hardware. No extra port needed; it survives restarts.
 
@@ -30,13 +31,16 @@ Data (SQLite DB, originals, render cache) lives in `./data`.
 
 `network_mode: host` is used so mDNS discovery works. With bridge networking, add frames by IP.
 
+For Bluetooth wake from the server, also mount `/run/dbus` (Linux hosts only); see
+[docs/bluetooth.md](docs/bluetooth.md) for what works where.
+
 ### Hub addresses
 - **Local URL** (`LOCAL_URL`, or Settings): the LAN address Canvases use in pull mode, e.g. `http://192.168.1.10:8080`. Auto-detected when unset. `PUBLIC_URL` is still accepted as its old name.
 - **Public address** (`EXTERNAL_URL`, optional): where people open the hub through a reverse proxy or Tailscale. The QR code on the Canvas welcome picture opens it; without it, the QR uses the local URL.
 
 ### Pull mode
 1. Check **Settings → Hub local URL** is an address the Canvas can reach.
-2. Wake the frame (press its button), open the frame → **Mode** → *Scheduled pull* and press **Save**.
+2. Wake the frame (press its button, or **Wake** with Bluetooth), open the frame → **Mode** → *Scheduled pull* and press **Save**.
 3. Give the frame a collection under **Schedule**. It will wake at each interval, pull the next photo and sleep.
 
 ### Immich
@@ -59,7 +63,7 @@ pull → download → signal loop. It warns if an image isn't baseline JPEG at n
 
 ```
 apps/server   Fastify + Drizzle/better-sqlite3 + sharp
-  src/device      BLOOMIN8 local API client + discovery
+  src/device      BLOOMIN8 local API client + discovery + Bluetooth wake (BlueZ/D-Bus)
   src/upstream    /eink_pull, /eink_signal, /u/img (pull protocol)
   src/imaging     render pipeline (baseline JPEG, native resolution, P/L orientation)
   src/immich      Immich API client
@@ -75,7 +79,7 @@ apps/web      React + Vite + Tailwind + TanStack Query
 - Immich: https://api.immich.app/
 
 ## Not yet covered
-- Bluetooth wake (the HA integration supports it; BLE from Docker is fragile)
+- Bluetooth wake is tested against a mocked BlueZ; verify it on real hardware and hosts
 - Pre-dithered uploads (`/image/dataUpload`) — the frame dithers JPEGs itself
 - Tested against the simulator only; verify resolution/rotation on real hardware
 

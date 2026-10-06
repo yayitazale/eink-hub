@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Eraser, Moon, Play, RefreshCw, RotateCcw, SkipForward, Trash2 } from 'lucide-react';
+import { ArrowLeft, Bluetooth, Eraser, Moon, Play, RefreshCw, RotateCcw, SkipForward, Smartphone, Trash2 } from 'lucide-react';
 import { api, thumbUrl, type Frame, type HistoryEntry, type Schedule } from '../lib/api';
 import { dateTime, relativeTime } from '../lib/format';
-import { useAction, useFrame, useSettings } from '../lib/hooks';
+import { useAction, useBleStatus, useFrame, useSettings } from '../lib/hooks';
+import { isPickerCancelled, phoneWakeSupport, wakeWithThisDevice } from '../lib/webBluetooth';
 import { useI18n, type MsgKey } from '../i18n';
 import { FrameMockup } from '../components/FrameMockup';
 import { AssignmentEditor } from '../components/AssignmentEditor';
 import { SchedulePicker } from '../components/SchedulePicker';
-import { Button, Card, Field, Pill, Segmented, Spinner, cx, inputClass } from '../components/ui';
+import { Button, Card, Field, Pill, Segmented, Spinner, Toggle, cx, inputClass } from '../components/ui';
 import { Battery, FrameStatus, TestPill } from './Frames';
 
 type Tab = 'schedule' | 'mode' | 'history' | 'device' | 'settings';
@@ -217,6 +218,39 @@ function DeviceTab({ frame }: { frame: Frame }) {
   );
 }
 
+function BluetoothSettings({ frame }: { frame: Frame }) {
+  const { t } = useI18n();
+  const ble = useBleStatus();
+  const [mac, setMac] = useState(frame.bleMac ?? '');
+  const [autoWake, setAutoWake] = useState(frame.bleAutoWake);
+  const save = useAction(() => api.patch(`/api/frames/${frame.id}`, { bleMac: mac.trim() || null, bleAutoWake: autoWake }), {
+    success: t('common.saved'),
+  });
+  const phone = phoneWakeSupport();
+  const hub = ble.data;
+
+  return (
+    <div className="border-t border-line pt-6">
+      <h4 className="mb-1 font-bold">Bluetooth</h4>
+      <ul className="mb-4 space-y-1 text-xs text-muted">
+        <li>{hub ? (hub.available ? t('ble.hub_ok', { adapter: hub.adapter }) : t(`ble.hub_${hub.reason}` as MsgKey)) : '…'}</li>
+        <li>{t(`ble.phone_${phone}` as MsgKey)}</li>
+      </ul>
+      <div className="max-w-xs">
+        <Field label={t('ble.mac')} hint={t('ble.mac_hint')}>
+          <input className={inputClass} placeholder="AA:BB:CC:DD:EE:FF" value={mac} onChange={(e) => setMac(e.target.value)} />
+        </Field>
+      </div>
+      <div className="mt-4 max-w-xl">
+        <Toggle label={t('ble.auto_wake')} hint={t('ble.auto_wake_hint')} checked={autoWake} onChange={setAutoWake} />
+      </div>
+      <Button className="mt-4" loading={save.isPending} onClick={() => save.mutate()}>
+        {t('common.save')}
+      </Button>
+    </div>
+  );
+}
+
 function SettingsTab({ frame }: { frame: Frame }) {
   const { t } = useI18n();
   const nav = useNavigate();
@@ -295,6 +329,8 @@ function SettingsTab({ frame }: { frame: Frame }) {
         </Button>
       </div>
 
+      <BluetoothSettings frame={frame} />
+
       <div className="border-t border-line pt-6">
         <Button
           variant="danger"
@@ -318,10 +354,33 @@ export function FrameDetail() {
     success: (r) => t(r?.queued ? 'detail.clear_queued' : 'common.done'),
   });
   const refresh = useAction(() => api.post(`/api/frames/${id}/refresh`), {});
+  const ble = useBleStatus();
+  const wake = useAction(() => api.post(`/api/frames/${id}/actions/wake`), { success: t('detail.woken') });
+  // Pulse from this phone, then wait for the Canvas to show up on Wi-Fi.
+  const phoneWake = useAction(
+    async () => {
+      try {
+        await wakeWithThisDevice();
+      } catch (err) {
+        if (isPickerCancelled(err)) return false;
+        throw err;
+      }
+      await new Promise((r) => setTimeout(r, 4000));
+      for (let i = 0; i < 4; i++) {
+        const fr = await api.post<Frame>(`/api/frames/${id}/refresh`);
+        if (fr.online) return true;
+      }
+      throw new Error(t('detail.wake_no_reply'));
+    },
+    { success: (woken) => (woken ? t('detail.woken') : '') },
+  );
 
   if (!frame.data) return <Spinner />;
   const f = frame.data;
   const info = f.lastInfo ?? {};
+  // How this Canvas can be woken from here: the hub's Bluetooth first (no device picker), else this phone's.
+  const wakeVia = f.bleMac && (f.simulated || ble.data?.available) ? 'hub' : !f.simulated && phoneWakeSupport() === 'ok' ? 'phone' : null;
+  const waking = wake.isPending || phoneWake.isPending;
 
   return (
     <div>
@@ -340,9 +399,24 @@ export function FrameDetail() {
             <Button size="sm" icon={<Eraser className="size-4" />} title={t('detail.clear_hint')} onClick={() => action.mutate('clear')}>
               {t('detail.clear')}
             </Button>
-            <Button size="sm" icon={<Moon className="size-4" />} onClick={() => action.mutate('sleep')}>
-              {t('detail.sleep')}
-            </Button>
+            {/* Same slot: Sleep while awake, Wake while asleep (if it can be woken from here). */}
+            {wakeVia && (!f.online || waking) ? (
+              <Button
+                size="sm"
+                icon={wakeVia === 'hub' ? <Bluetooth className="size-4" /> : <Smartphone className="size-4" />}
+                title={t(wakeVia === 'hub' ? 'detail.wake_hint' : 'detail.wake_phone_hint')}
+                loading={waking}
+                onClick={() => (wakeVia === 'hub' ? wake : phoneWake).mutate(undefined)}
+              >
+                {t('detail.wake')}
+              </Button>
+            ) : (
+              f.online && (
+                <Button size="sm" icon={<Moon className="size-4" />} onClick={() => action.mutate('sleep')}>
+                  {t('detail.sleep')}
+                </Button>
+              )
+            )}
             <Button size="sm" icon={<RotateCcw className="size-4" />} onClick={() => confirm(t('detail.confirm_reboot')) && action.mutate('reboot')}>
               {t('detail.reboot')}
             </Button>

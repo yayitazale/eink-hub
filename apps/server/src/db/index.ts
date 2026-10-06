@@ -141,6 +141,11 @@ export const migrations: string[] = [
   `
   UPDATE settings SET key = 'localUrl' WHERE key = 'publicUrl';
   `,
+  // v6: Bluetooth wake. The address comes from deviceInfo.bt_mac; auto-wake is opt-in (battery).
+  `
+  ALTER TABLE frames ADD COLUMN ble_mac TEXT;
+  ALTER TABLE frames ADD COLUMN ble_auto_wake INTEGER NOT NULL DEFAULT 0;
+  `,
 ];
 
 function migrate(sqlite: Database.Database) {

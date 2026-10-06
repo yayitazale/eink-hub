@@ -3,26 +3,15 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { desc, eq } from 'drizzle-orm';
 import { schema, setSetting } from '../db/index.js';
 import type { DisplayOptions, Frame } from '../db/schema.js';
+import { bleStatus, normalizeMac } from '../device/ble.js';
 import { DeviceError, FrameClient, type DeviceInfo, type Playlist } from '../device/client.js';
 import { discover } from '../device/discovery.js';
 import { HttpError, detectLocalUrl, localUrlSetting, qrUrl, type Ctx } from '../lib/context.js';
-import { displayImage, getAssignment, getFrame, markOnline, pushWelcome } from '../lib/display.js';
+import { displayImage, getAssignment, getFrame, infoToFrame, markOnline, pushWelcome } from '../lib/display.js';
+import { wakeFrame, withWake } from '../lib/wake.js';
 import { parseSchedule } from '../lib/schedule.js';
 import { requestLang, tr } from '../i18n.js';
 import { forgetTestCanvas, isSimulated, remember, startTestCanvas } from '../lib/simulators.js';
-
-function infoToFrame(info: DeviceInfo): Partial<Frame> {
-  const w = Number(info.width) || undefined;
-  const h = Number(info.height) || undefined;
-  return {
-    model: info.screen_model ?? info.board_model ?? null,
-    firmware: info.version ?? null,
-    battery: typeof info.battery === 'number' ? info.battery : null,
-    lastInfo: info,
-    // Store native resolution portrait-first regardless of how the device reports it.
-    ...(w && h ? { width: Math.min(w, h), height: Math.max(w, h) } : {}),
-  };
-}
 
 export async function refreshFrame(ctx: Ctx, frame: Frame, timeoutMs = 5000) {
   try {
@@ -34,7 +23,7 @@ export async function refreshFrame(ctx: Ctx, frame: Frame, timeoutMs = 5000) {
   return getFrame(ctx.db, frame.id);
 }
 
-const ACTIONS = ['next', 'sleep', 'reboot', 'clear', 'whistle'] as const;
+const ACTIONS = ['wake', 'next', 'sleep', 'reboot', 'clear', 'whistle'] as const;
 
 /** "192.168.1.6:80" and "192.168.1.6" are the same device. */
 const sameHost = (a: string, b: string) => a.replace(/:80$/, '') === b.replace(/:80$/, '');
@@ -134,7 +123,10 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
     return { ...f, assignment: getAssignment(db, f.id) ?? null, simulated: isSimulated(db, f.id) };
   });
 
-  app.patch<{ Params: { id: string }; Body: Partial<Pick<Frame, 'name' | 'host' | 'orientation' | 'rotate' | 'width' | 'height'>> & { pullSchedule?: unknown } }>(
+  app.patch<{
+    Params: { id: string };
+    Body: Partial<Pick<Frame, 'name' | 'host' | 'orientation' | 'rotate' | 'width' | 'height' | 'bleAutoWake'>> & { pullSchedule?: unknown; bleMac?: string | null };
+  }>(
     '/api/frames/:id',
     async (req) => {
       const id = +req.params.id;
@@ -147,6 +139,12 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
       if (b.rotate === 90 || b.rotate === 270) patch.rotate = b.rotate;
       if (b.pullSchedule !== undefined) patch.pullSchedule = parseSchedule(b.pullSchedule);
       if (b.width && b.height) Object.assign(patch, { width: Math.min(b.width, b.height), height: Math.max(b.width, b.height) });
+      if (b.bleMac !== undefined) {
+        const mac = b.bleMac ? normalizeMac(b.bleMac) : null;
+        if (b.bleMac && !mac) throw new HttpError(400, 'ble_mac_invalid');
+        patch.bleMac = mac;
+      }
+      if (typeof b.bleAutoWake === 'boolean') patch.bleAutoWake = b.bleAutoWake;
       if (Object.keys(patch).length) db.update(schema.frames).set(patch).where(eq(schema.frames.id, id)).run();
       return getFrame(db, id);
     },
@@ -161,27 +159,40 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
     return { ok: true };
   });
 
+  // Whether the hub itself can wake frames over Bluetooth; ?refresh=1 re-probes BlueZ.
+  app.get<{ Querystring: { refresh?: string } }>('/api/ble/status', async (req) => bleStatus(!!req.query.refresh));
+
   app.post<{ Params: { id: string } }>('/api/frames/:id/refresh', async (req) => refreshFrame(ctx, getFrame(db, +req.params.id), 8000));
 
   app.post<{ Params: { id: string; action: (typeof ACTIONS)[number] } }>('/api/frames/:id/actions/:action', async (req) => {
-    const c = client(+req.params.id);
+    const frame = getFrame(db, +req.params.id);
+    const c = new FrameClient(frame.host);
+    // Asleep and auto-wake on: wake over Bluetooth and retry once. Still no answer: it is asleep
+    // (the UI then offers Wake instead of Sleep).
+    const awake = <T>(fn: () => Promise<T>) =>
+      withWake(ctx, frame, fn).catch((err) => {
+        if (err instanceof DeviceError && err.offline) markOnline(db, frame.id, false);
+        throw err;
+      });
     switch (req.params.action) {
+      case 'wake':
+        await wakeFrame(ctx, frame);
+        return { ok: true };
       case 'next':
-        await c.showNext();
+        await awake(() => c.showNext());
         break;
       case 'sleep':
         await c.sleep();
-        markOnline(db, +req.params.id, false);
+        markOnline(db, frame.id, false);
         return { ok: true };
       case 'reboot':
-        await c.reboot();
+        await awake(() => c.reboot());
         break;
       case 'clear': {
         // "Limpiar" = back to the welcome picture; delivered on next wake if the Canvas is asleep.
-        const frame = getFrame(db, +req.params.id);
         db.update(schema.frames).set({ welcomeShown: false, pendingImageId: null, pendingOpts: null }).where(eq(schema.frames.id, frame.id)).run();
         try {
-          await pushWelcome(ctx, frame, qrUrl(db, req));
+          await awake(() => pushWelcome(ctx, frame, qrUrl(db, req)));
         } catch (err) {
           if (err instanceof DeviceError && err.offline) return { ok: true, queued: true };
           throw err;
@@ -189,12 +200,12 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
         return { ok: true };
       }
       case 'whistle':
-        await c.whistle();
+        await awake(() => c.whistle());
         break;
       default:
         throw new HttpError(400, 'unknown_action');
     }
-    markOnline(db, +req.params.id, true);
+    markOnline(db, frame.id, true);
     return { ok: true };
   });
 
@@ -202,7 +213,8 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
     '/api/frames/:id/device-settings',
     async (req) => {
       const id = +req.params.id;
-      await client(id).updateSettings(req.body ?? {});
+      const frame = getFrame(db, id);
+      await withWake(ctx, frame, () => new FrameClient(frame.host).updateSettings(req.body ?? {}));
       if (req.body?.name) db.update(schema.frames).set({ name: req.body.name }).where(eq(schema.frames.id, id)).run();
       return refreshFrame(ctx, getFrame(db, id));
     },

@@ -42,6 +42,10 @@ export const frames = sqliteTable('frames', {
   welcomeShown: integer('welcome_shown', { mode: 'boolean' }).notNull().default(false),
   nextWake: integer('next_wake'),
   createdAt: integer('created_at').notNull(),
+  /** Bluetooth address for waking the frame ("AA:BB:CC:DD:EE:FF"), from deviceInfo.bt_mac. */
+  bleMac: text('ble_mac'),
+  /** Wake over Bluetooth before sending when the frame is asleep. Off by default: it costs battery. */
+  bleAutoWake: integer('ble_auto_wake', { mode: 'boolean' }).notNull().default(false),
 });
 
 export const images = sqliteTable('images', {

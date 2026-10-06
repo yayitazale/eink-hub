@@ -14,6 +14,7 @@ calling out:
 | [Inter](https://rsms.me/inter/) (Debian `fonts-inter`) | SIL Open Font License 1.1 | Text drawn on photos |
 | [sharp](https://sharp.pixelplumbing.com/) / libvips | Apache-2.0 / LGPL-3.0-or-later | Image processing |
 | [Lucide](https://lucide.dev/) (`lucide-react`) | ISC | Icons |
+| [node-ble](https://github.com/chrvadala/node-ble) with [`@jellybrick/dbus-next`](https://github.com/JellyBrick/node-dbus-next) | MIT | Bluetooth wake through BlueZ |
 | [Node.js](https://nodejs.org/) and Debian base image | MIT and various | Runtime |
 
 BLOOMIN8 and Immich are trademarks of their respective owners. This project is

@@ -111,7 +111,7 @@ export const es = {
 
   'device.playing': 'Reproduciendo',
   'device.gallery_deleted': 'Galería eliminada',
-  'device.unreachable': 'El Canvas no responde. Despiértalo y vuelve a intentarlo.',
+  'device.unreachable': 'El Canvas no responde. Despiértalo (botón trasero o «Despertar») y vuelve a intentarlo.',
   'device.galleries': 'Galerías en el Canvas',
   'device.play': 'Reproducir',
   'device.show': 'Mostrar',
@@ -315,6 +315,25 @@ export const es = {
   'settings.password_new': 'Nueva',
   'settings.password_change': 'Cambiar',
   'settings.password_changed': 'Contraseña cambiada',
+
+  'detail.wake': 'Despertar',
+  'detail.wake_hint': 'Despierta el Canvas con el Bluetooth del Hub, sin tocar el botón trasero',
+  'detail.wake_phone_hint': 'Usa el Bluetooth de este dispositivo: acércate al Canvas y elígelo en la lista',
+  'detail.woken': 'Canvas despierto',
+  'detail.wake_no_reply': 'Se envió la señal por Bluetooth, pero el Canvas no respondió por Wi-Fi. Inténtalo de nuevo más cerca.',
+  'ble.hub_ok': 'El Hub puede despertar Canvas con el Bluetooth del servidor ({adapter}).',
+  'ble.hub_disabled': 'El Bluetooth del Hub está desactivado (BLE_DISABLED).',
+  'ble.hub_no_dbus': 'El Hub no tiene acceso al Bluetooth del servidor: monta /run/dbus en el contenedor (solo Linux, ver docs/bluetooth.md).',
+  'ble.hub_no_bluez': 'El Hub ve D-Bus pero no BlueZ: comprueba que el servicio bluetooth está activo en el servidor.',
+  'ble.hub_no_adapter': 'El servidor no tiene adaptador Bluetooth.',
+  'ble.hub_powered_off': 'El adaptador Bluetooth del servidor está apagado (bluetoothctl power on).',
+  'ble.phone_ok': 'Este navegador puede despertar el Canvas con su propio Bluetooth.',
+  'ble.phone_insecure': 'Para despertar con este móvil abre el Hub por HTTPS (p. ej. tu dirección pública): el navegador no permite Bluetooth en http://.',
+  'ble.phone_unsupported': 'Este navegador no permite Bluetooth web (iPhone/iPad, Firefox…). Usa Chrome o Edge en Android u ordenador.',
+  'ble.mac': 'Dirección Bluetooth',
+  'ble.mac_hint': 'Se rellena sola cuando el Canvas se conecta. Solo hace falta para despertarlo desde el Hub.',
+  'ble.auto_wake': 'Despertar automáticamente antes de enviar',
+  'ble.auto_wake_hint': 'Si el Canvas está dormido, el Hub lo despierta por Bluetooth para enviar fotos y acciones al momento en vez de esperar. Gasta algo más de batería.',
 };
 
 export type Messages = Record<keyof typeof es, string>;

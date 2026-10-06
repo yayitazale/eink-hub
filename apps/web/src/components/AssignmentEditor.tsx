@@ -4,21 +4,9 @@ import { api, type Assignment, type FitMode, type Frame, type OrderMode, type Sc
 import { useAction, useCollections } from '../lib/hooks';
 import { SchedulePicker } from './SchedulePicker';
 import { useI18n } from '../i18n';
-import { Button, Field, Segmented, inputClass } from './ui';
+import { Button, Field, Segmented, Toggle, inputClass } from './ui';
 
 const DEFAULT_SCHEDULE: Schedule = { kind: 'days', days: 1, at: '07:00' };
-
-function Toggle({ label, hint, checked, onChange }: { label: string; hint?: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <label className="flex items-center justify-between gap-3">
-      <span className="min-w-0">
-        <span className="block text-sm font-semibold">{label}</span>
-        {hint && <span className="block text-xs text-muted">{hint}</span>}
-      </span>
-      <input type="checkbox" className="size-5 shrink-0 accent-[var(--ink)]" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-    </label>
-  );
-}
 
 export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: () => void }) {
   const { t } = useI18n();

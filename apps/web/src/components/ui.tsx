@@ -142,6 +142,18 @@ export function Field({ label, hint, children, group }: { label: string; hint?: 
   );
 }
 
+export function Toggle({ label, hint, checked, onChange }: { label: string; hint?: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex items-center justify-between gap-3">
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold">{label}</span>
+        {hint && <span className="block text-xs text-muted">{hint}</span>}
+      </span>
+      <input type="checkbox" className="size-5 shrink-0 accent-[var(--ink)]" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+    </label>
+  );
+}
+
 export const inputClass =
   'w-full h-11 rounded-2xl border border-line bg-surface-2 px-4 text-sm outline-none transition focus:border-ink/40 focus:bg-surface placeholder:text-muted';
 

@@ -12,4 +12,7 @@ services:
     #   - "8080:8080"
     volumes:
       - ./data:/data
+      # Bluetooth wake (Linux host with BlueZ running): lets the hub use the
+      # host's Bluetooth through D-Bus. See docs/bluetooth.md.
+      # - /run/dbus:/run/dbus:ro
     env_file: .env
