@@ -87,7 +87,7 @@ export function SendDialog({ imageId, open, onClose, defaultFrameId }: { imageId
   const onCropComplete = (pct: Area) => setArea({ x: pct.x / 100, y: pct.y / 100, w: pct.width / 100, h: pct.height / 100 });
 
   return (
-    <Modal open={open} onClose={onClose} title={t('send.title')} wide>
+    <Modal open={open} onClose={onClose} title={t('send.title')} wide={mode === 'crop' ? true : 'md'}>
       {!frames.data ? (
         <Spinner />
       ) : frames.data.length === 0 ? (
