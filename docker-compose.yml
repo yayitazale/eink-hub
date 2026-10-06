@@ -4,12 +4,14 @@ services:
     image: registry.gitlab.com/yayitazale/eink-hub:latest
     container_name: eink-hub
     restart: unless-stopped
-    # Host networking lets mDNS discovery see the frames on your LAN.
-    # If you prefer bridge networking, remove this line, uncomment `ports`
-    # and add frames by IP (discovery's subnet scan still works with `subnet`).
-    network_mode: host
-    # ports:
-    #   - "8080:8080"
+    # Bridge networking (default). "Search the network" finds BLOOMIN8 frames
+    # with a subnet scan of the LAN in LOCAL_URL (.env), or add them by IP.
+    ports:
+      - "${PORT:-8080}:${PORT:-8080}"
+    # Optional mDNS discovery: multicast doesn't cross Docker's bridge, so to
+    # also find frames by mDNS use host networking instead (Linux hosts only):
+    # uncomment the next line and remove `ports` above.
+    # network_mode: host
     volumes:
       - ./data:/data
       # Bluetooth wake (Linux host with BlueZ running): lets the hub use the

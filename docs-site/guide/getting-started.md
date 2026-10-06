@@ -14,7 +14,11 @@ docker compose up -d
 
 This pulls `registry.gitlab.com/yayitazale/eink-hub:latest`, the latest release. Your data (database, originals and render cache) lives in `./data`.
 
-The compose file uses `network_mode: host` so the hub can find BLOOMIN8 frames with mDNS. With bridge networking, add those frames by IP instead; everything else works the same.
+The compose file uses Docker's default **bridge networking**, publishing port 8080. **Search the network** finds BLOOMIN8 frames by scanning the subnet of your `LOCAL_URL`, so set it to this machine's LAN address. You can always add a frame by IP too.
+
+::: details Optional: mDNS discovery with host networking
+Multicast (mDNS) doesn't cross Docker's bridge. To also discover frames by mDNS, use host networking (Linux hosts only; Docker Desktop on Windows/macOS doesn't support it): in `docker-compose.yml` uncomment `network_mode: host` and remove the `ports` section. The hub then listens directly on the host's port 8080.
+:::
 
 Open `http://<host>:8080`, choose an admin password and you're in.
 

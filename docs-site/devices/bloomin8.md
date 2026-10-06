@@ -4,7 +4,7 @@ The original target of the hub, with the most complete support: it talks to the 
 
 ## Adding it
 
-- **Search the network** finds Canvases with mDNS and a subnet scan. Wake them first: they don't answer while asleep.
+- **Search the network** finds Canvases with a scan of your LAN's subnet (taken from the [local URL](/guide/addresses)), plus mDNS if you run the container with [host networking](/guide/getting-started#install-with-docker). Wake them first: they don't answer while asleep.
 - Or **Add manually → BLOOMIN8** with its IP address. You can add it while it's asleep; the details fill in on first contact.
 
 ## Push or pull
