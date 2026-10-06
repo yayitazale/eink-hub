@@ -1,0 +1,161 @@
+import { currentLang } from '../i18n';
+
+export type FitMode = 'cover' | 'contain' | 'blur';
+export type OrderMode = 'random' | 'sequential' | 'newest';
+export type CollectionType = 'manual' | 'immich_album' | 'immich_person' | 'immich_favorites' | 'immich_smart' | 'immich_memories';
+
+export type Schedule =
+  | { kind: 'interval'; hours: 1 | 3 | 6 | 12 }
+  | { kind: 'days'; days: 1 | 2 | 3; at: string }
+  | { kind: 'weeks'; weeks: 1 | 2; weekday: number; at: string }
+  | { kind: 'monthly'; day: number; at: string }
+  | { kind: 'cron'; expr: string };
+
+export interface Crop {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface Assignment {
+  id: number;
+  frameId: number;
+  collectionId: number;
+  orderMode: OrderMode;
+  schedule: Schedule;
+  nextChange: number | null;
+  activeFrom: string | null;
+  activeTo: string | null;
+  fit: FitMode;
+  bg: string;
+  showDate: boolean;
+  enabled: boolean;
+  lastChange: number | null;
+}
+
+export interface Frame {
+  id: number;
+  name: string;
+  host: string;
+  deviceId: string | null;
+  model: string | null;
+  firmware: string | null;
+  width: number;
+  height: number;
+  orientation: 'portrait' | 'landscape';
+  rotate: number;
+  battery: number | null;
+  online: boolean;
+  lastSeen: number | null;
+  lastInfo: Record<string, unknown> | null;
+  mode: 'push' | 'pull';
+  pullSchedule: Schedule;
+  pendingImageId: number | null;
+  currentImageId: number | null;
+  currentRender: string | null;
+  nextWake: number | null;
+  assignment: Assignment | null;
+  /** A simulated Canvas running inside the hub. */
+  simulated?: boolean;
+}
+
+export interface Image {
+  id: number;
+  source: 'local' | 'immich';
+  immichAssetId: string | null;
+  originalName: string | null;
+  width: number | null;
+  height: number | null;
+  takenAt: number | null;
+  favorite: boolean;
+  createdAt: number;
+}
+
+export interface Collection {
+  id: number;
+  name: string;
+  type: CollectionType;
+  config: Record<string, unknown>;
+  lastSync: number | null;
+  syncError: string | null;
+  itemCount: number;
+  coverImageId: number | null;
+}
+
+export interface ImmichAssetLite {
+  id: string;
+  name?: string;
+  takenAt?: string;
+  favorite?: boolean;
+  orientation?: 'landscape' | 'portrait' | 'square' | null;
+}
+
+export interface HistoryEntry {
+  id: number;
+  imageId: number;
+  shownAt: number;
+  method: 'push' | 'pull';
+  success: boolean | null;
+  battery: number | null;
+}
+
+export interface DiscoveredFrame {
+  host: string;
+  name: string;
+  info: Record<string, unknown>;
+}
+
+export interface Settings {
+  immichUrl: string;
+  immichApiKeySet: boolean;
+  /** LAN address Canvases use (pull mode), plus how it was obtained. */
+  localUrl: string;
+  localUrlSource: 'settings' | 'env' | 'browser' | 'interface' | 'none';
+  /** Optional reverse-proxy / Tailscale address; the welcome QR opens it. */
+  externalUrl: string;
+  language: 'es' | 'eu' | 'en' | null;
+  defaultFit: FitMode;
+}
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+  }
+}
+
+async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
+  const isForm = body instanceof FormData;
+  const res = await fetch(url, {
+    method,
+    credentials: 'same-origin',
+    headers: { 'x-hub-lang': currentLang(), ...(body !== undefined && !isForm ? { 'content-type': 'application/json' } : {}) },
+    body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
+  });
+  if (res.status === 401 && !url.startsWith('/api/auth')) {
+    window.dispatchEvent(new Event('hub:unauthorized'));
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new ApiError(err.error ?? res.statusText, res.status);
+  }
+  const type = res.headers.get('content-type') ?? '';
+  if (type.includes('application/json')) return res.json();
+  return (await res.blob()) as T;
+}
+
+export const api = {
+  get: <T>(url: string) => request<T>('GET', url),
+  post: <T>(url: string, body?: unknown) => request<T>('POST', url, body ?? {}),
+  put: <T>(url: string, body?: unknown) => request<T>('PUT', url, body ?? {}),
+  patch: <T>(url: string, body?: unknown) => request<T>('PATCH', url, body ?? {}),
+  del: <T>(url: string, body?: unknown) => request<T>('DELETE', url, body),
+};
+
+export const thumbUrl = (imageId: number) => `/api/images/${imageId}/thumb`;
+export const immichThumb = (assetId: string, size: 'thumbnail' | 'preview' = 'thumbnail') =>
+  `/api/immich/assets/${assetId}/thumbnail?size=${size}`;
+export const renderUrl = (hash: string) => `/api/renders/${hash}`;

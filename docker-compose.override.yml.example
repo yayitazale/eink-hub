@@ -1,0 +1,7 @@
+# Copy to docker-compose.override.yml (gitignored) to build the image from
+# this checkout instead of pulling it from the GitLab registry:
+#   docker compose up -d --build
+services:
+  eink-hub:
+    build: .
+    image: eink-hub:latest

@@ -1,0 +1,401 @@
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowLeft, Eraser, Moon, Play, RefreshCw, RotateCcw, SkipForward, Trash2 } from 'lucide-react';
+import { api, thumbUrl, type Frame, type HistoryEntry, type Schedule } from '../lib/api';
+import { dateTime, relativeTime } from '../lib/format';
+import { useAction, useFrame, useSettings } from '../lib/hooks';
+import { useI18n, type MsgKey } from '../i18n';
+import { FrameMockup } from '../components/FrameMockup';
+import { AssignmentEditor } from '../components/AssignmentEditor';
+import { SchedulePicker } from '../components/SchedulePicker';
+import { Button, Card, Field, Pill, Segmented, Spinner, cx, inputClass } from '../components/ui';
+import { Battery, FrameStatus, TestPill } from './Frames';
+
+type Tab = 'schedule' | 'mode' | 'history' | 'device' | 'settings';
+
+function Info({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <div className="truncate text-[11px] font-semibold uppercase tracking-wider text-muted">{label}</div>
+      {/* Long values (IPs, hostnames, SSIDs) wrap instead of overlapping the next column. */}
+      <div className="mt-0.5 text-sm font-semibold [overflow-wrap:anywhere]">{value ?? '—'}</div>
+    </div>
+  );
+}
+
+function ModeTab({ frame }: { frame: Frame }) {
+  const { t } = useI18n();
+  const settings = useSettings();
+  const [mode, setMode] = useState(frame.mode);
+  const [url, setUrl] = useState('');
+  const [pullSchedule, setPullSchedule] = useState<Schedule>(frame.pullSchedule);
+  const [scheduleOk, setScheduleOk] = useState(true);
+  // Prefill with the detected LAN URL once settings load; stays editable.
+  useEffect(() => {
+    if (!url && settings.data?.localUrl) setUrl(settings.data.localUrl);
+  }, [settings.data?.localUrl]);
+
+  // Saving applies the selected mode. Only a mode or URL change is written to the device (which
+  // must be awake); the fallback schedule lives in the hub and is picked up on the next wake.
+  const save = useAction(
+    () => {
+      const localUrl = url || window.location.origin;
+      if (mode === 'pull' && frame.mode === 'pull' && localUrl === settings.data?.localUrl) {
+        return api.patch(`/api/frames/${frame.id}`, { pullSchedule });
+      }
+      return api.post(`/api/frames/${frame.id}/pull`, { enabled: mode === 'pull', localUrl, pullSchedule });
+    },
+    { success: t('mode.updated') },
+  );
+  const detected = url && url === settings.data?.localUrl;
+  const unchangedPush = mode === 'push' && frame.mode === 'push';
+
+  const card = (value: Frame['mode'], title: string, desc: string) => (
+    <button
+      type="button"
+      onClick={() => setMode(value)}
+      aria-pressed={mode === value}
+      className={cx(
+        'rounded-3xl border-2 p-5 text-left transition',
+        mode === value ? 'border-ink bg-surface-2' : 'border-line hover:border-ink/30',
+      )}
+    >
+      <span className="flex items-center justify-between gap-2">
+        <span className="font-bold">{title}</span>
+        {frame.mode === value && <Pill tone="ok">{t('mode.current')}</Pill>}
+      </span>
+      <span className="mt-1 block text-sm text-muted">{desc}</span>
+    </button>
+  );
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm text-muted">{t('mode.select_hint')}</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {card('push', 'Push', t('mode.push_desc'))}
+        {card('pull', t('mode.pull_title'), t('mode.pull_desc'))}
+      </div>
+
+      {mode === 'push' ? (
+        <p className="rounded-2xl bg-surface-2 p-4 text-sm text-ink-2">{t('mode.push_config')}</p>
+      ) : (
+        <div className="space-y-4 rounded-3xl border border-line p-4">
+          <Field label={t('mode.hub_url')} hint={detected ? t(`localUrl.${settings.data!.localUrlSource}` as MsgKey) : t('mode.hub_url_hint')}>
+            <input className={inputClass} placeholder="http://192.168.1.10:8080" value={url} onChange={(e) => setUrl(e.target.value)} />
+          </Field>
+          <div>
+            <SchedulePicker value={pullSchedule} onChange={setPullSchedule} onValidity={setScheduleOk} label={t('mode.fallback_label')} />
+            <p className="mt-2 text-xs text-muted">{t('mode.fallback_hint')}</p>
+          </div>
+        </div>
+      )}
+
+      {!unchangedPush && <p className="text-xs text-muted">{t('mode.wake_first')}</p>}
+      <Button variant="primary" loading={save.isPending} disabled={unchangedPush || (mode === 'pull' && !scheduleOk)} onClick={() => save.mutate()}>
+        {t('common.save')}
+      </Button>
+    </div>
+  );
+}
+
+function HistoryTab({ frame }: { frame: Frame }) {
+  const { t } = useI18n();
+  const history = useQuery({ queryKey: ['history', frame.id], queryFn: () => api.get<HistoryEntry[]>(`/api/frames/${frame.id}/history`) });
+  if (!history.data) return <Spinner />;
+  if (!history.data.length) return <p className="text-sm text-muted">{t('history.empty')}</p>;
+  return (
+    <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+      {history.data.map((h) => (
+        <div key={h.id}>
+          <img src={thumbUrl(h.imageId)} alt="" className="aspect-[3/4] w-full rounded-2xl object-cover" loading="lazy" />
+          <p className="mt-1 text-[11px] font-semibold text-ink-2">{relativeTime(h.shownAt)}</p>
+          <p className="text-[11px] text-muted">
+            {h.method}
+            {h.success === false ? ` · ${t('history.failed')}` : ''}
+            {h.battery != null ? ` · ${h.battery}%` : ''}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const DEFAULT_GALLERY = 'default';
+
+function DeviceTab({ frame }: { frame: Frame }) {
+  const { t, tn } = useI18n();
+  const galleries = useQuery({
+    queryKey: ['device-galleries', frame.id],
+    queryFn: () => api.get<{ name: string; total: number; images: { name: string; time: number }[] }[]>(`/api/frames/${frame.id}/galleries`),
+    retry: false,
+  });
+  const playlists = useQuery({
+    queryKey: ['device-playlists', frame.id],
+    queryFn: () => api.get<{ name: string; type: string; list: unknown[] }[]>(`/api/frames/${frame.id}/playlists`),
+    retry: false,
+  });
+  const play = useAction((b: { gallery?: string; image?: string; playlist?: string }) => api.post(`/api/frames/${frame.id}/play`, b), {
+    success: t('device.playing'),
+  });
+  const delGallery = useAction((name: string) => api.del(`/api/frames/${frame.id}/galleries/${encodeURIComponent(name)}`), {
+    success: t('device.gallery_deleted'),
+    invalidate: [['device-galleries', frame.id]],
+  });
+
+  // The firmware's built-in "default" gallery is rarely useful, so it starts hidden.
+  const [showDefault, setShowDefault] = useState(false);
+
+  if (galleries.isError) return <p className="text-sm text-muted">{t('device.unreachable')}</p>;
+  if (!galleries.data) return <Spinner />;
+  const hasDefault = galleries.data.some((g) => g.name === DEFAULT_GALLERY);
+  const shownGalleries = showDefault ? galleries.data : galleries.data.filter((g) => g.name !== DEFAULT_GALLERY);
+  return (
+    <div className="space-y-6">
+      <div>
+        <h4 className="mb-2 font-bold">{t('device.galleries')}</h4>
+        <div className="space-y-2">
+          {shownGalleries.map((g) => (
+            <details key={g.name} className="rounded-2xl bg-surface-2 px-4 py-3">
+              <summary className="flex cursor-pointer items-center justify-between gap-2">
+                <span className="min-w-0 truncate font-semibold">
+                  {g.name} <span className="text-sm font-normal text-muted">· {tn('common.photos', g.total)}</span>
+                </span>
+                <span className="flex shrink-0 gap-1" onClick={(e) => e.preventDefault()}>
+                  <Button size="sm" icon={<Play className="size-3.5" />} onClick={() => play.mutate({ gallery: g.name })}>
+                    {t('device.play')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    aria-label={t('common.delete')}
+                    onClick={() => confirm(t('device.confirm_delete_gallery', { name: g.name })) && delGallery.mutate(g.name)}
+                  >
+                    <Trash2 className="size-3.5" />
+                  </Button>
+                </span>
+              </summary>
+              <ul className="mt-2 divide-y divide-line text-sm">
+                {g.images.map((i) => (
+                  <li key={i.name} className="flex items-center justify-between gap-2 py-1.5">
+                    <span className="truncate">{i.name}</span>
+                    <button className="shrink-0 text-xs font-semibold text-accent" onClick={() => play.mutate({ gallery: g.name, image: i.name })}>
+                      {t('device.show')}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ))}
+        </div>
+        {hasDefault && (
+          <button className="mt-2 text-xs font-semibold text-muted hover:text-ink" onClick={() => setShowDefault((v) => !v)}>
+            {t(showDefault ? 'device.hide_default' : 'device.show_default')}
+          </button>
+        )}
+      </div>
+      <div>
+        <h4 className="mb-2 font-bold">{t('device.playlists')}</h4>
+        {playlists.data?.length ? (
+          <div className="space-y-2">
+            {playlists.data.map((p) => (
+              <div key={p.name} className="flex items-center justify-between gap-2 rounded-2xl bg-surface-2 px-4 py-3">
+                <span className="min-w-0 truncate font-semibold">
+                  {p.name} <span className="text-sm font-normal text-muted">· {tn('device.items', p.list?.length ?? 0)}</span>
+                </span>
+                <Button size="sm" icon={<Play className="size-3.5" />} onClick={() => play.mutate({ playlist: p.name })}>
+                  {t('device.play')}
+                </Button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted">{t('device.no_playlists')}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SettingsTab({ frame }: { frame: Frame }) {
+  const { t } = useI18n();
+  const nav = useNavigate();
+  const info = frame.lastInfo ?? {};
+  const [name, setName] = useState(frame.name);
+  const [host, setHost] = useState(frame.host);
+  const [orientation, setOrientation] = useState(frame.orientation);
+  const [rotate, setRotate] = useState(String(frame.rotate) as '90' | '270');
+  const [sleep, setSleep] = useState(Number(info.sleep_duration ?? 0) / 60 || '');
+  const [idle, setIdle] = useState(Number(info.max_idle ?? 0) || '');
+
+  const save = useAction(() => api.patch(`/api/frames/${frame.id}`, { name, host, orientation, rotate: Number(rotate) }), {
+    success: t('common.saved'),
+  });
+  const saveDevice = useAction(
+    () =>
+      api.post(`/api/frames/${frame.id}/device-settings`, {
+        name,
+        ...(sleep ? { sleep_duration: Number(sleep) * 60 } : {}),
+        ...(idle ? { max_idle: Number(idle) } : {}),
+      }),
+    { success: t('canvasSettings.sent') },
+  );
+  const remove = useAction(() => api.del(`/api/frames/${frame.id}`), { success: t('canvasSettings.deleted') });
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label={t('common.name')}>
+          <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} />
+        </Field>
+        <Field label={t('canvasSettings.host')}>
+          <input className={inputClass} value={host} onChange={(e) => setHost(e.target.value)} />
+        </Field>
+        <Field label={t('canvasSettings.orientation')} group>
+          <Segmented
+            fill
+            value={orientation}
+            onChange={setOrientation}
+            options={[
+              { value: 'portrait', label: t('canvasSettings.portrait') },
+              { value: 'landscape', label: t('canvasSettings.landscape') },
+            ]}
+          />
+        </Field>
+        {orientation === 'landscape' && (
+          <Field label={t('canvasSettings.rotation')} group>
+            <Segmented
+              fill
+              value={rotate}
+              onChange={setRotate}
+              options={[
+                { value: '90', label: '90°' },
+                { value: '270', label: '270°' },
+              ]}
+            />
+          </Field>
+        )}
+      </div>
+      <Button variant="primary" loading={save.isPending} onClick={() => save.mutate()}>
+        {t('common.save')}
+      </Button>
+
+      <div className="border-t border-line pt-6">
+        <h4 className="mb-3 font-bold">{t('canvasSettings.device')}</h4>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label={t('canvasSettings.sleep')} hint={t('canvasSettings.sleep_hint')}>
+            <input type="number" className={inputClass} value={sleep} onChange={(e) => setSleep(Number(e.target.value))} />
+          </Field>
+          <Field label={t('canvasSettings.idle')} hint={t('canvasSettings.idle_hint')}>
+            <input type="number" className={inputClass} value={idle} onChange={(e) => setIdle(Number(e.target.value))} />
+          </Field>
+        </div>
+        <Button className="mt-4" loading={saveDevice.isPending} onClick={() => saveDevice.mutate()}>
+          {t('canvasSettings.send')}
+        </Button>
+      </div>
+
+      <div className="border-t border-line pt-6">
+        <Button
+          variant="danger"
+          icon={<Trash2 className="size-4" />}
+          loading={remove.isPending}
+          onClick={() => confirm(t('canvasSettings.confirm_delete', { name: frame.name })) && remove.mutate(undefined, { onSuccess: () => nav('/') })}
+        >
+          {t('canvasSettings.delete')}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export function FrameDetail() {
+  const { t } = useI18n();
+  const id = Number(useParams().id);
+  const frame = useFrame(id);
+  const [tab, setTab] = useState<Tab>('schedule');
+  const action = useAction((a: string) => api.post<{ ok: boolean; queued?: boolean }>(`/api/frames/${id}/actions/${a}`), {
+    success: (r) => t(r?.queued ? 'detail.clear_queued' : 'common.done'),
+  });
+  const refresh = useAction(() => api.post(`/api/frames/${id}/refresh`), {});
+
+  if (!frame.data) return <Spinner />;
+  const f = frame.data;
+  const info = f.lastInfo ?? {};
+
+  return (
+    <div>
+      <Link to="/" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-ink">
+        <ArrowLeft className="size-4" /> {t('nav.canvas')}
+      </Link>
+      <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
+        <div className="space-y-5">
+          <div className="rounded-[32px] bg-surface-2/60 px-10 py-10">
+            <FrameMockup frame={f} className="mx-auto max-w-[240px]" />
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button size="sm" icon={<SkipForward className="size-4" />} onClick={() => action.mutate('next')}>
+              {t('detail.next')}
+            </Button>
+            <Button size="sm" icon={<Eraser className="size-4" />} title={t('detail.clear_hint')} onClick={() => action.mutate('clear')}>
+              {t('detail.clear')}
+            </Button>
+            <Button size="sm" icon={<Moon className="size-4" />} onClick={() => action.mutate('sleep')}>
+              {t('detail.sleep')}
+            </Button>
+            <Button size="sm" icon={<RotateCcw className="size-4" />} onClick={() => confirm(t('detail.confirm_reboot')) && action.mutate('reboot')}>
+              {t('detail.reboot')}
+            </Button>
+          </div>
+        </div>
+
+        <div className="min-w-0 space-y-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-[28px] font-bold tracking-tight [overflow-wrap:anywhere]">{f.name}</h1>
+              <div className="mt-1 flex items-center gap-3">
+                {f.simulated && <TestPill />}
+                <FrameStatus frame={f} />
+                <Battery value={f.battery} />
+              </div>
+            </div>
+            <Button size="sm" variant="ghost" icon={<RefreshCw className="size-4" />} loading={refresh.isPending} onClick={() => refresh.mutate()}>
+              {t('detail.refresh')}
+            </Button>
+          </div>
+
+          <Card className="grid grid-cols-2 gap-4 p-5 sm:grid-cols-4">
+            <Info label={t('detail.resolution')} value={`${f.width}×${f.height}`} />
+            <Info label="IP" value={f.host} />
+            <Info label={t('detail.last_seen')} value={relativeTime(f.lastSeen)} />
+            <Info label={t(f.mode === 'pull' ? 'detail.next_wake' : 'detail.firmware')} value={f.mode === 'pull' ? dateTime(f.nextWake) : f.firmware} />
+            <Info label={t('detail.model')} value={f.model} />
+            <Info label="Wi-Fi" value={info.sta_ssid as string} />
+            <Info label={t('detail.free')} value={info.free_size ? `${Math.round(Number(info.free_size) / 1e6)} MB` : undefined} />
+            <Info label={t('detail.pending')} value={t(f.pendingImageId ? 'detail.pending_photo' : 'detail.pending_none')} />
+          </Card>
+
+          <Segmented
+            value={tab}
+            onChange={setTab}
+            className="max-w-full overflow-x-auto scrollbar-none"
+            options={[
+              { value: 'schedule', label: t('nav.schedule') },
+              { value: 'mode', label: t('detail.tab_mode') },
+              { value: 'history', label: t('detail.tab_history') },
+              { value: 'device', label: t('detail.tab_device') },
+              { value: 'settings', label: t('nav.settings') },
+            ]}
+          />
+          <Card className="p-6">
+            {tab === 'schedule' && <AssignmentEditor key={f.assignment?.id ?? 'new'} frame={f} />}
+            {tab === 'mode' && <ModeTab frame={f} />}
+            {tab === 'history' && <HistoryTab frame={f} />}
+            {tab === 'device' && <DeviceTab frame={f} />}
+            {tab === 'settings' && <SettingsTab frame={f} />}
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}

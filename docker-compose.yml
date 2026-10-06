@@ -1,0 +1,15 @@
+services:
+  eink-hub:
+    # Released image; see docker-compose.override.yml.example to build locally.
+    image: registry.gitlab.com/yayitazale/eink-hub:latest
+    container_name: eink-hub
+    restart: unless-stopped
+    # Host networking lets mDNS discovery see the frames on your LAN.
+    # If you prefer bridge networking, remove this line, uncomment `ports`
+    # and add frames by IP (discovery's subnet scan still works with `subnet`).
+    network_mode: host
+    # ports:
+    #   - "8080:8080"
+    volumes:
+      - ./data:/data
+    env_file: .env

@@ -1,0 +1,5 @@
+# Force LF on files that run inside the Linux container, whatever
+# core.autocrlf says in the local checkout (on Windows autocrlf=true rewrites
+# them to CRLF, and "#!/bin/sh\r" is not a valid shebang).
+*.sh text eol=lf
+Dockerfile text eol=lf

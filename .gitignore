@@ -1,0 +1,8 @@
+node_modules
+dist
+data
+*.log
+.env
+docker-compose.override.yml
+fake-frame.log
+.claude
