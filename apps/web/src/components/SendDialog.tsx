@@ -5,6 +5,7 @@ import { api, type Crop, type FitMode, type Frame } from '../lib/api';
 import { useAction, useFrames } from '../lib/hooks';
 import { FrameMockup } from './FrameMockup';
 import { useI18n, type MsgKey } from '../i18n';
+import { BgPicker } from './BgPicker';
 import { Button, Modal, Segmented, Spinner, cx } from './ui';
 
 type Mode = 'auto' | 'crop' | 'contain' | 'blur';
@@ -108,7 +109,7 @@ export function SendDialog({ imageId, open, onClose, defaultFrameId }: { imageId
                 </button>
               ))}
             </div>
-            <Segmented fill value={mode} onChange={setMode} options={modeLabels.map((m) => ({ value: m.value, label: t(m.label) }))} />
+            <Segmented className="max-w-full overflow-x-auto scrollbar-none" value={mode} onChange={setMode} options={modeLabels.map((m) => ({ value: m.value, label: t(m.label) }))} />
 
             {mode === 'crop' && frame && imageId ? (
               <div className="relative h-[52dvh] overflow-hidden rounded-3xl bg-[#2a2926]">
@@ -132,18 +133,7 @@ export function SendDialog({ imageId, open, onClose, defaultFrameId }: { imageId
               </p>
             )}
             {mode === 'contain' && (
-              <div className="flex items-center gap-3">
-                {['#ffffff', '#f4f1eb', '#000000'].map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setBg(c)}
-                    className={cx('size-9 rounded-full border-2', bg === c ? 'border-accent' : 'border-line')}
-                    style={{ background: c }}
-                    aria-label={c}
-                  />
-                ))}
-                <input type="color" value={bg} onChange={(e) => setBg(e.target.value)} className="size-9 cursor-pointer rounded-full border-0 bg-transparent" />
-              </div>
+              <BgPicker value={bg} onChange={setBg} />
             )}
           </div>
 
