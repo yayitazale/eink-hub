@@ -159,14 +159,14 @@ export function setCrop(db: DB, imageId: number, aspect: string, crop: CropRect 
 }
 
 /** Date the photo was taken, e.g. "6 de octubre de 2019". Stored as wall-clock time in UTC. */
-export function photoDate(img: Pick<Image, 'takenAt'>, lang: Lang = 'es'): string | null {
+export function photoDate(img: Pick<Image, 'takenAt'>, lang: Lang = 'en'): string | null {
   if (!img.takenAt) return null;
   if (lang === 'eu') return basqueDate(new Date(img.takenAt));
   return new Intl.DateTimeFormat(locales[lang], { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(img.takenAt);
 }
 
 /** "Un día como hoy hace 7 años" — the Google Photos-style caption for "On this day" memories. */
-export function yearsAgoCaption(img: Pick<Image, 'takenAt'>, lang: Lang = 'es', now = new Date()): string | null {
+export function yearsAgoCaption(img: Pick<Image, 'takenAt'>, lang: Lang = 'en', now = new Date()): string | null {
   if (!img.takenAt) return null;
   const years = now.getFullYear() - new Date(img.takenAt).getUTCFullYear();
   if (years < 1) return photoDate(img, lang);

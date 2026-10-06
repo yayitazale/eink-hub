@@ -195,7 +195,7 @@ export const isLang = (v: unknown): v is Lang => languages.includes(v as Lang);
 /** The hub-wide language (Settings); used for anything shown on the Canvas itself. */
 export function hubLang(db: DB): Lang {
   const l = getSetting(db, 'language');
-  return isLang(l) ? l : 'es';
+  return isLang(l) ? l : 'en';
 }
 
 /** Language for an API response: the UI's explicit choice, else the browser's, else the hub's. */
