@@ -8,6 +8,14 @@ export default defineConfig({
   description: 'Self-hosted control center for e-ink photo frames: BLOOMIN8, SwitchBot, TRMNL and your own DIY frames, with Immich.',
   lang: 'en-GB',
   base: process.env.DOCS_BASE ?? '/eink-hub/',
+  // Set by scripts/build-all.mjs: which release this build documents, and where the site root is
+  // (the version switcher reads versions.json from there).
+  vite: {
+    define: {
+      __DOCS_VERSION__: JSON.stringify(process.env.DOCS_VERSION ?? 'dev'),
+      __DOCS_ROOT__: JSON.stringify(process.env.DOCS_ROOT ?? '/eink-hub/'),
+    },
+  },
   // GitLab Pages serves the `public` folder at the repository root.
   outDir: '../public',
   cleanUrls: true,
@@ -85,7 +93,7 @@ export default defineConfig({
     editLink: { pattern: `${repo}/-/edit/main/docs-site/:path`, text: 'Edit this page on GitLab' },
     search: { provider: 'local' },
     footer: {
-      message: 'Released under the MIT License. Not affiliated with BLOOMIN8, SwitchBot or TRMNL.',
+      message: `Released under the <a href="${repo}/-/blob/main/LICENSE">MIT License</a>. Not affiliated with BLOOMIN8, SwitchBot or TRMNL.`,
       copyright: '© 2026 Joseba Egia',
     },
   },

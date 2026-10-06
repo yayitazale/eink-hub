@@ -96,31 +96,41 @@ npm-audit:
     - if: '$CI_COMMIT_TAG'
 
 # The project website (docs-site/, VitePress) on GitLab Pages. It must be called
-# `pages` and leave the site in `public/`. Published from main only; merge
-# requests that touch it just build it, so broken links fail before merging.
-# Full image (not slim): VitePress reads `git log` for the "last updated" dates.
+# `pages` and leave the site in `public/`. Every deploy rebuilds the docs of
+# every release from its tag (Pages replaces the whole site), so people on an
+# older version can still read theirs: latest release at the root, older ones
+# under /vX.Y.Z/, main under /main/. Needs the full history and tags.
+# Merge requests that touch the docs only build the current version, so broken
+# links fail before merging.
+# Full image (not slim): git is needed for the tags and "last updated" dates.
 .docs: &docs
   stage: build
   image: node:22-bookworm
   variables:
     GIT_DEPTH: 0
+    # Shared by every release's `npm ci` in build-all.mjs.
+    npm_config_cache: $CI_PROJECT_DIR/.npm
   cache:
     key: docs-site
-    paths: [docs-site/node_modules]
-  script:
+    paths: [.npm]
+  before_script:
     - cd docs-site
     - npm ci
-    - npm run build
 
 pages:
   <<: *docs
+  script:
+    - npm run build:all
   artifacts:
     paths: [public]
   rules:
+    - if: '$CI_COMMIT_TAG'
     - if: '$CI_COMMIT_BRANCH == "main"'
 
 docs-build:
   <<: *docs
+  script:
+    - npm run build
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: [docs-site/**/*, docs/**/*, examples/**/*]

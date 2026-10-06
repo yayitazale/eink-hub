@@ -19,11 +19,11 @@ The hub can't wake the frame or make it check in sooner. Each call counts agains
 
 ## Public address
 
-Because SwitchBot's servers download the photo, the hub needs an **https address reachable from the internet**. Set it as the **external URL** in **Settings**. Some options:
+Because SwitchBot's servers download the photo, the hub needs an **https address reachable from the internet**. Only `/u/img/` has to be exposed: the UI can stay private. Set it in **Settings** as the **public address for cloud frames** (or use the external URL if that's already public). Some options, explained in [Hub addresses](/guide/addresses#_3-expose-it-to-the-internet-only-for-switchbot):
 
-- [Tailscale Funnel](https://tailscale.com/kb/1223/funnel): `tailscale funnel 8080`, no open ports needed.
-- A reverse proxy (Caddy, Nginx Proxy Manager, Traefik…) with a certificate. You can expose just the `/u/img/` path.
-- A Cloudflare Tunnel.
+- [Tailscale Funnel](https://tailscale.com/kb/1223/funnel) on port 8443 for `/u/img` only, no open ports on your router.
+- A reverse proxy (Caddy, Nginx Proxy Manager, Traefik…) with a certificate, forwarding only `/u/img/`.
+- A Cloudflare Tunnel with the same path rule.
 
 Picture URLs carry a long random per-frame token, so nobody can list or guess your photos.
 

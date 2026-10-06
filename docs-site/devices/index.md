@@ -4,6 +4,7 @@ Each kind of frame is a *driver* in the hub. They differ in how the hub reaches 
 
 | | BLOOMIN8 | SwitchBot AI Art Frame | TRMNL firmware | DIY (Open Frame) |
 | --- | --- | --- | --- | --- |
+| Integration | 🏠 Local | ☁️ Cloud | 🏠 Local | 🏠 Local |
 | Connection | Local HTTP API | SwitchBot cloud (OpenAPI v1.1) | Device polls the hub | Device polls the hub |
 | Needs internet | No | Yes, and a public https address for the hub | No | No |
 | Image format | JPEG; the frame dithers | JPEG | 1-bit BMP (or PNG) | JPEG, PNG or BMP, optionally dithered by the hub |

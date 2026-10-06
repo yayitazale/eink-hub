@@ -42,13 +42,16 @@ features:
 
 ## Which frames work?
 
-| Frame | How the hub talks to it | Status |
-| --- | --- | --- |
-| [BLOOMIN8 E-Ink Canvas](/devices/bloomin8) | Local API on your LAN, push or scheduled pull, Bluetooth wake | ✅ Full support |
-| [SwitchBot AI Art Frame](/devices/switchbot) | SwitchBot's official cloud API | ✅ Supported (needs a public https address) |
-| [TRMNL, Waveshare PhotoPainter, Seeed reTerminal…](/devices/trmnl) | The hub acts as their TRMNL "BYOS" server | ✅ Supported |
-| [Your own ESP32 / Raspberry Pi frame](/diy/) | [Open Frame protocol](/diy/protocol) | ✅ Supported |
-| [Aura, Reflection](/devices/unsupported) | No usable API | ❌ Not possible today |
+| Frame | Integration | How the hub talks to it | Status |
+| --- | --- | --- | --- |
+| [BLOOMIN8 E-Ink Canvas](/devices/bloomin8) | 🏠 Local | Local API on your LAN, push or scheduled pull, Bluetooth wake | ✅ Full support |
+| [SwitchBot AI Art Frame](/devices/switchbot) | ☁️ Cloud | SwitchBot's official cloud API | ✅ Supported (needs a public https address) |
+| [TRMNL, Waveshare PhotoPainter, Seeed reTerminal…](/devices/trmnl) | 🏠 Local | The hub acts as their TRMNL "BYOS" server | ✅ Supported |
+| [Your own ESP32 / Raspberry Pi frame](/diy/) | 🏠 Local | [Open Frame protocol](/diy/protocol) | ✅ Supported |
+| [Aura](/devices/unsupported#aura-frames) | ☁️ Cloud | Unofficial, reverse-engineered API only | ❌ Not supported |
+| [Reflection](/devices/unsupported#reflection-frame) | 📱 NFC | Tap-to-print from a phone, no API | ❌ Not possible |
+
+**Local** frames talk to the hub over your network only and keep working without internet. **Cloud** frames go through the manufacturer's servers.
 
 ## Up and running in two minutes
 
@@ -62,3 +65,9 @@ docker compose up -d
 Open `http://<your-server>:8080`, choose an admin password and add your first frame. No hardware yet? **Add Canvas → Simulated Canvas** gives you a virtual frame to try everything.
 
 [Read the full guide →](/guide/getting-started)
+
+---
+
+::: info 🤖 Built with Claude
+This project has been developed together with [Claude](https://claude.ai).
+:::

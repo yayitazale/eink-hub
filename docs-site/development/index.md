@@ -36,3 +36,9 @@ Everything brand-specific sits behind a driver in `apps/server/src/device/driver
 | `index.ts` | `driverFor(frame)` |
 
 A **push** frame (local or cloud API) needs a driver with `info()` and `show()`. A **pull** frame needs an endpoint in `apps/server/src/upstream/` that calls `servePull()` (`lib/pull.ts`) and formats its answer. The UI adapts to the driver's `capabilities`.
+
+## Known limitations
+
+- Bluetooth wake is tested against a mocked BlueZ; verify it on real hardware and hosts.
+- SwitchBot and TRMNL support is tested against mocks and the published protocols, not real devices yet.
+- Pre-dithered uploads to BLOOMIN8 (`/image/dataUpload`) aren't used: the frame dithers JPEGs itself.
