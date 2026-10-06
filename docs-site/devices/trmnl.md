@@ -1,4 +1,8 @@
-# TRMNL firmware
+# TRMNL firmware <Badge type="warning" text="not tested" />
+
+::: warning Not tested on real hardware
+This integration follows the published protocol and is covered by automated tests, but hasn't been tried on a real device yet. Reports are welcome in the [issues](https://gitlab.com/yayitazale/eink-hub/-/issues).
+:::
 
 [TRMNL](https://usetrmnl.com) is an e-ink device whose open-source firmware can talk to your own server ("Bring Your Own Server", [BYOS](https://docs.trmnl.com/go/diy/byos)). The hub implements that server, so anything running TRMNL firmware works without writing any code:
 

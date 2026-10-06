@@ -94,7 +94,7 @@ export default defineConfig({
     search: { provider: 'local' },
     footer: {
       message: `Released under the <a href="${repo}/-/blob/main/LICENSE">MIT License</a>. Not affiliated with BLOOMIN8, SwitchBot or TRMNL.`,
-      copyright: '© 2026 Joseba Egia',
+      copyright: '© 2026 <a href="https://josebaegia.me/">Joseba Egia</a>',
     },
   },
 });

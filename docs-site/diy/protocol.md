@@ -1,4 +1,8 @@
-# Open Frame protocol v1
+# Open Frame protocol v1 <Badge type="warning" text="not tested" />
+
+::: warning Not tested on real hardware
+This integration follows the published protocol and is covered by automated tests, but hasn't been tried on a real device yet. Reports are welcome in the [issues](https://gitlab.com/yayitazale/eink-hub/-/issues).
+:::
 
 A minimal HTTP protocol between a frame and E-Ink Hub. The frame always starts the conversation, so it needs no server, no open ports and no clock. It is designed for battery-powered microcontrollers.
 

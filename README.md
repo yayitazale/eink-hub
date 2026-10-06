@@ -7,9 +7,9 @@ Self-hosted control center for e-ink photo frames, with **Immich** integration. 
 | Frame | Integration | |
 | --- | --- | --- |
 | [BLOOMIN8 E-Ink Canvas](https://yayitazale.gitlab.io/eink-hub/devices/bloomin8) | 🏠 Local | ✅ |
-| [SwitchBot AI Art Frame](https://yayitazale.gitlab.io/eink-hub/devices/switchbot) | ☁️ Cloud | ✅ |
-| [TRMNL firmware](https://yayitazale.gitlab.io/eink-hub/devices/trmnl) (TRMNL, Waveshare PhotoPainter, reTerminal…) | 🏠 Local | ✅ |
-| [Your own ESP32 / Raspberry Pi frame](https://yayitazale.gitlab.io/eink-hub/diy/) | 🏠 Local | ✅ |
+| [SwitchBot AI Art Frame](https://yayitazale.gitlab.io/eink-hub/devices/switchbot) | ☁️ Cloud | ✅ ⚠️ not tested |
+| [TRMNL firmware](https://yayitazale.gitlab.io/eink-hub/devices/trmnl) (TRMNL, Waveshare PhotoPainter, reTerminal…) | 🏠 Local | ✅ ⚠️ not tested |
+| [Your own ESP32 / Raspberry Pi frame](https://yayitazale.gitlab.io/eink-hub/diy/) | 🏠 Local | ✅ ⚠️ not tested |
 
 - Exact previews with smart crop, manual crop, border or blurred background
 - Collections from uploads or Immich (albums, people, favourites, smart search, "on this day")
@@ -41,4 +41,4 @@ The website lives in [`docs-site/`](docs-site) (VitePress). Contributions are we
 
 ## License
 
-[MIT](LICENSE) © 2026 Joseba Egia. Third-party components are listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Not affiliated with BLOOMIN8, SwitchBot or TRMNL.
+[MIT](LICENSE) © 2026 [Joseba Egia](https://josebaegia.me/). Third-party components are listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Not affiliated with BLOOMIN8, SwitchBot or TRMNL.

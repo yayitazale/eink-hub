@@ -45,9 +45,9 @@ features:
 | Frame | Integration | How the hub talks to it | Status |
 | --- | --- | --- | --- |
 | [BLOOMIN8 E-Ink Canvas](/devices/bloomin8) | 🏠 Local | Local API on your LAN, push or scheduled pull, Bluetooth wake | ✅ Full support |
-| [SwitchBot AI Art Frame](/devices/switchbot) | ☁️ Cloud | SwitchBot's official cloud API | ✅ Supported (needs a public https address) |
-| [TRMNL, Waveshare PhotoPainter, Seeed reTerminal…](/devices/trmnl) | 🏠 Local | The hub acts as their TRMNL "BYOS" server | ✅ Supported |
-| [Your own ESP32 / Raspberry Pi frame](/diy/) | 🏠 Local | [Open Frame protocol](/diy/protocol) | ✅ Supported |
+| [SwitchBot AI Art Frame](/devices/switchbot) | ☁️ Cloud | SwitchBot's official cloud API | ✅ Supported (needs a public https address) <Badge type="warning" text="not tested" /> |
+| [TRMNL, Waveshare PhotoPainter, Seeed reTerminal…](/devices/trmnl) | 🏠 Local | The hub acts as their TRMNL "BYOS" server | ✅ Supported <Badge type="warning" text="not tested" /> |
+| [Your own ESP32 / Raspberry Pi frame](/diy/) | 🏠 Local | [Open Frame protocol](/diy/protocol) | ✅ Supported <Badge type="warning" text="not tested" /> |
 | [Aura](/devices/unsupported#aura-frames) | ☁️ Cloud | Unofficial, reverse-engineered API only | ❌ Not supported |
 | [Reflection](/devices/unsupported#reflection-frame) | 📱 NFC | Tap-to-print from a phone, no API | ❌ Not possible |
 

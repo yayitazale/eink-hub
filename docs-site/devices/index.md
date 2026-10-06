@@ -2,7 +2,7 @@
 
 Each kind of frame is a *driver* in the hub. They differ in how the hub reaches them and, above all, in **how a sleeping frame gets to see a new picture**.
 
-| | BLOOMIN8 | SwitchBot AI Art Frame | TRMNL firmware | DIY (Open Frame) |
+| | BLOOMIN8 | SwitchBot AI Art Frame <Badge type="warning" text="not tested" /> | TRMNL firmware <Badge type="warning" text="not tested" /> | DIY (Open Frame) <Badge type="warning" text="not tested" /> |
 | --- | --- | --- | --- | --- |
 | Integration | 🏠 Local | ☁️ Cloud | 🏠 Local | 🏠 Local |
 | Connection | Local HTTP API | SwitchBot cloud (OpenAPI v1.1) | Device polls the hub | Device polls the hub |

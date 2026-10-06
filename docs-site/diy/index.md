@@ -1,4 +1,8 @@
-# Build your own frame
+# Build your own frame <Badge type="warning" text="not tested" />
+
+::: warning Not tested on real hardware
+This integration follows the published protocol and is covered by automated tests, but hasn't been tried on a real device yet. Reports are welcome in the [issues](https://gitlab.com/yayitazale/eink-hub/-/issues).
+:::
 
 Any microcontroller or single-board computer with Wi-Fi and an e-paper panel can be an E-Ink Hub frame. The hub does the hard parts: picking the photo, cropping, resizing, rotating, captions and, if you want, **dithering to your panel's exact colours**. Your firmware only has to download a picture and draw it.
 

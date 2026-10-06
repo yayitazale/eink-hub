@@ -1,4 +1,8 @@
-# SwitchBot AI Art Frame
+# SwitchBot AI Art Frame <Badge type="warning" text="not tested" />
+
+::: warning Not tested on real hardware
+This integration follows the published protocol and is covered by automated tests, but hasn't been tried on a real device yet. Reports are welcome in the [issues](https://gitlab.com/yayitazale/eink-hub/-/issues).
+:::
 
 The [SwitchBot AI Art Frame](https://www.switch-bot.com/products/switchbot-ai-art-frame) (7.3″, 13.3″ and 31.5″, E Ink Spectra 6) has no local API. The hub uses SwitchBot's official cloud API ([OpenAPI v1.1](https://github.com/OpenWonderLabs/SwitchBotAPI)), the same one Home Assistant's SwitchBot Cloud integration uses.
 
