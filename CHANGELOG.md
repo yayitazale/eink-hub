@@ -9,6 +9,12 @@ web share a single number (see `VERSION` at the repository root).
 Generated automatically from commit messages. The 0.1.0 entry is the only
 one written by hand: it summarises everything before the first release.
 
+## [0.3.2] - 2026-10-07
+
+### Documentation
+
+- **unraid**: Explain Bluetooth wake needs BlueZ ([97509226](https://gitlab.com/yayitazale/eink-hub/-/commit/975092264bf59c0d84126de8df03affcf82b6c93))
+
 ## [0.3.1] - 2026-10-07
 
 ### Fixed
