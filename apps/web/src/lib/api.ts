@@ -100,6 +100,19 @@ export interface Frame {
   bleMac: string | null;
   /** Wake over the hub's Bluetooth before sending when asleep. */
   bleAutoWake: boolean;
+  /** Screen diagonal in inches: set by hand, or inferred from model/resolution (null if unknown). */
+  diagonal: number | null;
+  diagonalInferred: boolean;
+  /** How the frame around it looks in the mockups. */
+  appearance: FrameAppearance;
+}
+
+export type FrameColor = 'black' | 'white' | 'walnut' | 'oak' | 'natural';
+export type FrameStyle = 'thin' | 'thick' | 'classic';
+export interface FrameAppearance {
+  mat?: boolean;
+  color?: FrameColor;
+  style?: FrameStyle;
 }
 
 /** Whether the hub itself can use the host's Bluetooth. */

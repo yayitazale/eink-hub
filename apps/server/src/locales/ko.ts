@@ -45,6 +45,7 @@ export const ko: Catalogue = {
   test_canvas_name: '테스트 Canvas',
   ble_no_mac: '이 Canvas의 블루투스 주소를 알 수 없습니다',
   ble_mac_invalid: '잘못된 블루투스 주소입니다(AA:BB:CC:DD:EE:FF)',
+  diagonal_invalid: '크기는 4~60인치 사이여야 합니다',
   ble_unavailable: 'Hub의 블루투스를 사용할 수 없습니다',
   ble_wake_failed: '블루투스로 깨우지 못했습니다: {detail}',
   ble_woke_no_reply: '블루투스 신호를 보냈지만 Canvas가 Wi-Fi로 응답하지 않았습니다',

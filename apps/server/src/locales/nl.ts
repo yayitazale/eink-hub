@@ -45,6 +45,7 @@ export const nl: Catalogue = {
   test_canvas_name: 'Test-Canvas',
   ble_no_mac: 'Het Bluetooth-adres van dit Canvas is onbekend',
   ble_mac_invalid: 'Ongeldig Bluetooth-adres (AA:BB:CC:DD:EE:FF)',
+  diagonal_invalid: 'Formaat moet tussen 4 en 60 inch liggen',
   ble_unavailable: 'De Bluetooth van de Hub is niet beschikbaar',
   ble_wake_failed: 'Wakker maken via Bluetooth mislukt: {detail}',
   ble_woke_no_reply: 'Het Bluetooth-signaal is verzonden, maar het Canvas antwoordde niet via wifi',

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Bluetooth, Copy, Download, Eraser, Moon, Play, RefreshCw, RotateCcw, SkipForward, Smartphone, Trash2 } from 'lucide-react';
-import { api, thumbUrl, type Frame, type HistoryEntry, type ImageFormat, type Schedule } from '../lib/api';
+import { api, thumbUrl, type Frame, type FrameAppearance, type HistoryEntry, type ImageFormat, type Schedule } from '../lib/api';
+import { FRAME_COLORS, FRAME_STYLES, KNOWN_DIAGONALS, formatCm, frameGeometry, withDefaults } from '../lib/frameGeometry';
 import { dateTime, relativeTime } from '../lib/format';
 import { useAction, useBleStatus, useFrame, useSettings } from '../lib/hooks';
 import { isPickerCancelled, phoneWakeSupport, wakeWithThisDevice } from '../lib/webBluetooth';
@@ -329,6 +330,91 @@ function DeviceTab({ frame }: { frame: Frame }) {
   );
 }
 
+/** Swatch colours for the frame colour picker (woods use their texture). */
+const SWATCH: Record<string, string> = { black: '#1d1c1a', white: '#f3f1ec' };
+
+/** Physical size and the look of the frame: only changes how the Hub draws it. */
+function FrameLookSettings({ frame }: { frame: Frame }) {
+  const { t } = useI18n();
+  const [look, setLook] = useState(() => withDefaults(frame.appearance));
+  // '' = automatic (from the model / resolution).
+  const known = frame.diagonal != null && KNOWN_DIAGONALS.includes(frame.diagonal);
+  const [size, setSize] = useState(frame.diagonalInferred ? '' : known ? String(frame.diagonal) : 'other');
+  const [custom, setCustom] = useState(frame.diagonalInferred || known ? '' : String(frame.diagonal));
+  const diagonal = size === 'other' ? Number(custom) || null : size ? Number(size) : null;
+  const set = (p: Partial<FrameAppearance>) => setLook((l) => ({ ...l, ...p }));
+  const save = useAction(() => api.patch(`/api/frames/${frame.id}`, { appearance: look, diagonal }), { success: t('common.saved') });
+  const preview = { ...frame, diagonal: size === '' && frame.diagonalInferred ? frame.diagonal : diagonal };
+
+  return (
+    <div className="border-t border-line pt-6">
+      <h4 className="mb-1 font-bold">{t('canvasSettings.frame')}</h4>
+      <p className="mb-4 text-xs text-muted">{t('canvasSettings.frame_hint')}</p>
+      <div className="grid gap-6 sm:grid-cols-[1fr_200px]">
+        <div className="space-y-4">
+          <Field
+            label={t('canvasSettings.frame_size')}
+            hint={
+              size !== '' || !frame.diagonalInferred
+                ? undefined
+                : frame.diagonal != null
+                  ? t('canvasSettings.frame_size_detected', { size: frame.diagonal })
+                  : t('canvasSettings.frame_size_unknown')
+            }
+          >
+            <div className="flex gap-2">
+              <select className={inputClass} value={size} onChange={(e) => setSize(e.target.value)}>
+                <option value="">{t('canvasSettings.frame_size_auto')}</option>
+                {KNOWN_DIAGONALS.map((d) => (
+                  <option key={d} value={String(d)}>
+                    {d}″
+                  </option>
+                ))}
+                <option value="other">{t('canvasSettings.frame_size_other')}</option>
+              </select>
+              {size === 'other' && (
+                <input type="number" step="0.1" min="4" max="60" className={cx(inputClass, 'w-28')} value={custom} onChange={(e) => setCustom(e.target.value)} />
+              )}
+            </div>
+          </Field>
+          <Toggle label={t('canvasSettings.frame_mat')} hint={t('canvasSettings.frame_mat_hint')} checked={look.mat} onChange={(mat) => set({ mat })} />
+          <Field label={t('canvasSettings.frame_color')} group>
+            <div className="flex flex-wrap gap-3">
+              {FRAME_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  title={t(`canvasSettings.color_${c}`)}
+                  aria-label={t(`canvasSettings.color_${c}`)}
+                  aria-pressed={look.color === c}
+                  onClick={() => set({ color: c })}
+                  className={cx(
+                    'size-9 rounded-full border border-line bg-cover shadow-soft transition',
+                    look.color === c ? 'ring-2 ring-ink ring-offset-2 ring-offset-surface' : 'hover:scale-105',
+                  )}
+                  style={SWATCH[c] ? { background: SWATCH[c] } : { backgroundImage: `url(/textures/${c}-h.webp)` }}
+                />
+              ))}
+            </div>
+          </Field>
+          <Field label={t('canvasSettings.frame_style')} group>
+            <Segmented fill value={look.style} onChange={(style) => set({ style })} options={FRAME_STYLES.map((s) => ({ value: s, label: t(`canvasSettings.style_${s}`) }))} />
+          </Field>
+        </div>
+        <div className="space-y-2">
+          <div className="mx-auto max-w-[200px] rounded-3xl bg-surface-2/60 p-6">
+            <FrameMockup frame={preview} appearance={look} />
+          </div>
+          <p className="text-center text-xs text-muted">{formatCm(frameGeometry(preview, look))}</p>
+        </div>
+      </div>
+      <Button className="mt-4" loading={save.isPending} onClick={() => save.mutate()}>
+        {t('common.save')}
+      </Button>
+    </div>
+  );
+}
+
 function BluetoothSettings({ frame }: { frame: Frame }) {
   const { t } = useI18n();
   const ble = useBleStatus();
@@ -445,6 +531,8 @@ function SettingsTab({ frame }: { frame: Frame }) {
       </div>
       )}
 
+      <FrameLookSettings frame={frame} />
+
       {caps.bleWake && <BluetoothSettings frame={frame} />}
 
       <div className="border-t border-line pt-6">
@@ -519,6 +607,10 @@ export function FrameDetail() {
         <div className="space-y-5">
           <div className="rounded-[32px] bg-surface-2/60 px-10 py-10">
             <FrameMockup frame={f} className="mx-auto max-w-[240px]" />
+            <p className="mt-4 text-center text-xs text-muted">
+              {f.diagonal ? `${f.diagonal}″ · ` : ''}
+              {formatCm(frameGeometry(f, withDefaults(f.appearance)))}
+            </p>
           </div>
           <div className="flex flex-wrap justify-center gap-2">
             <Button size="sm" icon={<SkipForward className="size-4" />} onClick={() => action.mutate('next')}>

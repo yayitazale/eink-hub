@@ -2,13 +2,14 @@ import crypto from 'node:crypto';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { desc, eq } from 'drizzle-orm';
 import { schema, setSetting } from '../db/index.js';
-import { SECRET_CONFIG_KEYS, type DisplayOptions, type Frame, type FrameConfig } from '../db/schema.js';
+import { FRAME_COLORS, FRAME_STYLES, SECRET_CONFIG_KEYS, type DisplayOptions, type Frame, type FrameAppearance, type FrameConfig } from '../db/schema.js';
 import { bleStatus, normalizeMac } from '../device/ble.js';
 import { DeviceError, FrameClient, type DeviceInfo, type Playlist } from '../device/client.js';
 import { describeKind, driverFor, isFrameKind, palettes, type DeviceAction, type FrameKind, type ImageFormat } from '../device/drivers/index.js';
 import { infoToFrame } from '../device/drivers/bloomin8.js';
 import { SWITCHBOT_SIZES, SwitchBotApi, type SwitchBotSize } from '../device/drivers/switchbot.js';
 import { discover } from '../device/discovery.js';
+import { inferDiagonal } from '../device/sizes.js';
 import { HttpError, cloudUrlSetting, detectLocalUrl, localUrlSetting, qrUrl, type Ctx } from '../lib/context.js';
 import { prepareCollection } from '../lib/collections.js';
 import { assignmentOptions, chooseNextImage, displayImage, getAssignment, getFrame, markOnline, pushWelcome } from '../lib/display.js';
@@ -42,7 +43,8 @@ function confirmCloudDelivery(ctx: Ctx, frame: Frame, status: Record<string, unk
 /** What the UI gets for a frame: no secrets, plus what it can do. */
 export function publicFrame(ctx: Ctx, f: Frame) {
   const config = Object.fromEntries(Object.entries(f.config ?? {}).filter(([k]) => !(SECRET_CONFIG_KEYS as readonly string[]).includes(k)));
-  return { ...f, config, ...describeKind(f), assignment: getAssignment(ctx.db, f.id) ?? null, simulated: isSimulated(ctx.db, f.id) };
+  const diagonal = f.diagonal ?? inferDiagonal(f);
+  return { ...f, config, diagonal, diagonalInferred: f.diagonal == null, ...describeKind(f), assignment: getAssignment(ctx.db, f.id) ?? null, simulated: isSimulated(ctx.db, f.id) };
 }
 
 const parseFormat = (v: unknown): ImageFormat | undefined => {
@@ -251,6 +253,9 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
       pullSchedule?: unknown;
       bleMac?: string | null;
       config?: Partial<Pick<FrameConfig, 'maxPollMinutes' | 'notifyUrl' | 'format' | 'token' | 'secret'>>;
+      /** Inches; null goes back to the inferred size. */
+      diagonal?: number | null;
+      appearance?: Partial<FrameAppearance>;
     };
   }>(
     '/api/frames/:id',
@@ -282,8 +287,21 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
         patch.bleMac = mac;
       }
       if (typeof b.bleAutoWake === 'boolean') patch.bleAutoWake = b.bleAutoWake;
+      if (b.diagonal !== undefined) {
+        const d = b.diagonal === null ? null : Number(b.diagonal);
+        if (d !== null && !(d >= 4 && d <= 60)) throw new HttpError(400, 'diagonal_invalid');
+        patch.diagonal = d === null ? null : Math.round(d * 10) / 10;
+      }
+      if (b.appearance) {
+        const a = b.appearance;
+        const next: FrameAppearance = { ...frame.appearance };
+        if (typeof a.mat === 'boolean') next.mat = a.mat;
+        if (FRAME_COLORS.includes(a.color as never)) next.color = a.color;
+        if (FRAME_STYLES.includes(a.style as never)) next.style = a.style;
+        patch.appearance = next;
+      }
       if (Object.keys(patch).length) db.update(schema.frames).set(patch).where(eq(schema.frames.id, id)).run();
-      return getFrame(db, id);
+      return publicFrame(ctx, getFrame(db, id));
     },
   );
 

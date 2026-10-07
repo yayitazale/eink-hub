@@ -45,6 +45,7 @@ export const ca: Catalogue = {
   test_canvas_name: 'Canvas de prova',
   ble_no_mac: 'No es coneix l’adreça Bluetooth d’aquest Canvas',
   ble_mac_invalid: 'Adreça Bluetooth no vàlida (AA:BB:CC:DD:EE:FF)',
+  diagonal_invalid: 'La mida ha de ser entre 4 i 60 polzades',
   ble_unavailable: 'El Bluetooth del Hub no està disponible',
   ble_wake_failed: 'No s’ha pogut despertar per Bluetooth: {detail}',
   ble_woke_no_reply: 'S’ha enviat el senyal per Bluetooth, però el Canvas no ha respost per Wi-Fi',

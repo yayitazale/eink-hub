@@ -48,6 +48,7 @@ export const cs: Catalogue = {
   test_canvas_name: 'Testovací Canvas',
   ble_no_mac: 'Adresa Bluetooth tohoto Canvasu není známa',
   ble_mac_invalid: 'Neplatná adresa Bluetooth (AA:BB:CC:DD:EE:FF)',
+  diagonal_invalid: 'Velikost musí být mezi 4 a 60 palci',
   ble_unavailable: 'Bluetooth Hubu není k dispozici',
   ble_wake_failed: 'Probuzení přes Bluetooth se nezdařilo: {detail}',
   ble_woke_no_reply: 'Signál Bluetooth byl odeslán, ale Canvas neodpověděl přes Wi-Fi',
