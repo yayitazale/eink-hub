@@ -62,9 +62,24 @@ docker compose up -d --build
 
 Match the surrounding code: TypeScript everywhere, small modules, comments
 that explain *why* rather than *what*. UI strings go through the i18n files in
-`apps/web/src/i18n` (English, Spanish and Basque), so please add new keys to
-all three; if you can't translate one, copy the English text and mention it in
-the MR.
+`apps/web/src/i18n`, and API messages through `apps/server/src/i18n.ts` with
+`apps/server/src/locales`. Please add new keys to every language; if you can't
+translate one, copy the English text and mention it in the MR. `npm test`
+checks that every language has every key, the same `{placeholders}` and the
+plural forms its language needs.
+
+### Languages
+
+English, Spanish and Basque are written by hand. Catalan, Galician, French,
+German, Italian, Portuguese, Dutch, Polish, Czech, Russian, Japanese, Korean
+and Simplified and Traditional Chinese were machine-translated and have not
+been reviewed by native speakers: corrections are very welcome.
+
+To add a language: create `apps/web/src/i18n/<code>.ts` (typed `Catalogue`) and
+`apps/server/src/locales/<code>.ts`, register both in the two `i18n` index
+files, and add `_few` / `_many` variants of the plural keys if
+`new Intl.PluralRules('<code>')` needs them. Text drawn on the Canvas needs a
+font with the right glyphs in the `Dockerfile`.
 
 ## License
 
