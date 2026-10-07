@@ -142,6 +142,7 @@ export const ja: Catalogue = {
   'localUrl.browser': '自動検出されました：Hubへのアクセスに使っているアドレスです。',
   'localUrl.interface': 'このサーバーのIPアドレスから自動検出されました。',
   'localUrl.none': '検出できませんでした。ローカルネットワーク上のこのサーバーのIPアドレスを入力してください。',
+  'externalUrl.tailscale': 'Tailscale Serve から自動検出されました。この欄が空の間はこのアドレスを使います。',
 
   'history.empty': 'Hubから表示されたものはまだありません。',
   'history.failed': '失敗',

@@ -142,6 +142,7 @@ export const de: Catalogue = {
   'localUrl.browser': 'Automatisch erkannt: Es ist die Adresse, unter der du den Hub benutzt.',
   'localUrl.interface': 'Automatisch aus der IP dieses Servers erkannt.',
   'localUrl.none': 'Konnte nicht erkannt werden: Gib die IP dieses Servers im lokalen Netzwerk ein.',
+  'externalUrl.tailscale': 'Automatisch aus Tailscale Serve erkannt; wird verwendet, solange dieses Feld leer ist.',
 
   'history.empty': 'Vom Hub wurde noch nichts angezeigt.',
   'history.failed': 'fehlgeschlagen',

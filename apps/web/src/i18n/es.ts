@@ -141,6 +141,7 @@ export const es = {
   'localUrl.browser': 'Detectada automáticamente: es la dirección con la que estás usando el Hub.',
   'localUrl.interface': 'Detectada automáticamente a partir de la IP de este servidor.',
   'localUrl.none': 'No se ha podido detectar: escribe la IP de este servidor en tu red local.',
+  'externalUrl.tailscale': 'Detectada automáticamente de Tailscale Serve; se usa mientras este campo esté vacío.',
 
   'history.empty': 'Todavía no se ha mostrado nada desde el Hub.',
   'history.failed': 'falló',

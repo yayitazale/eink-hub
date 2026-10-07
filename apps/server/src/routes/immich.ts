@@ -4,7 +4,7 @@ import { statsEnabled } from '../lib/stats.js';
 import { isLang } from '../i18n.js';
 import { ImmichClient, assetOrientation, type ImmichAsset } from '../immich/client.js';
 import { addItems, memoriesDay } from '../lib/collections.js';
-import { HttpError, cloudUrlSetting, detectLocalUrl, externalUrlSetting, immichConfig, immichFor, type Ctx } from '../lib/context.js';
+import { HttpError, cloudUrlSetting, configuredExternalUrl, detectLocalUrl, externalUrlSetting, externalUrlSource, immichConfig, immichFor, type Ctx } from '../lib/context.js';
 import { displayImage } from '../lib/display.js';
 import { upsertImmichAssets } from '../lib/images.js';
 
@@ -118,7 +118,10 @@ export function immichRoutes(app: FastifyInstance, ctx: Ctx) {
       immichApiKeySet: !!apiKey,
       localUrl: detected.url,
       localUrlSource: detected.source,
-      externalUrl: externalUrlSetting(db),
+      // Only what is configured, so saving the form doesn't freeze the detected address.
+      externalUrl: configuredExternalUrl(db),
+      externalUrlEffective: externalUrlSetting(db),
+      externalUrlSource: externalUrlSource(db),
       cloudUrl: getSetting(db, 'cloudUrl') ?? '',
       cloudUrlEffective: cloudUrlSetting(db),
       language: getSetting(db, 'language') ?? null,

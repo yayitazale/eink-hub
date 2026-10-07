@@ -137,6 +137,8 @@ function HubSettings() {
   }, [settings.data]);
   const save = useAction(() => api.put('/api/settings', { localUrl, externalUrl, cloudUrl }), { success: t('common.saved'), invalidate: [['settings']] });
   const source = settings.data && localUrl === settings.data.localUrl ? t(`localUrl.${settings.data.localUrlSource}` as MsgKey) : '';
+  // Detected from Tailscale Serve (Unraid): shown as the placeholder, used while the field is empty.
+  const tailscaleUrl = settings.data?.externalUrlSource === 'tailscale' ? settings.data.externalUrlEffective : '';
   return (
     <Card className="p-6">
       <h2 className="text-lg font-bold">Hub</h2>
@@ -144,10 +146,13 @@ function HubSettings() {
         <Field label={t('settings.local_url')} hint={`${t('settings.local_url_hint')} ${source}`}>
           <input className={inputClass} placeholder="http://192.168.1.10:8080" value={localUrl} onChange={(e) => setLocalUrl(e.target.value)} />
         </Field>
-        <Field label={t('settings.external_url')} hint={t('settings.external_url_hint')}>
+        <Field
+          label={t('settings.external_url')}
+          hint={tailscaleUrl && !externalUrl ? `${t('settings.external_url_hint')} ${t('externalUrl.tailscale')}` : t('settings.external_url_hint')}
+        >
           <input
             className={inputClass}
-            placeholder="https://hub.example.ts.net"
+            placeholder={tailscaleUrl || 'https://hub.example.ts.net'}
             value={externalUrl}
             onChange={(e) => setExternalUrl(e.target.value)}
           />

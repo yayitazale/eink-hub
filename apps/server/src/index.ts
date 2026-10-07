@@ -3,15 +3,18 @@ import { config, ensureDirs } from './config.js';
 import { openDb } from './db/index.js';
 import { startScheduler } from './scheduler/index.js';
 import { restoreTestCanvases, stopTestCanvases } from './lib/simulators.js';
+import { startTailscaleDetection } from './lib/tailscale.js';
 
 ensureDirs();
 const db = openDb(config.dbPath);
 const { app, ctx } = await buildApp(db, { logDir: config.dataDir });
 const stopScheduler = config.schedulerEnabled ? startScheduler(ctx) : () => {};
+const stopTailscale = startTailscaleDetection(app.log);
 
 for (const sig of ['SIGINT', 'SIGTERM'] as const) {
   process.on(sig, async () => {
     stopScheduler();
+    stopTailscale();
     await stopTestCanvases();
     await app.close();
     process.exit(0);

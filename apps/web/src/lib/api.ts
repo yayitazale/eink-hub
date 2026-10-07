@@ -178,8 +178,11 @@ export interface Settings {
   /** LAN address Canvases use (pull mode), plus how it was obtained. */
   localUrl: string;
   localUrlSource: 'settings' | 'env' | 'browser' | 'interface' | 'none';
-  /** Optional reverse-proxy / Tailscale address; the welcome QR opens it. */
+  /** Optional reverse-proxy / Tailscale address as configured; the welcome QR opens it. */
   externalUrl: string;
+  /** What is actually used: externalUrl, else the address Tailscale Serve publishes the hub at. */
+  externalUrlEffective: string;
+  externalUrlSource: 'settings' | 'env' | 'tailscale' | 'none';
   /** Public https address cloud frames (SwitchBot) download pictures from; empty = externalUrl. */
   cloudUrl: string;
   /** What is actually used: cloudUrl, else externalUrl. */

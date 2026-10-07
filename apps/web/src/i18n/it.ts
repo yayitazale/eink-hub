@@ -142,6 +142,7 @@ export const it: Catalogue = {
   'localUrl.browser': 'Rilevato automaticamente: è l’indirizzo con cui usi l’Hub.',
   'localUrl.interface': 'Rilevato automaticamente dall’IP di questo server.',
   'localUrl.none': 'Impossibile rilevarlo: inserisci l’IP di questo server sulla rete locale.',
+  'externalUrl.tailscale': 'Rilevato automaticamente da Tailscale Serve; viene usato finché questo campo è vuoto.',
 
   'history.empty': 'Dall’Hub non è ancora stato mostrato nulla.',
   'history.failed': 'non riuscita',

@@ -148,6 +148,7 @@ export const ru: Catalogue = {
   'localUrl.browser': 'Определено автоматически: это адрес, по которому вы открываете Hub.',
   'localUrl.interface': 'Определено автоматически по IP этого сервера.',
   'localUrl.none': 'Не удалось определить: введите IP этого сервера в локальной сети.',
+  'externalUrl.tailscale': 'Определено автоматически из Tailscale Serve; используется, пока это поле пустое.',
 
   'history.empty': 'С Hub пока ничего не показывалось.',
   'history.failed': 'неудачно',

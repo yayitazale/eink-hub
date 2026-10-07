@@ -142,6 +142,7 @@ export const eu: Messages = {
   'localUrl.browser': 'Automatikoki detektatua: Hub-a erabiltzeko ari zaren helbidea da.',
   'localUrl.interface': 'Automatikoki detektatua, zerbitzari honen IPtik.',
   'localUrl.none': 'Ezin izan da detektatu: idatzi zerbitzari honen IPa zure sare lokalean.',
+  'externalUrl.tailscale': 'Tailscale Serve-tik automatikoki detektatua; eremu hau hutsik dagoen bitartean erabiltzen da.',
 
   'history.empty': 'Oraindik ez da ezer erakutsi Hub-etik.',
   'history.failed': 'huts egin du',
