@@ -26,6 +26,8 @@ docker compose up -d
 Open `http://<host>:8080`, choose an admin password and **Add Canvas**. No hardware? Add a *Simulated Canvas*.
 See [Getting started](https://eink-hub-7ba3a3.gitlab.io/guide/getting-started) for the rest.
 
+On **Unraid**, install *eink-hub* from Community Applications, with Tailscale support built in: see [Unraid](https://eink-hub-7ba3a3.gitlab.io/guide/unraid).
+
 ## Development
 
 ```bash

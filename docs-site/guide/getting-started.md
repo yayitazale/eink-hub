@@ -22,6 +22,10 @@ Multicast (mDNS) doesn't cross Docker's bridge. To also discover frames by mDNS,
 
 Open `http://<host>:8080`, choose an admin password and you're in.
 
+## Install on Unraid
+
+On Unraid, install **eink-hub** from the **Apps** tab (Community Applications). It also works with Unraid's Tailscale integration. See [Unraid](/guide/unraid).
+
 ## Add a frame
 
 **Canvas → Add Canvas** offers:
