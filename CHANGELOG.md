@@ -9,6 +9,22 @@ web share a single number (see `VERSION` at the repository root).
 Generated automatically from commit messages. The 0.1.0 entry is the only
 one written by hand: it summarises everything before the first release.
 
+## [0.3.0] - 2026-10-07
+
+### Added
+
+- Detect the Tailscale Serve address and keep tailnet hosts out of LOCAL_URL ([d1790ba1](https://gitlab.com/yayitazale/eink-hub/-/commit/d1790ba1653d113ccd10d8e4850c6f18dd0a0353))
+- **unraid**: Community Applications template with Tailscale preset ([64d55431](https://gitlab.com/yayitazale/eink-hub/-/commit/64d554313c53386a9f7c776375f9481f812e60a1))
+- **unraid**: Link the forum support thread ([3be80075](https://gitlab.com/yayitazale/eink-hub/-/commit/3be800758aa9907784398cec0cf5ad8f664a6ed8))
+
+### Documentation
+
+- Unraid install and Tailscale guide ([568cd2f0](https://gitlab.com/yayitazale/eink-hub/-/commit/568cd2f06f9b215e01bf45f0121324e8ad1fa767))
+
+### Maintenance
+
+- **unraid**: Move the template to the unraid-templates repo ([d24d0417](https://gitlab.com/yayitazale/eink-hub/-/commit/d24d0417cd02209cd17b76badf6cceaa18bfd56f))
+
 ## [0.2.0] - 2026-10-07
 
 ### Added
