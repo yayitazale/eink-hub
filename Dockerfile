@@ -24,8 +24,7 @@ RUN npm ci --omit=dev -w apps/server
 FROM node:22-bookworm-slim
 ENV NODE_ENV=production \
     DATA_DIR=/data \
-    PORT=8080 \
-    TZ=Europe/Madrid
+    PORT=8080
 # Fonts for text drawn on photos (date captions, welcome picture); the slim image has none.
 # Inter covers Latin and Cyrillic; fonts-noto-cjk adds Chinese, Japanese and Korean (~60 MB).
 # `upgrade` pulls Debian security fixes newer than the base image.
