@@ -208,7 +208,8 @@ export const es = {
 
   'schedule.change': 'Cambiar',
   'schedule.every_hour': 'Cada hora',
-  'schedule.every_n_hours': 'Cada {n} horas',
+  'schedule.every_hours_one': 'Cada {n} hora',
+  'schedule.every_hours_other': 'Cada {n} horas',
   'schedule.preset_h3': 'Cada 3 horas',
   'schedule.preset_h6': 'Cada 6 horas',
   'schedule.preset_h12': 'Cada 12 horas (2 veces al día)',
@@ -233,7 +234,8 @@ export const es = {
     'Cambios frecuentes despiertan el Canvas más a menudo y reducen mucho la duración de la batería. Para tinta electrónica se recomienda cambiar como mucho una vez al día.',
   'schedule.next_changes': 'Próximos cambios: {list}',
   'schedule.desc_daily': 'Cada día a las {at}',
-  'schedule.desc_days': 'Cada {n} días a las {at}',
+  'schedule.desc_days_one': 'Cada {n} día a las {at}',
+  'schedule.desc_days_other': 'Cada {n} días a las {at}',
   'schedule.desc_weekly': 'Cada semana, los {day} a las {at}',
   'schedule.desc_biweekly': 'Cada 2 semanas, los {day} a las {at}',
   'schedule.desc_monthly': 'Cada mes, el día {day} a las {at}',
@@ -430,3 +432,7 @@ export const es = {
 };
 
 export type Messages = Record<keyof typeof es, string>;
+
+/** Extra plural forms (`key_few`, `key_many`…) for languages with more than one/other, e.g. Russian or Polish. */
+export type PluralForms = { [K in `${string}_${'zero' | 'two' | 'few' | 'many'}`]?: string };
+export type Catalogue = Messages & PluralForms;

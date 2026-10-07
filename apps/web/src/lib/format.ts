@@ -1,5 +1,5 @@
 import type { Schedule } from './api';
-import type { TFunction } from '../i18n';
+import type { TFunction, TnFunction } from '../i18n';
 
 /** Active BCP 47 locale; set by the I18nProvider whenever the language changes. */
 let locale = 'en-GB';
@@ -51,12 +51,12 @@ export function weekdayName(d: number): string {
 }
 
 /** Human-readable schedule, e.g. "Every 2 weeks, on Monday at 08:00". */
-export function describeSchedule(s: Schedule, t: TFunction): string {
+export function describeSchedule(s: Schedule, t: TFunction, tn: TnFunction): string {
   switch (s.kind) {
     case 'interval':
-      return s.hours === 1 ? t('schedule.every_hour') : t('schedule.every_n_hours', { n: s.hours });
+      return s.hours === 1 ? t('schedule.every_hour') : tn('schedule.every_hours', s.hours);
     case 'days':
-      return t(s.days === 1 ? 'schedule.desc_daily' : 'schedule.desc_days', { n: s.days, at: s.at });
+      return s.days === 1 ? t('schedule.desc_daily', { at: s.at }) : tn('schedule.desc_days', s.days, { at: s.at });
     case 'weeks':
       return t(s.weeks === 1 ? 'schedule.desc_weekly' : 'schedule.desc_biweekly', { day: weekdayName(s.weekday), at: s.at });
     case 'monthly':
