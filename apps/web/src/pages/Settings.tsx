@@ -6,6 +6,8 @@ import { useAction, useSettings } from '../lib/hooks';
 import { APP_VERSION, CHANGELOG_URL } from '../lib/version';
 import { languages, useI18n, type Lang, type MsgKey } from '../i18n';
 import { ServerLogs } from '../components/ServerLogs';
+
+const IMMICH_PERMISSIONS_URL = 'https://eink-hub-7ba3a3.gitlab.io/guide/immich#api-key-permissions';
 import { Button, Card, Field, SectionTitle, Segmented, Spinner, Toggle, inputClass, useToast } from '../components/ui';
 
 type Tab = 'general' | 'immich' | 'security' | 'logs';
@@ -67,11 +69,19 @@ function ImmichSettings() {
     invalidate: [['settings'], ['immich'], ['collections']],
   });
   const configured = !!settings.data?.immichUrl || !!settings.data?.immichApiKeySet;
+  // The link sits wherever each language puts `{link}` in the sentence.
+  const [before, after = ''] = t('settings.immich_hint', { link: '\u0000' }).split('\u0000');
 
   return (
     <Card className="p-6">
       <h2 className="text-lg font-bold">Immich</h2>
-      <p className="mt-1 text-sm text-muted">{t('settings.immich_hint')}</p>
+      <p className="mt-1 text-sm text-muted">
+        {before}
+        <a href={IMMICH_PERMISSIONS_URL} target="_blank" rel="noreferrer" className="font-semibold underline hover:text-ink">
+          {t('settings.immich_hint_link')}
+        </a>
+        {after}
+      </p>
       <div className="mt-5 space-y-4">
         <Field label={t('settings.immich_url')}>
           <input className={inputClass} placeholder="http://192.168.1.20:2283" value={url} onChange={(e) => setUrl(e.target.value)} />

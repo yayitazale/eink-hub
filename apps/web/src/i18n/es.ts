@@ -349,8 +349,8 @@ export const es = {
   'settings.language': 'Idioma',
   'settings.language_hint': 'Se aplica a toda la web y a los textos que se dibujan en los Canvas (imagen de bienvenida y fecha de las fotos).',
   'settings.immich_saved': 'Immich guardado',
-  'settings.immich_hint':
-    'Crea una API key en Immich → Ajustes de cuenta → Claves API, con permisos de lectura de assets, álbumes, personas y recuerdos.',
+  'settings.immich_hint': 'Crea una API key en Immich → Ajustes de cuenta → Claves API, con los {link}.',
+  'settings.immich_hint_link': 'permisos necesarios',
   'settings.immich_url': 'URL del servidor',
   'settings.immich_key_set': 'Ya hay una clave guardada. Déjalo vacío para mantenerla.',
   'settings.immich_connected': 'Conectado como {user}',

@@ -350,8 +350,8 @@ export const eu: Messages = {
   'settings.language': 'Hizkuntza',
   'settings.language_hint': 'Web osoari eta Canvasetan marrazten diren testuei aplikatzen zaie (ongietorri-irudia eta argazkien data).',
   'settings.immich_saved': 'Immich gordeta',
-  'settings.immich_hint':
-    'Sortu API gako bat Immich-en → Kontuaren ezarpenak → API gakoak, assetak, albumak, pertsonak eta oroitzapenak irakurtzeko baimenekin.',
+  'settings.immich_hint': 'Sortu API gako bat Immich-en → Kontuaren ezarpenak → API gakoak, {link} dituela.',
+  'settings.immich_hint_link': 'beharrezko baimenak',
   'settings.immich_url': 'Zerbitzariaren URLa',
   'settings.immich_key_set': 'Gako bat gordeta dago jada. Utzi hutsik mantentzeko.',
   'settings.immich_connected': '{user} gisa konektatuta',
