@@ -46,7 +46,7 @@ export function Schedule() {
                         <span className="font-semibold">{col.name}</span> · {t(`collectionType.${col.type}`)} · {tn('common.photos', col.itemCount)}
                       </p>
                       <p className="mt-0.5 text-xs text-muted">
-                        {describeSchedule(a.schedule, t)}, {t(`order.${a.orderMode}_lc`)}
+                        {describeSchedule(a.schedule, t, tn)}, {t(`order.${a.orderMode}_lc`)}
                         {a.activeFrom && ` · ${t('scheduleView.window', { from: a.activeFrom, to: a.activeTo ?? '' })}`}
                         {nextChange && ` · ${t('scheduleView.next_change', { when: relativeTime(nextChange), date: dateTime(nextChange) })}`}
                       </p>

@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 import sharp from 'sharp';
 import { and, eq, inArray } from 'drizzle-orm';
 import { config } from '../config.js';
-import { basqueDate, hubLang, locales, tr, type Lang } from '../i18n.js';
+import { basqueDate, hubLang, locales, yearsAgoText, type Lang } from '../i18n.js';
 import { schema, type DB } from '../db/index.js';
 import type { DisplayOptions, Frame, Image } from '../db/schema.js';
 import { assetSize, type ImmichAsset } from '../immich/client.js';
@@ -171,7 +171,7 @@ export function yearsAgoCaption(img: Pick<Image, 'takenAt'>, lang: Lang = 'en', 
   if (!img.takenAt) return null;
   const years = now.getFullYear() - new Date(img.takenAt).getUTCFullYear();
   if (years < 1) return photoDate(img, lang);
-  return tr(lang, years === 1 ? 'memory_year_ago' : 'memory_years_ago', { n: years });
+  return yearsAgoText(lang, years);
 }
 
 export interface Rendered {

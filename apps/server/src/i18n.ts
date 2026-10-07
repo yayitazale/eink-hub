@@ -1,7 +1,22 @@
 import type { FastifyRequest } from 'fastify';
 import { getSetting, type DB } from './db/index.js';
 
-export const languages = ['es', 'eu', 'en'] as const;
+import { ca } from './locales/ca.js';
+import { gl } from './locales/gl.js';
+import { fr } from './locales/fr.js';
+import { de } from './locales/de.js';
+import { it } from './locales/it.js';
+import { pt } from './locales/pt.js';
+import { pl } from './locales/pl.js';
+import { cs } from './locales/cs.js';
+import { ru } from './locales/ru.js';
+import { nl } from './locales/nl.js';
+import { ja } from './locales/ja.js';
+import { ko } from './locales/ko.js';
+import { zh } from './locales/zh.js';
+import { zhTW } from './locales/zhTW.js';
+
+export const languages = ['es', 'eu', 'en', 'ca', 'gl', 'fr', 'de', 'it', 'pt', 'pl', 'cs', 'ru', 'nl', 'ja', 'ko', 'zh', 'zh-TW'] as const;
 export type Lang = (typeof languages)[number];
 
 const es = {
@@ -62,7 +77,11 @@ const es = {
 
 export type MsgKey = keyof typeof es;
 
-const eu: Record<MsgKey, string> = {
+/** A catalogue: every key of `es`, plus the extra plural forms Slavic languages need for "{n} years ago". */
+export type Catalogue = Record<MsgKey, string> &
+  Partial<Record<'memory_years_ago_one' | 'memory_years_ago_few' | 'memory_years_ago_many', string>>;
+
+const eu: Catalogue = {
   collection_not_found: 'Ez da {id} bilduma aurkitu',
   immich_not_configured: 'Immich ez dago konfiguratuta',
   canvas_not_found: 'Ez da {id} Canvasa aurkitu',
@@ -118,7 +137,7 @@ const eu: Record<MsgKey, string> = {
   trmnl_mac_missing: 'TRMNL gailuaren MAC helbidea falta da',
 };
 
-const en: Record<MsgKey, string> = {
+const en: Catalogue = {
   collection_not_found: 'Collection {id} not found',
   immich_not_configured: 'Immich is not configured',
   canvas_not_found: 'Canvas {id} not found',
@@ -174,10 +193,14 @@ const en: Record<MsgKey, string> = {
   trmnl_mac_missing: 'The TRMNL device’s MAC address is missing',
 };
 
-const catalogues: Record<Lang, Record<MsgKey, string>> = { es, eu, en };
+export const catalogues: Record<Lang, Catalogue> = { es, eu, en, ca, gl, fr, de, it, pt, pl, cs, ru, nl, ja, ko, zh, 'zh-TW': zhTW };
 
 /** BCP 47 locale used for dates in each language. */
-export const locales: Record<Lang, string> = { es: 'es-ES', eu: 'eu-ES', en: 'en-GB' };
+export const locales: Record<Lang, string> = {
+  es: 'es-ES', eu: 'eu-ES', en: 'en-GB', ca: 'ca-ES', gl: 'gl-ES', fr: 'fr-FR', de: 'de-DE',
+  it: 'it-IT', pt: 'pt-PT', pl: 'pl-PL', cs: 'cs-CZ', ru: 'ru-RU', nl: 'nl-NL', ja: 'ja-JP', ko: 'ko-KR',
+  zh: 'zh-CN', 'zh-TW': 'zh-TW',
+};
 
 export type MsgVars = Record<string, string | number>;
 
@@ -204,8 +227,27 @@ export function basqueDate(d: Date): string {
   return `${y}${basqueYearSuffix(y)} ${EU_MONTHS_GENITIVE[d.getUTCMonth()]} ${d.getUTCDate()}a`;
 }
 
+const interpolate = (msg: string, vars: MsgVars) => msg.replace(/\{(\w+)\}/g, (_, v) => String(vars[v] ?? `{${v}}`));
+
 export function tr(lang: Lang, key: MsgKey, vars: MsgVars = {}): string {
-  return catalogues[lang][key].replace(/\{(\w+)\}/g, (_, v) => String(vars[v] ?? `{${v}}`));
+  return interpolate(catalogues[lang][key] ?? en[key], vars);
+}
+
+/** "{n} years ago" with the plural form `lang` needs (Russian, Polish and Czech have several). */
+export function yearsAgoText(lang: Lang, years: number): string {
+  if (years === 1) return tr(lang, 'memory_year_ago');
+  const cat = new Intl.PluralRules(locales[lang]).select(years);
+  const extra = cat === 'one' ? 'memory_years_ago_one' : cat === 'few' ? 'memory_years_ago_few' : cat === 'many' ? 'memory_years_ago_many' : null;
+  const msg = (extra && catalogues[lang][extra]) || tr(lang, 'memory_years_ago');
+  return interpolate(msg, { n: years });
+}
+
+/** Maps a BCP 47 tag to a supported language; Traditional Chinese regions get zh-TW. */
+export function matchLang(tag: string): Lang | null {
+  const t = tag.toLowerCase();
+  if (t.startsWith('zh')) return /^zh-(tw|hk|mo|hant)/.test(t) ? 'zh-TW' : 'zh';
+  const base = t.slice(0, 2);
+  return isLang(base) ? base : null;
 }
 
 export const isLang = (v: unknown): v is Lang => languages.includes(v as Lang);
@@ -222,6 +264,6 @@ export function requestLang(req: FastifyRequest, db: DB): Lang {
   if (isLang(explicit)) return explicit;
   const accepted = String(req.headers['accept-language'] ?? '')
     .split(',')
-    .map((p) => p.trim().slice(0, 2).toLowerCase());
-  return accepted.find(isLang) ?? hubLang(db);
+    .map((p) => matchLang(p.split(';')[0].trim()));
+  return accepted.find((l): l is Lang => l !== null) ?? hubLang(db);
 }

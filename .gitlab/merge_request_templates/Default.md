@@ -12,5 +12,5 @@
 
 - [ ] Commits and MR title follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 - [ ] `npm run build` and `npm test` pass
-- [ ] New UI strings are added to all i18n files (en / es / eu)
+- [ ] New UI strings are added to every language in `apps/web/src/i18n` (and `apps/server/src/locales` for API messages)
 - [ ] No version bump or `CHANGELOG.md` edit (the release script does that)
