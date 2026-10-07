@@ -160,6 +160,11 @@ export const migrations: string[] = [
   ALTER TABLE frames ADD COLUMN kind TEXT NOT NULL DEFAULT 'bloomin8';
   ALTER TABLE frames ADD COLUMN config TEXT NOT NULL DEFAULT '{}';
   `,
+  // v9: physical size (null = inferred) and how the frame looks in the mockups.
+  `
+  ALTER TABLE frames ADD COLUMN diagonal REAL;
+  ALTER TABLE frames ADD COLUMN appearance TEXT NOT NULL DEFAULT '{}';
+  `,
 ];
 
 function migrate(sqlite: Database.Database) {

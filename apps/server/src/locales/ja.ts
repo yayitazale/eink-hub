@@ -45,6 +45,7 @@ export const ja: Catalogue = {
   test_canvas_name: 'テスト用Canvas',
   ble_no_mac: 'このCanvasのBluetoothアドレスが不明です',
   ble_mac_invalid: '無効なBluetoothアドレスです（AA:BB:CC:DD:EE:FF）',
+  diagonal_invalid: 'サイズは4〜60インチの範囲で指定してください',
   ble_unavailable: 'HubのBluetoothを利用できません',
   ble_wake_failed: 'Bluetoothで起動できませんでした：{detail}',
   ble_woke_no_reply: 'Bluetoothで信号を送信しましたが、CanvasからWi-Fiでの応答がありません',

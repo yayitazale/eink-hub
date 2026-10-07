@@ -328,6 +328,15 @@ components:
         width: { type: integer, description: Native resolution, short side }
         height: { type: integer, description: Native resolution, long side }
         orientation: { type: string, enum: [portrait, landscape] }
+        diagonal: { type: [number, 'null'], description: 'Screen diagonal in inches: set by hand, or inferred from the model / resolution' }
+        diagonalInferred: { type: boolean }
+        appearance:
+          type: object
+          description: How the frame looks in the app's mockups. Missing keys use the defaults (mat, black, thin).
+          properties:
+            mat: { type: boolean, description: Passe-partout }
+            color: { type: string, enum: [black, white, walnut, oak, natural] }
+            style: { type: string, enum: [thin, thick, classic] }
         battery: { type: [integer, 'null'] }
         online: { type: boolean }
         lastSeen: { type: [integer, 'null'] }

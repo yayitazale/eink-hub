@@ -45,6 +45,7 @@ export const zhTW: Catalogue = {
   test_canvas_name: '測試 Canvas',
   ble_no_mac: '不知道此 Canvas 的藍牙位址',
   ble_mac_invalid: '無效的藍牙位址（AA:BB:CC:DD:EE:FF）',
+  diagonal_invalid: '尺寸必須介於 4 到 60 英吋之間',
   ble_unavailable: 'Hub 的藍牙無法使用',
   ble_wake_failed: '無法透過藍牙喚醒：{detail}',
   ble_woke_no_reply: '已透過藍牙傳送訊號，但 Canvas 沒有透過 Wi-Fi 回應',

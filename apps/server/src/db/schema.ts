@@ -29,6 +29,18 @@ export interface FrameConfig {
   maxPollMinutes?: number;
 }
 
+/** How the frame around the screen looks in the app's mockups. Empty = defaults. */
+export interface FrameAppearance {
+  /** Passepartout (white mat) between frame and screen. */
+  mat?: boolean;
+  color?: FrameColor;
+  style?: FrameStyle;
+}
+export const FRAME_COLORS = ['black', 'white', 'walnut', 'oak', 'natural'] as const;
+export const FRAME_STYLES = ['thin', 'thick', 'classic'] as const;
+export type FrameColor = (typeof FRAME_COLORS)[number];
+export type FrameStyle = (typeof FRAME_STYLES)[number];
+
 /** Secrets never leave the hub. */
 export const SECRET_CONFIG_KEYS = ['token', 'secret'] as const;
 
@@ -67,6 +79,9 @@ export const frames = sqliteTable('frames', {
   /** Which driver talks to it (see device/drivers). */
   kind: text('kind').$type<FrameKind>().notNull().default('bloomin8'),
   config: text('config', { mode: 'json' }).$type<FrameConfig>().notNull().default({}),
+  /** Screen diagonal in inches, set by hand. Null = inferred from model/resolution (device/sizes). */
+  diagonal: real('diagonal'),
+  appearance: text('appearance', { mode: 'json' }).$type<FrameAppearance>().notNull().default({}),
 });
 
 export const images = sqliteTable('images', {
