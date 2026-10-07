@@ -38,6 +38,10 @@ The template uses **bridge** networking, which is enough: add frames by IP or wi
 
 To wake BLOOMIN8 frames with the server's Bluetooth, Unraid must have a Bluetooth adapter with BlueZ running. In the container's **advanced view**, set **D-Bus (Bluetooth wake)** to `/run/dbus`. See [Bluetooth wake](/guide/bluetooth).
 
+## Help
+
+Ask in the [Unraid forum support thread](https://forums.unraid.net/topic/200820-support-yayitazale-eink-hub/), or open an issue on [GitLab](https://gitlab.com/yayitazale/eink-hub/-/issues).
+
 ## Update
 
 Unraid tells you when a new release is out: in the **Docker** tab click **Check for updates**, then **apply update** on the container. The template follows `:latest`, which is always the latest release. To pin a version, change **Repository** to e.g. `registry.gitlab.com/yayitazale/eink-hub:v0.2.0`.

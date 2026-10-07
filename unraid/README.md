@@ -5,7 +5,7 @@
 CA doesn't read it from this repository: it is published from [yayitazale/unraid-templates](https://github.com/yayitazale/unraid-templates), which CA syncs. After changing it here:
 
 1. Copy it to `yayitazale/eink-hub.xml` in that repository (its `TemplateURL` already points there).
-2. Make sure `<Support>` is the forum support thread.
+2. Keep `<Support>` pointing at the [forum support thread](https://forums.unraid.net/topic/200820-support-yayitazale-eink-hub/).
 
 User docs: [Unraid](https://eink-hub-7ba3a3.gitlab.io/guide/unraid) (`docs-site/guide/unraid.md`).
 

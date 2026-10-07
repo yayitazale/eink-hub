@@ -7,7 +7,7 @@
   <MyIP/>
   <Shell>bash</Shell>
   <Privileged>false</Privileged>
-  <Support>TODO-forum-support-thread</Support>
+  <Support>https://forums.unraid.net/topic/200820-support-yayitazale-eink-hub/</Support>
   <Project>https://gitlab.com/yayitazale/eink-hub</Project>
   <ReadMe>https://eink-hub-7ba3a3.gitlab.io/guide/unraid</ReadMe>
   <Overview>Self-hosted control center for e-ink photo frames (BLOOMIN8, SwitchBot AI Art Frame, TRMNL firmware and your own ESP32 / Raspberry Pi frames), with Immich integration. Exact previews with smart crop, collections from uploads or Immich, schedules, battery-friendly pull mode and Bluetooth wake.&#xD;
