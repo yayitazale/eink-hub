@@ -1,6 +1,6 @@
 /**
  * Bluetooth wake for Canvases in deep sleep, through the host's BlueZ over D-Bus
- * (the container needs /run/dbus mounted; see docs/bluetooth.md).
+ * (the container needs /run/dbus mounted; see docs-site/guide/bluetooth.md).
  * Protocol from ARPOBOT-BLOOMIN8/eink_canvas_home_assistant_component (const.py, ble_wake.py):
  * connect, write 0x01 then 0x00 to characteristic 0xF001 without response, disconnect.
  * Wi-Fi and the HTTP API come up a few seconds later.

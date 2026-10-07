@@ -361,7 +361,7 @@ export const ja: Catalogue = {
   'detail.wake_no_reply': 'Bluetoothで起動信号を送信しましたが、CanvasからWi-Fiでの応答がありません。もっと近づいてもう一度お試しください。',
   'ble.hub_ok': 'Hubはサーバーの Bluetooth（{adapter}）でCanvasを起動できます。',
   'ble.hub_disabled': 'HubのBluetoothはオフになっています（BLE_DISABLED）。',
-  'ble.hub_no_dbus': 'Hubがサーバーの Bluetooth にアクセスできません。コンテナに /run/dbus をマウントしてください（Linuxのみ、docs/bluetooth.md を参照）。',
+  'ble.hub_no_dbus': 'Hubがサーバーの Bluetooth にアクセスできません。コンテナに /run/dbus をマウントしてください（Linuxのみ、https://eink-hub-7ba3a3.gitlab.io/guide/bluetooth を参照）。',
   'ble.hub_no_bluez': 'HubはD-Busを認識していますが、BlueZは認識していません。サーバーでbluetoothサービスが動作しているか確認してください。',
   'ble.hub_no_adapter': 'サーバーにBluetoothアダプターがありません。',
   'ble.hub_powered_off': 'サーバーのBluetoothアダプターがオフです（bluetoothctl power on）。',

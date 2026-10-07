@@ -1,5 +1,5 @@
 # git-cliff (https://git-cliff.org) configuration that generates CHANGELOG.md
-# from commit messages. See docs/versioning.md.
+# from commit messages. See docs-site/development/versioning.md.
 
 [changelog]
 header = """

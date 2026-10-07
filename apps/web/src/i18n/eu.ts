@@ -362,7 +362,7 @@ export const eu: Messages = {
   'detail.wake_no_reply': 'Bluetooth seinalea bidali da, baina Canvasak ez du Wi-Fi bidez erantzun. Saiatu berriro hurbilago.',
   'ble.hub_ok': 'Hub-ak Canvasak esna ditzake zerbitzariaren Bluetoothaz ({adapter}).',
   'ble.hub_disabled': 'Hub-aren Bluetootha desaktibatuta dago (BLE_DISABLED).',
-  'ble.hub_no_dbus': 'Hub-ak ezin du zerbitzariaren Bluetootha erabili: muntatu /run/dbus edukiontzian (Linux soilik, ikus docs/bluetooth.md).',
+  'ble.hub_no_dbus': 'Hub-ak ezin du zerbitzariaren Bluetootha erabili: muntatu /run/dbus edukiontzian (Linux soilik, ikus https://eink-hub-7ba3a3.gitlab.io/guide/bluetooth).',
   'ble.hub_no_bluez': 'Hub-ak D-Bus ikusten du baina ez BlueZ: egiaztatu bluetooth zerbitzua martxan dagoela zerbitzarian.',
   'ble.hub_no_adapter': 'Zerbitzariak ez du Bluetooth egokigailurik.',
   'ble.hub_powered_off': 'Zerbitzariaren Bluetooth egokigailua itzalita dago (bluetoothctl power on).',
