@@ -15,6 +15,6 @@ services:
     volumes:
       - ./data:/data
       # Bluetooth wake (Linux host with BlueZ running): lets the hub use the
-      # host's Bluetooth through D-Bus. See docs/bluetooth.md.
+      # host's Bluetooth through D-Bus. See docs-site/guide/bluetooth.md.
       # - /run/dbus:/run/dbus:ro
     env_file: .env

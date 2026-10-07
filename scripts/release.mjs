@@ -3,7 +3,7 @@
 
 /**
  * Cuts a release: syncs the version, regenerates the changelog, commits and
- * creates the tag. See docs/versioning.md.
+ * creates the tag. See docs-site/development/versioning.md.
  *
  *   node scripts/release.mjs            # version computed from the commits
  *   node scripts/release.mjs 1.0.0      # version forced by hand

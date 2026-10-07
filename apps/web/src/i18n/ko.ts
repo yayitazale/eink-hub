@@ -361,7 +361,7 @@ export const ko: Catalogue = {
   'detail.wake_no_reply': '블루투스로 깨우기 신호를 보냈지만 Canvas가 Wi-Fi로 응답하지 않았습니다. 더 가까이에서 다시 시도하세요.',
   'ble.hub_ok': 'Hub는 서버의 블루투스({adapter})로 Canvas를 깨울 수 있습니다.',
   'ble.hub_disabled': 'Hub의 블루투스가 꺼져 있습니다(BLE_DISABLED).',
-  'ble.hub_no_dbus': 'Hub가 서버의 블루투스에 접근할 수 없습니다. 컨테이너에 /run/dbus를 마운트하세요(Linux 전용, docs/bluetooth.md 참조).',
+  'ble.hub_no_dbus': 'Hub가 서버의 블루투스에 접근할 수 없습니다. 컨테이너에 /run/dbus를 마운트하세요(Linux 전용, https://eink-hub-7ba3a3.gitlab.io/guide/bluetooth 참조).',
   'ble.hub_no_bluez': 'Hub가 D-Bus는 보지만 BlueZ는 보지 못합니다. 서버에서 bluetooth 서비스가 실행 중인지 확인하세요.',
   'ble.hub_no_adapter': '서버에 블루투스 어댑터가 없습니다.',
   'ble.hub_powered_off': '서버의 블루투스 어댑터가 꺼져 있습니다(bluetoothctl power on).',

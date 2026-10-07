@@ -26,7 +26,7 @@ pull), and the relevant container logs (`docker compose logs eink-hub`).
 
    The changelog is generated from these prefixes; commits that don't follow
    the format are left out of it. The full table of prefixes is in
-   [docs/versioning.md](docs/versioning.md#commit-message-format).
+   [docs-site/development/versioning.md](docs-site/development/versioning.md#commit-message-format).
 4. Check that it builds and the tests pass (see below).
 5. Open a **merge request against `main`**. Describe what changes and why,
    and how you tested it (real frame model, or the Test Canvas / simulator).

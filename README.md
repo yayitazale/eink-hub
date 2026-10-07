@@ -1,4 +1,4 @@
-# <img src="docs/logo.png" alt="" width="40" align="absmiddle" /> E-Ink Hub
+# <img src="docs-site/public/logo.png" alt="" width="40" align="absmiddle" /> E-Ink Hub
 
 Self-hosted control center for e-ink photo frames, with **Immich** integration. A single Docker container (Node + SQLite) with a mobile-friendly web UI.
 
