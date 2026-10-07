@@ -17,7 +17,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const ROOT_BASE = process.env.DOCS_ROOT ?? '/eink-hub/';
+// In CI, follow wherever GitLab actually serves Pages: /eink-hub/ on yayitazale.gitlab.io, but /
+// when the project uses a unique domain (eink-hub-xxxxxx.gitlab.io).
+const pagesPath = process.env.CI_PAGES_URL && new URL(process.env.CI_PAGES_URL).pathname.replace(/\/?$/, '/');
+const ROOT_BASE = process.env.DOCS_ROOT ?? pagesPath ?? '/';
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
 const repo = git('rev-parse', '--show-toplevel');
 const out = path.join(repo, 'public');

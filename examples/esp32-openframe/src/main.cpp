@@ -2,7 +2,7 @@
 //
 // Every wake-up: connect to Wi-Fi, ask the hub what to show (GET /of/v1/display), download the
 // BMP if there is something new, draw it, and deep-sleep for as long as the hub says.
-// Protocol: https://yayitazale.gitlab.io/eink-hub/diy/protocol
+// Protocol: https://eink-hub-7ba3a3.gitlab.io/diy/protocol
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <HTTPClient.h>

@@ -112,7 +112,7 @@ function BrandOption({ selected, onSelect, icon, title, hint }: { selected: bool
 }
 
 /** The project's website (GitLab Pages). */
-export const DOCS_URL = 'https://yayitazale.gitlab.io/eink-hub/';
+export const DOCS_URL = 'https://eink-hub-7ba3a3.gitlab.io/';
 
 function SwitchBotForm({
   name,

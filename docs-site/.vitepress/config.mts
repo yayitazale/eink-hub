@@ -1,19 +1,20 @@
 import { defineConfig } from 'vitepress';
 
 const repo = 'https://gitlab.com/yayitazale/eink-hub';
+const base = process.env.DOCS_BASE ?? '/';
 
-// Published by the `pages` job in .gitlab-ci.yml to https://yayitazale.gitlab.io/eink-hub/.
+// Published by the `pages` job in .gitlab-ci.yml to https://eink-hub-7ba3a3.gitlab.io/.
 export default defineConfig({
   title: 'E-Ink Hub',
   description: 'Self-hosted control center for e-ink photo frames: BLOOMIN8, SwitchBot, TRMNL and your own DIY frames, with Immich.',
   lang: 'en-GB',
-  base: process.env.DOCS_BASE ?? '/eink-hub/',
+  base,
   // Set by scripts/build-all.mjs: which release this build documents, and where the site root is
   // (the version switcher reads versions.json from there).
   vite: {
     define: {
       __DOCS_VERSION__: JSON.stringify(process.env.DOCS_VERSION ?? 'dev'),
-      __DOCS_ROOT__: JSON.stringify(process.env.DOCS_ROOT ?? '/eink-hub/'),
+      __DOCS_ROOT__: JSON.stringify(process.env.DOCS_ROOT ?? '/'),
     },
   },
   // GitLab Pages serves the `public` folder at the repository root.
@@ -21,7 +22,7 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/eink-hub/favicon.svg' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}favicon.svg` }],
     ['meta', { name: 'theme-color', content: '#1d1c1a' }],
   ],
   themeConfig: {
