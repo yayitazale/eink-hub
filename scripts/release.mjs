@@ -126,9 +126,15 @@ for (const file of ['apps/server/src/version.ts', 'apps/web/src/lib/version.ts']
 
 // --- 4. Add the new section to the changelog --------------------------------
 
-// --prepend (not -o): keeps what is already written, including the 0.1.0
-// entry that was written by hand.
-cliff(`--unreleased --tag v${version} --prepend CHANGELOG.md`)
+// Inserted by hand below the header, keeping what is already written (the 0.1.0
+// entry was written by hand). Not --prepend: it would repeat the header too.
+const changelogPath = join(ROOT, 'CHANGELOG.md')
+const changelog = readFileSync(changelogPath, 'utf8')
+const firstRelease = changelog.indexOf('\n## [')
+if (firstRelease === -1) abort('No "## [x.y.z]" section found in CHANGELOG.md. Has the format changed?')
+const eol = changelog.includes('\r\n') ? '\r\n' : '\n'
+const section = cliff(`--unreleased --tag v${version} --strip header`).replace(/\r?\n/g, eol)
+writeFileSync(changelogPath, changelog.slice(0, firstRelease + 1) + section + eol + eol + changelog.slice(firstRelease + 1))
 
 // --- 5. Review before touching history ----------------------------------------
 
