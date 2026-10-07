@@ -1,7 +1,7 @@
 # Raspberry Pi + Pimoroni Inky Open Frame example
 
 A Raspberry Pi with a [Pimoroni Inky](https://shop.pimoroni.com/collections/inky) display as an
-[E-Ink Hub](https://yayitazale.gitlab.io/eink-hub/diy/raspberry-pi) frame. See the site for the full walkthrough.
+[E-Ink Hub](https://eink-hub-7ba3a3.gitlab.io/diy/raspberry-pi) frame. See the site for the full walkthrough.
 
 ```bash
 mkdir -p ~/openframe && cd ~/openframe
