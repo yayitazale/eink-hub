@@ -32,7 +32,8 @@ and can be edited in **Settings** of the Canvas.
 | Host | Status | Notes |
 | --- | --- | --- |
 | Linux with BlueZ (Debian, Ubuntu, Raspberry Pi OS, mini-PC…) | ✅ Supported | Mount `/run/dbus` (below). Built-in or USB adapter. Can share the adapter with a Home Assistant Container on the same host. |
-| Unraid, TrueNAS SCALE, VM with USB Bluetooth passthrough | ⚠️ Should work | Needs BlueZ (`bluetoothd`) running on that host or VM. |
+| Unraid | ⚠️ Advanced | Unraid ships without BlueZ. You can install it yourself, see [Unraid](/guide/unraid#bluetooth-wake). Otherwise, use the phone. |
+| TrueNAS SCALE, VM with USB Bluetooth passthrough | ⚠️ Should work | Needs BlueZ (`bluetoothd`) running on that host or VM. |
 | Proxmox LXC, rootless Docker or Podman | ⚠️ Advanced | The container must reach the host's system D-Bus, and BlueZ's D-Bus policy must allow it (it allows root by default). |
 | Synology / QNAP NAS | ❌ Not supported | No BlueZ for USB dongles on the host. Use the phone, or run the hub on another machine. |
 | Docker Desktop on Windows or macOS | ❌ Not supported | Containers run in a VM without access to the host's Bluetooth. Use the phone. |

@@ -35,7 +35,32 @@ The template uses **bridge** networking, which is enough: add frames by IP or wi
 
 ## Bluetooth wake
 
-The template mounts `/run/dbus` (**D-Bus (Bluetooth wake)**), so the hub can wake BLOOMIN8 frames with the server's Bluetooth. That needs a Bluetooth adapter and BlueZ running on Unraid; without them the hub just shows Bluetooth as unavailable, and you can still wake frames from your phone. To turn it off, remove that path. See [Bluetooth wake](/guide/bluetooth).
+Unraid ships without BlueZ, the Linux Bluetooth service the hub uses, so the server's Bluetooth cannot wake frames out of the box. Wake them **from your phone** instead: open the hub over its Tailscale https address and use **Wake with this phone**. See [Bluetooth wake](/guide/bluetooth).
+
+::: details Advanced: use the server's Bluetooth
+This is not supported by Unraid and may need redoing after an Unraid update.
+
+1. Plug in a Bluetooth adapter and check that Unraid sees it: `ls /sys/class/bluetooth` should list `hci0`. If not, run `modprobe btusb`. If the kernel log (`dmesg`) shows `error -71`, try another port, preferably a USB 2.0 port at the back.
+2. Install the Slackware BlueZ package. Packages in `/boot/extra` are reinstalled on every boot:
+
+   ```bash
+   wget -P /boot/extra https://mirrors.slackware.com/slackware/slackware64-15.0/slackware64/n/bluez-5.63-x86_64-2.txz
+   installpkg /boot/extra/bluez-5.63-x86_64-2.txz
+   ```
+
+3. Start BlueZ now and on every boot by adding this to `/boot/config/go` and running it once:
+
+   ```bash
+   modprobe btusb
+   kill -HUP $(pgrep -x dbus-daemon)
+   $(find /usr -name bluetoothd -type f | head -1) &
+   sleep 3 && bluetoothctl power on
+   ```
+
+4. Edit the container, add a **Path** with container path `/run/dbus`, host path `/run/dbus` and access mode **Read Only**, and apply. Bridge networking is fine.
+
+The Canvas **Settings** should then say the hub can wake Canvases with `hci0`.
+:::
 
 ## Help
 
