@@ -9,6 +9,16 @@ web share a single number (see `VERSION` at the repository root).
 Generated automatically from commit messages. The 0.1.0 entry is the only
 one written by hand: it summarises everything before the first release.
 
+## [0.3.1] - 2026-10-07
+
+### Fixed
+
+- **immich**: Document every API key permission the hub needs ([a789d750](https://gitlab.com/yayitazale/eink-hub/-/commit/a789d750b63df57c2220fef7fc6a4bd4895ae55b))
+
+### Maintenance
+
+- Generic time zone and Unraid template docs ([b8052d3d](https://gitlab.com/yayitazale/eink-hub/-/commit/b8052d3dcc7c3ac99812750160c450d9ad3198c3))
+
 ## [0.3.0] - 2026-10-07
 
 ### Added
