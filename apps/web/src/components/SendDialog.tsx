@@ -102,8 +102,8 @@ export function SendDialog({ imageId, open, onClose, defaultFrameId }: { imageId
       ) : frames.data.length === 0 ? (
         <p className="text-sm text-muted">{t('send.no_canvas')}</p>
       ) : (
-        <div className="grid gap-6 md:grid-cols-[1fr_280px]">
-          <div className="space-y-4">
+        <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_280px]">
+          <div className="min-w-0 space-y-4">
             <div className="flex flex-wrap gap-2">
               {frames.data.map((f) => (
                 <button
@@ -146,7 +146,7 @@ export function SendDialog({ imageId, open, onClose, defaultFrameId }: { imageId
             )}
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex min-w-0 flex-col gap-4">
             {frame && (
               <div className="relative mx-auto w-full max-w-[240px]">
                 <FrameMockup frame={{ ...frame, currentRender: null, currentImageId: imageId }} src={preview ?? (imageId ? `/api/images/${imageId}/thumb` : null)} />
@@ -157,18 +157,19 @@ export function SendDialog({ imageId, open, onClose, defaultFrameId }: { imageId
                 )}
               </div>
             )}
-            <p className="text-center text-xs text-muted">{t(preview ? 'send.preview_exact' : 'send.preview_thumb')}</p>
-            <Button icon={<Eye className="size-4" />} onClick={showPreview} loading={previewLoading}>
-              {t('send.preview')}
+            <p className="text-balance text-center text-xs text-muted">{t(preview ? 'send.preview_exact' : 'send.preview_thumb')}</p>
+            <Button className="min-w-0" icon={<Eye className="size-4" />} onClick={showPreview} loading={previewLoading}>
+              <span className="truncate">{t('send.preview')}</span>
             </Button>
             <Button
               variant="primary"
               size="lg"
+              className="min-w-0"
               icon={<Send className="size-4" />}
               loading={send.isPending}
               onClick={() => send.mutate(undefined, { onSuccess: onClose })}
             >
-              {t('send.send_to', { name: frame?.name ?? '' })}
+              <span className="truncate">{t('send.send_to', { name: frame?.name ?? '' })}</span>
             </Button>
           </div>
         </div>
