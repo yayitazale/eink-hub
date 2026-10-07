@@ -142,6 +142,7 @@ export const zh: Catalogue = {
   'localUrl.browser': '自动检测：这是你访问 Hub 所用的地址。',
   'localUrl.interface': '根据此服务器的 IP 自动检测。',
   'localUrl.none': '无法检测：请输入此服务器在本地网络中的 IP。',
+  'externalUrl.tailscale': '从 Tailscale Serve 自动检测；此字段为空时使用该地址。',
 
   'history.empty': '尚未通过 Hub 显示过任何内容。',
   'history.failed': '失败',

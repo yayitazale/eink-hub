@@ -142,6 +142,7 @@ export const gl: Catalogue = {
   'localUrl.browser': 'Detectada automaticamente: é o enderezo co que usas o Hub.',
   'localUrl.interface': 'Detectada automaticamente a partir da IP deste servidor.',
   'localUrl.none': 'Non se puido detectar: introduce a IP deste servidor na rede local.',
+  'externalUrl.tailscale': 'Detectada automaticamente de Tailscale Serve; úsase mentres este campo estea baleiro.',
 
   'history.empty': 'Aínda non se mostrou nada desde o Hub.',
   'history.failed': 'fallida',

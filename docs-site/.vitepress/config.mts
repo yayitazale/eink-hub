@@ -41,6 +41,7 @@ export default defineConfig({
           text: 'Guide',
           items: [
             { text: 'Getting started', link: '/guide/getting-started' },
+            { text: 'Unraid', link: '/guide/unraid' },
             { text: 'Hub addresses', link: '/guide/addresses' },
             { text: 'Collections & schedules', link: '/guide/schedules' },
             { text: 'Immich', link: '/guide/immich' },

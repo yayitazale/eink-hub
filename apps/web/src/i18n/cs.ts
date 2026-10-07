@@ -148,6 +148,7 @@ export const cs: Catalogue = {
   'localUrl.browser': 'Zjištěno automaticky: je to adresa, na které Hub používáte.',
   'localUrl.interface': 'Zjištěno automaticky z IP adresy tohoto serveru.',
   'localUrl.none': 'Nepodařilo se zjistit: zadejte IP adresu tohoto serveru v místní síti.',
+  'externalUrl.tailscale': 'Zjištěno automaticky z Tailscale Serve; používá se, dokud je toto pole prázdné.',
 
   'history.empty': 'Z Hubu se zatím nic nezobrazilo.',
   'history.failed': 'selhalo',

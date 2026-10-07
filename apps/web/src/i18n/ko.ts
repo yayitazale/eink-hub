@@ -142,6 +142,7 @@ export const ko: Catalogue = {
   'localUrl.browser': '자동으로 감지했습니다. Hub에 접속할 때 사용 중인 주소입니다.',
   'localUrl.interface': '이 서버의 IP로 자동 감지했습니다.',
   'localUrl.none': '감지하지 못했습니다. 로컬 네트워크에서 이 서버의 IP를 입력하세요.',
+  'externalUrl.tailscale': 'Tailscale Serve에서 자동으로 감지했습니다. 이 칸이 비어 있는 동안 이 주소를 사용합니다.',
 
   'history.empty': '아직 Hub에서 표시한 것이 없습니다.',
   'history.failed': '실패',

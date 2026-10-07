@@ -5,6 +5,7 @@ import { config } from '../config.js';
 import { getSetting, type DB } from '../db/index.js';
 import { ImmichClient } from '../immich/client.js';
 import { tr, type MsgKey, type MsgVars } from '../i18n.js';
+import { tailscaleServeUrl } from './tailscale.js';
 
 export interface Ctx {
   db: DB;
@@ -41,9 +42,22 @@ export function localUrlSetting(db: DB): string {
   return trimSlash(getSetting(db, 'localUrl') ?? config.localUrl);
 }
 
-/** Address for people (reverse proxy / Tailscale); empty when not set. */
-export function externalUrlSetting(db: DB): string {
+export type ExternalUrlSource = 'settings' | 'env' | 'tailscale' | 'none';
+
+/** The external address as configured (Settings, else EXTERNAL_URL); empty when not set. */
+export function configuredExternalUrl(db: DB): string {
   return trimSlash(getSetting(db, 'externalUrl') ?? config.externalUrl);
+}
+
+/** Address for people (reverse proxy / Tailscale): the configured one, else Tailscale Serve's; empty when neither. */
+export function externalUrlSetting(db: DB): string {
+  return configuredExternalUrl(db) || tailscaleServeUrl();
+}
+
+export function externalUrlSource(db: DB): ExternalUrlSource {
+  if (trimSlash(getSetting(db, 'externalUrl') ?? '')) return 'settings';
+  if (configuredExternalUrl(db)) return 'env';
+  return tailscaleServeUrl() ? 'tailscale' : 'none';
 }
 
 /**
@@ -60,6 +74,8 @@ export function qrUrl(db: DB, req?: FastifyRequest): string {
 }
 
 const LOCAL_HOST = /^(localhost|127\.|\[?::1\]?|0\.0\.0\.0)/;
+/** Tailscale MagicDNS names: only devices in the tailnet reach them, never a Canvas on the LAN. */
+const TAILNET_HOST = /\.ts\.net(:\d+)?$/i;
 const PRIVATE_IP = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/;
 
 export type LocalUrlSource = 'settings' | 'env' | 'browser' | 'interface' | 'none';
@@ -73,7 +89,7 @@ export function detectLocalUrl(db: DB, req?: FastifyRequest): { url: string; sou
   if (saved) return { url: trimSlash(saved), source: 'settings' };
   if (config.localUrl) return { url: trimSlash(config.localUrl), source: 'env' };
   const host = req?.headers.host;
-  if (req && host && !LOCAL_HOST.test(host)) return { url: `${req.protocol}://${host}`, source: 'browser' };
+  if (req && host && !LOCAL_HOST.test(host) && !TAILNET_HOST.test(host)) return { url: `${req.protocol}://${host}`, source: 'browser' };
   const ip = lanAddress();
   if (ip) return { url: `http://${ip}:${config.port}`, source: 'interface' };
   return { url: '', source: 'none' };

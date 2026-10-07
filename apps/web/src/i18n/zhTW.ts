@@ -142,6 +142,7 @@ export const zhTW: Catalogue = {
   'localUrl.browser': '自動偵測：這是你連線到 Hub 所使用的位址。',
   'localUrl.interface': '依據此伺服器的 IP 自動偵測。',
   'localUrl.none': '無法偵測：請輸入此伺服器在區域網路中的 IP。',
+  'externalUrl.tailscale': '從 Tailscale Serve 自動偵測；此欄位空白時會使用該位址。',
 
   'history.empty': '尚未透過 Hub 顯示過任何內容。',
   'history.failed': '失敗',

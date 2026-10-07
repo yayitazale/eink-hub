@@ -142,6 +142,7 @@ export const ca: Catalogue = {
   'localUrl.browser': 'Detectada automàticament: és l’adreça amb què fas servir el Hub.',
   'localUrl.interface': 'Detectada automàticament a partir de la IP d’aquest servidor.',
   'localUrl.none': 'No s’ha pogut detectar: introdueix la IP d’aquest servidor a la xarxa local.',
+  'externalUrl.tailscale': 'Detectada automàticament de Tailscale Serve; s’utilitza mentre aquest camp estigui buit.',
 
   'history.empty': 'Encara no s’ha mostrat res des del Hub.',
   'history.failed': 'fallida',

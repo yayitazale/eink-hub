@@ -148,6 +148,7 @@ export const pl: Catalogue = {
   'localUrl.browser': 'Wykryto automatycznie: to adres, pod którym korzystasz z Huba.',
   'localUrl.interface': 'Wykryto automatycznie na podstawie IP tego serwera.',
   'localUrl.none': 'Nie udało się wykryć: wpisz adres IP tego serwera w sieci lokalnej.',
+  'externalUrl.tailscale': 'Wykryto automatycznie z Tailscale Serve; jest używany, dopóki to pole jest puste.',
 
   'history.empty': 'Z Huba nic jeszcze nie wyświetlono.',
   'history.failed': 'nieudane',

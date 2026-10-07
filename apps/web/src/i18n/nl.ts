@@ -142,6 +142,7 @@ export const nl: Catalogue = {
   'localUrl.browser': 'Automatisch gedetecteerd: het is het adres waarmee je de Hub gebruikt.',
   'localUrl.interface': 'Automatisch gedetecteerd uit het IP-adres van deze server.',
   'localUrl.none': 'Kon niet worden gedetecteerd: voer het IP-adres van deze server op je lokale netwerk in.',
+  'externalUrl.tailscale': 'Automatisch gedetecteerd uit Tailscale Serve; wordt gebruikt zolang dit veld leeg is.',
 
   'history.empty': 'Er is nog niets getoond vanaf de Hub.',
   'history.failed': 'mislukt',

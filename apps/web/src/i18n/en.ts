@@ -142,6 +142,7 @@ export const en: Messages = {
   'localUrl.browser': "Detected automatically: it's the address you are using the Hub at.",
   'localUrl.interface': "Detected automatically from this server's IP.",
   'localUrl.none': "Couldn't be detected: enter this server's IP on your local network.",
+  'externalUrl.tailscale': "Detected automatically from Tailscale Serve; it's used while this field is empty.",
 
   'history.empty': 'Nothing has been shown from the Hub yet.',
   'history.failed': 'failed',

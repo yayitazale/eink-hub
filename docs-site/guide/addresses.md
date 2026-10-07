@@ -6,7 +6,7 @@ The hub has up to two addresses, both set in **Settings** (or as environment var
 
 The address frames on your LAN use to reach the hub, e.g. `http://192.168.1.10:8080`. It is needed by every frame that downloads pictures by itself: BLOOMIN8 in pull mode, TRMNL firmware and DIY frames.
 
-When it is not set, the hub guesses it from the address you browse it at, or from the machine's LAN IP. It can't be `localhost`: the frame must be able to reach it. `PUBLIC_URL` is still accepted as its old name.
+When it is not set, the hub guesses it from the address you browse it at (except a Tailscale `*.ts.net` one), or from the machine's LAN IP. It can't be `localhost`: the frame must be able to reach it. `PUBLIC_URL` is still accepted as its old name.
 
 ## External URL (`EXTERNAL_URL`)
 
@@ -14,6 +14,8 @@ Optional. The address people use to open the hub from outside, through a reverse
 
 - The QR code on the welcome picture opens it (otherwise the local URL).
 - **SwitchBot frames** download photos from it (it must be https), unless you set the address below.
+
+When Tailscale runs inside the container, as with [Unraid's Tailscale integration](/guide/unraid#tailscale), the hub detects the address Tailscale Serve gives it and uses it while this setting is empty.
 
 ## Public address for cloud frames (`CLOUD_URL`)
 

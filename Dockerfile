@@ -18,6 +18,9 @@ COPY apps/server/package.json apps/server/
 COPY apps/web/package.json apps/web/
 RUN npm ci --omit=dev -w apps/server
 
+# Keep it Debian-based and running as root: Unraid's "Use Tailscale" installs Tailscale
+# in the container with apt-get when it starts. The Unraid template lives in
+# https://gitlab.com/yayitazale/unraid-templates (yayitazale/eink-hub.xml).
 FROM node:22-bookworm-slim
 ENV NODE_ENV=production \
     DATA_DIR=/data \
