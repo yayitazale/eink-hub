@@ -4,7 +4,7 @@
  *
  *   public/            latest release (what the site opens with)
  *   public/vX.Y.Z/     every older release that has a docs-site/
- *   public/main/       unreleased docs from main
+ *   (main's docs only until there is a release: no image ships them, so nobody runs it)
  *   public/versions.json   the list the version switcher reads at runtime
  *
  * GitLab Pages replaces the whole site on every deploy, so all versions are rebuilt from their
@@ -68,9 +68,8 @@ fs.rmSync(out, { recursive: true, force: true });
 const versions = [];
 const worktrees = [];
 try {
-  // main: at the root until there is a release with docs, under /main/ afterwards.
-  const mainOut = latest ? path.join(out, 'main') : out;
-  build(docsHere, latest ? `${ROOT_BASE}main/` : ROOT_BASE, 'main', mainOut);
+  // Before the first release with docs, main is all there is: it goes at the root.
+  if (!latest) build(docsHere, ROOT_BASE, 'main', out);
 
   for (const tag of releases) {
     const dir = checkout(tag);
@@ -81,7 +80,7 @@ try {
     if (isLatest) fs.cpSync(path.join(tmp, `docs-root-${tag}`), out, { recursive: true });
     versions.push({ version: tag, path: base, latest: isLatest });
   }
-  versions.push({ version: 'main', path: latest ? `${ROOT_BASE}main/` : ROOT_BASE, latest: !latest });
+  if (!latest) versions.push({ version: 'main', path: ROOT_BASE, latest: true });
   fs.writeFileSync(path.join(out, 'versions.json'), JSON.stringify(versions, null, 2));
   console.log(`\n✔ ${versions.map((v) => v.version).join(', ')}`);
 } finally {

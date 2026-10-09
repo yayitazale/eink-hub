@@ -87,7 +87,8 @@ npm-audit:
 # `pages` and leave the site in `public/`. Every deploy rebuilds the docs of
 # every release from its tag (Pages replaces the whole site), so people on an
 # older version can still read theirs: latest release at the root, older ones
-# under /vX.Y.Z/, main under /main/. Needs the full history and tags.
+# under /vX.Y.Z/. Only on tags: unreleased docs describe what no image ships,
+# so they go live with the next release. Needs the full history and tags.
 # Merge requests that touch the docs only build the current version, so broken
 # links fail before merging.
 # Full image (not slim): git is needed for the tags and "last updated" dates.
@@ -113,7 +114,6 @@ pages:
     paths: [public]
   rules:
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_COMMIT_BRANCH == "main"'
 
 docs-build:
   <<: *docs
