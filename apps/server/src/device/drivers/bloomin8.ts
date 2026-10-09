@@ -52,8 +52,11 @@ export class Bloomin8Driver implements FrameDriver {
   }
 
   async show(r: Rendered) {
+    // Make room first, while the Canvas is idle: once the new picture is uploaded it spends
+    // the next half minute refreshing the panel, and may fall asleep before a later cleanup.
+    // A failed cleanup must not block the picture; the next push catches up.
+    await this.pruneHubGallery(HUB_GALLERY_KEEP - 1, r.deviceName).catch(() => {});
     await this.client.upload(r.buf, r.deviceName, { gallery: HUB_GALLERY, showNow: true });
-    this.pruneHubGallery().catch(() => {});
   }
 
   async action(a: DeviceAction) {
@@ -63,9 +66,10 @@ export class Bloomin8Driver implements FrameDriver {
     else await this.client.whistle();
   }
 
-  private async pruneHubGallery() {
+  /** Keep only the `keep` newest pictures the hub pushed (not counting `incoming`, about to be replaced). */
+  private async pruneHubGallery(keep: number, incoming: string) {
     const g = await this.client.gallery(HUB_GALLERY, 0, 200);
-    const old = [...(g?.data ?? [])].sort((a, b) => b.time - a.time).slice(HUB_GALLERY_KEEP);
+    const old = (g?.data ?? []).filter((i) => i.name !== incoming).sort((a, b) => b.time - a.time).slice(keep);
     for (const item of old) await this.client.deleteImage(item.name, HUB_GALLERY);
   }
 }
