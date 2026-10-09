@@ -11,6 +11,13 @@ const { app, ctx } = await buildApp(db, { logDir: config.dataDir });
 const stopScheduler = config.schedulerEnabled ? startScheduler(ctx) : () => {};
 const stopTailscale = startTailscaleDetection(app.log);
 
+// Without these a crash only reaches `docker logs`; hub.log (and the in-app log view) should say why.
+process.on('unhandledRejection', (err) => app.log.error({ err }, 'unhandled promise rejection'));
+process.on('uncaughtException', (err) => {
+  app.log.fatal({ err }, 'uncaught exception, exiting');
+  process.exit(1);
+});
+
 for (const sig of ['SIGINT', 'SIGTERM'] as const) {
   process.on(sig, async () => {
     stopScheduler();

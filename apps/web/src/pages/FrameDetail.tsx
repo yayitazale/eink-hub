@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Bluetooth, Copy, Download, Eraser, Moon, Play, RefreshCw, RotateCcw, SkipForward, Smartphone, Trash2 } from 'lucide-react';
 import { api, thumbUrl, type Frame, type FrameAppearance, type HistoryEntry, type ImageFormat, type Schedule } from '../lib/api';
 import { FRAME_COLORS, FRAME_STYLES, KNOWN_DIAGONALS, formatCm, frameGeometry, withDefaults } from '../lib/frameGeometry';
-import { dateTime, relativeTime } from '../lib/format';
+import { dateTime, formatBytes, formatPercent, relativeTime } from '../lib/format';
 import { useAction, useBleStatus, useFrame, useSettings } from '../lib/hooks';
 import { isPickerCancelled, phoneWakeSupport, wakeWithThisDevice } from '../lib/webBluetooth';
 import { useI18n, type MsgKey } from '../i18n';
@@ -25,6 +25,17 @@ function Info({ label, value }: { label: string; value: React.ReactNode }) {
       {/* Long values (IPs, hostnames, SSIDs) wrap instead of overlapping the next column. */}
       <div className="mt-0.5 text-sm font-semibold [overflow-wrap:anywhere]">{value ?? '—'}</div>
     </div>
+  );
+}
+
+/** Free storage on the Canvas: share of the card first, the absolute size beside it. */
+function FreeSpace({ free, total }: { free: number; total: number }) {
+  if (!free) return null;
+  if (!total) return <>{formatBytes(free)}</>;
+  return (
+    <>
+      {formatPercent(free, total)} <span className="font-normal text-muted">· {formatBytes(free)}</span>
+    </>
   );
 }
 
@@ -675,7 +686,7 @@ export function FrameDetail() {
             {f.kind === 'bloomin8' ? (
               <>
                 <Info label="Wi-Fi" value={info.sta_ssid as string} />
-                <Info label={t('detail.free')} value={info.free_size ? `${Math.round(Number(info.free_size) / 1e6)} MB` : undefined} />
+                <Info label={t('detail.free')} value={info.free_size ? <FreeSpace free={Number(info.free_size)} total={Number(info.total_size)} /> : undefined} />
               </>
             ) : (
               <>

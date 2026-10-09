@@ -44,7 +44,19 @@ function confirmCloudDelivery(ctx: Ctx, frame: Frame, status: Record<string, unk
 export function publicFrame(ctx: Ctx, f: Frame) {
   const config = Object.fromEntries(Object.entries(f.config ?? {}).filter(([k]) => !(SECRET_CONFIG_KEYS as readonly string[]).includes(k)));
   const diagonal = f.diagonal ?? inferDiagonal(f);
-  return { ...f, config, diagonal, diagonalInferred: f.diagonal == null, ...describeKind(f), assignment: getAssignment(ctx.db, f.id) ?? null, simulated: isSimulated(ctx.db, f.id) };
+  const kind = describeKind(f);
+  const online = kind.wakeModel === 'ble' ? stillAwake(f) : f.online;
+  return { ...f, online, config, diagonal, diagonalInferred: f.diagonal == null, ...kind, assignment: getAssignment(ctx.db, f.id) ?? null, simulated: isSimulated(ctx.db, f.id) };
+}
+
+/**
+ * A Canvas falls asleep by itself `max_idle` seconds after the last request, and nobody tells
+ * the hub. Past that it is asleep, so the UI offers Wake instead of Sleep.
+ */
+export function stillAwake(f: Pick<Frame, 'online' | 'lastSeen' | 'lastInfo'>, now = Date.now()) {
+  const idle = Number(f.lastInfo?.max_idle);
+  if (!f.online || !f.lastSeen || !(idle > 0)) return f.online;
+  return now - f.lastSeen < idle * 1000;
 }
 
 const parseFormat = (v: unknown): ImageFormat | undefined => {
@@ -361,7 +373,10 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
         return { ok: true, playlist, queued: method === 'queued' };
       }
       case 'sleep':
-        await device('sleep');
+        // No answer means it is already asleep, which is what was asked.
+        await device('sleep').catch((err) => {
+          if (!(err instanceof DeviceError && err.offline)) throw err;
+        });
         markOnline(db, frame.id, false);
         return { ok: true };
       case 'reboot':
