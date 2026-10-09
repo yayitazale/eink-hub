@@ -9,6 +9,18 @@ web share a single number (see `VERSION` at the repository root).
 Generated automatically from commit messages. The 0.1.0 entry is the only
 one written by hand: it summarises everything before the first release.
 
+## [0.3.3] - 2026-10-09
+
+### Added
+
+- **web**: Show Canvas free space as a share of the card ([4e72e7c6](https://gitlab.com/yayitazale/eink-hub/-/commit/4e72e7c6a8bf26cf19f0255ea16476e1d4a0d3ee))
+
+### Fixed
+
+- **bloomin8**: Trim the hub gallery before uploading ([ad5c16f1](https://gitlab.com/yayitazale/eink-hub/-/commit/ad5c16f17e546bfebf99023f839b98ce8e532361))
+- **bloomin8**: Show a Canvas as asleep once max_idle has passed ([5953df58](https://gitlab.com/yayitazale/eink-hub/-/commit/5953df581717069195e39fdfb90daaff8b10a571))
+- **server**: Log unhandled errors to hub.log before exiting ([aacae127](https://gitlab.com/yayitazale/eink-hub/-/commit/aacae1273c0d2c0bb575ffa212b49d6473ed48fe))
+
 ## [0.3.2] - 2026-10-07
 
 ### Documentation
