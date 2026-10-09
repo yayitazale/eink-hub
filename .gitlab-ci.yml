@@ -1,7 +1,6 @@
 # A release's `git push --follow-tags` pushes two refs at once (the main
 # branch and the tag), and GitLab starts one pipeline per ref even though both
-# point at the same commit. Runners are ephemeral and don't share a layer
-# cache between pipelines, so the image would be built twice for nothing.
+# point at the same commit, so the tests would run twice for nothing.
 #
 # The tag pipeline is the one that matters (it checks the version, publishes
 # :vX.Y.Z and creates the Release), so the branch one is dropped. It's
@@ -29,23 +28,11 @@ variables:
   DOCKER_TLS_CERTDIR: ""
   DOCKER_BUILDKIT: "1"
 
-# How the image is tagged depending on what triggered the pipeline. Shared by
-# build-image and trivy-image (which must scan exactly the image that was just
-# published), hence the anchor.
-#
-# On a tag, :latest moves to the release. That's the usual convention and
-# what makes publishing tags worthwhile: whoever deploys by pulling :latest
-# gets deliberately released versions, not every merge to main. main is
-# published as :main so it can still be tried out.
-.image-rules: &image-rules
-  - if: '$CI_COMMIT_TAG'
-    variables:
-      IMAGE_TAG: "$CI_COMMIT_TAG"
-      IMAGE_ALIAS: "latest"
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    variables:
-      IMAGE_TAG: "$CI_COMMIT_SHORT_SHA"
-      IMAGE_ALIAS: "main"
+# Images are only published for releases: a tag pushes :vX.Y.Z and moves
+# :latest, so whoever deploys by pulling :latest gets deliberately released
+# versions. Merges to main publish nothing; merge requests build the image
+# without pushing it, so a broken Dockerfile fails before merging and not on
+# release day.
 
 # Safety net against the classic mistake: creating the tag without bumping
 # the version files, and ending up with a :v0.4.0 image that says 0.3.0
@@ -65,8 +52,9 @@ check-version:
   rules:
     - if: '$CI_COMMIT_TAG'
 
-# Blocking: a broken build or a failing test must not reach an image. Runs on
-# merge requests too, so contributors get feedback before merging.
+# Blocking: a broken build or a failing test must not reach an image. Merge
+# requests can't be merged unless it passes; it runs again on main because a
+# merge commit isn't exactly what the MR tested if main moved meanwhile.
 test:
   stage: scan-deps
   image: node:22-bookworm-slim
@@ -135,22 +123,34 @@ docs-build:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: [docs-site/**/*, examples/**/*]
 
-build-image:
+.docker: &docker
   stage: build
   image: docker:24.0.6
   services:
     - docker:24.0.6-dind
+
+# Same build as a release, thrown away afterwards.
+docker-build:
+  <<: *docker
+  script:
+    - docker build --pull .
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+build-image:
+  <<: *docker
   script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
     - >
       docker build
       --pull
-      --tag "$CI_REGISTRY_IMAGE:$IMAGE_TAG"
-      --tag "$CI_REGISTRY_IMAGE:$IMAGE_ALIAS"
+      --tag "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"
+      --tag "$CI_REGISTRY_IMAGE:latest"
       .
-    - docker push "$CI_REGISTRY_IMAGE:$IMAGE_TAG"
-    - docker push "$CI_REGISTRY_IMAGE:$IMAGE_ALIAS"
-  rules: *image-rules
+    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"
+    - docker push "$CI_REGISTRY_IMAGE:latest"
+  rules:
+    - if: '$CI_COMMIT_TAG'
 
 trivy-image:
   stage: scan-image
@@ -168,8 +168,9 @@ trivy-image:
     TRIVY_PASSWORD: "$CI_REGISTRY_PASSWORD"
   script:
     # Reuses the image build-image just published, doesn't rebuild.
-    - trivy image --severity HIGH,CRITICAL --exit-code 0 "$CI_REGISTRY_IMAGE:$IMAGE_TAG"
-  rules: *image-rules
+    - trivy image --severity HIGH,CRITICAL --exit-code 0 "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"
+  rules:
+    - if: '$CI_COMMIT_TAG'
 
 # Records the release in GitLab's Releases tab, linking the changelog frozen
 # at that tag. Uploads no artifacts: what gets published is the registry image.
