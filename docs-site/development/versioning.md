@@ -135,16 +135,17 @@ git reset --hard HEAD~1
 4. **`trivy-image`** scans that same image (informational, never blocks).
 5. **`release`** creates the entry in GitLab's *Releases* tab.
 
-Pushes to `main` without a tag only run the tests and rebuild this website.
+Pushes to `main` without a tag only run the tests.
 **Images, and `:latest`, only move when a tag is published**, so whoever
 deploys by pulling `:latest` gets deliberately released versions and not
 every merge.
 
-Both tags and pushes to `main` also rebuild this website (the `pages` job):
-the latest release at the root, older releases under `/vX.Y.Z/` and `main`
-under `/main/`.
+Tags also rebuild this website (the `pages` job): the latest release at the
+root and older releases under `/vX.Y.Z/`. Docs merged to `main` go live with
+the next release, which can be a docs-only one; merge requests still check
+the docs build (`docs-build`).
 
-Merge requests run `test` and `npm-audit` (plus `docs-build` when they touch
+Merge requests run `test`, `npm-audit` and `docker-build` (plus `docs-build` when they touch
 the docs or examples); they never publish an image.
 
 ## The changelog
