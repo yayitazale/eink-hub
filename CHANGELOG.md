@@ -9,6 +9,16 @@ web share a single number (see `VERSION` at the repository root).
 Generated automatically from commit messages. The 0.1.0 entry is the only
 one written by hand: it summarises everything before the first release.
 
+## [0.3.4] - 2026-10-09
+
+### Documentation
+
+- Drop unreleased main from the version switcher ([a2874bda](https://gitlab.com/yayitazale/eink-hub/-/commit/a2874bda9be1df7be6d2abd938e6d873a93b0592))
+
+### Maintenance
+
+- Publish images only for releases ([f8afd796](https://gitlab.com/yayitazale/eink-hub/-/commit/f8afd796fb3c786a39a23b6448f6149097e37de1))
+
 ## [0.3.3] - 2026-10-09
 
 ### Added
