@@ -60,4 +60,3 @@ docker compose pull && docker compose up -d
 | --- | --- |
 | `:latest` | The latest release (recommended) |
 | `:vX.Y.Z` | A specific release, to pin a version |
-| `:main` | Latest build of `main`. Untested, for trying unreleased changes |

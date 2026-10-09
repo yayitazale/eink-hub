@@ -87,8 +87,9 @@ automatically, and even after running the script, the commit and tag stay
 local until you `push` -- until then GitLab knows nothing and it can be undone
 with no consequences.
 
-Every merge to `main` does build an image, but as `:main` and `:<short sha>`,
-so it can be tried out. It isn't a release and doesn't move `:latest`.
+Merges to `main` publish no image: only releases reach the registry. Every
+merge request builds the Docker image without pushing it, and it can only be
+merged once the tests and that build pass.
 
 ## Cutting a release
 
@@ -134,10 +135,10 @@ git reset --hard HEAD~1
 4. **`trivy-image`** scans that same image (informational, never blocks).
 5. **`release`** creates the entry in GitLab's *Releases* tab.
 
-On pushes to `main` without a tag the image is still built, but as `:main`
-and `:<short sha>`. **`:latest` only moves when a tag is published**, so
-whoever deploys by pulling `:latest` gets deliberately released versions and
-not every merge.
+Pushes to `main` without a tag only run the tests and rebuild this website.
+**Images, and `:latest`, only move when a tag is published**, so whoever
+deploys by pulling `:latest` gets deliberately released versions and not
+every merge.
 
 Both tags and pushes to `main` also rebuild this website (the `pages` job):
 the latest release at the root, older releases under `/vX.Y.Z/` and `main`
