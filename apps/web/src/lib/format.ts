@@ -65,3 +65,15 @@ export function describeSchedule(s: Schedule, t: TFunction, tn: TnFunction): str
       return t('schedule.desc_cron', { expr: s.expr });
   }
 }
+
+/** Storage size with a unit that keeps it short: 850 MB, 31.4 GB. */
+export function formatBytes(bytes: number): string {
+  const gb = bytes >= 1e9;
+  const n = new Intl.NumberFormat(locale, { maximumFractionDigits: gb ? 1 : 0 }).format(bytes / (gb ? 1e9 : 1e6));
+  return `${n} ${gb ? 'GB' : 'MB'}`;
+}
+
+/** Share of the whole, in the active locale's style (99 %, 99%). */
+export function formatPercent(part: number, whole: number): string {
+  return new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 0 }).format(part / whole);
+}
