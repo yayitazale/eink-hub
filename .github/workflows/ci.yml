@@ -1,0 +1,64 @@
+name: CI
+
+# Pull requests and merges to main. Images are only published for releases
+# (release.yml): merges to main publish nothing, and pull requests build the
+# image without pushing it, so a broken Dockerfile fails before merging and not
+# on release day.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Blocking: a broken build or a failing test must not reach an image. Pull
+  # requests can't be merged unless it passes; it runs again on main because a
+  # merge commit isn't exactly what the PR tested if main moved meanwhile.
+  #
+  # A release's `git push --follow-tags` pushes main and the tag at once. The
+  # tag run (release.yml) is the one that matters, so the main one is skipped.
+  # It's recognised by the commit title, which scripts/release.mjs always
+  # writes the same way, and only touches version files and the changelog.
+  test:
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release)') }}
+    runs-on: ubuntu-latest
+    container: node:22-bookworm-slim
+    steps:
+      # better-sqlite3 compiles from source when no prebuilt binary matches.
+      - run: apt-get update && apt-get install -y --no-install-recommends python3 make g++ fontconfig fonts-inter
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+
+  # Non-blocking on purpose: a new CVE in a dependency must not prevent
+  # shipping an urgent fix. It's a warning, not a gate.
+  npm-audit:
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release)') }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm audit --audit-level=high
+
+  # Same build as a release, thrown away afterwards.
+  docker-build:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          pull: true
+          push: false

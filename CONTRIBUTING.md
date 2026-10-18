@@ -1,23 +1,23 @@
 # Contributing to E-Ink Hub
 
-Thanks for helping out! Bug reports, ideas and merge requests are all welcome.
+Thanks for helping out! Bug reports, ideas and pull requests are all welcome.
 
 ## Reporting bugs and ideas
 
-Open an issue on GitLab: https://gitlab.com/yayitazale/eink-hub/-/issues
+Open an issue on GitHub: https://github.com/yayitazale/eink-hub/issues
 
 For bugs, include the hub version (shown at the bottom of the sidebar, or
 `GET /api/health`), the frame model and firmware, the delivery mode (push or
 pull), and the relevant container logs (`docker compose logs eink-hub`).
 
-## Merge requests
+## Pull requests
 
 1. **Fork** the project and create a branch from `main`, named after the
    change: `feat/blurred-border`, `fix/pull-queue`, `docs/immich-setup`…
-2. Make your changes. Keep each MR focused on one thing — small MRs get
+2. Make your changes. Keep each PR focused on one thing — small PRs get
    reviewed and merged much faster.
 3. Use **[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)**
-   for commit messages and for the MR title:
+   for commit messages and for the PR title:
 
    ```
    feat(immich): add "on this day" collections
@@ -28,9 +28,9 @@ pull), and the relevant container logs (`docker compose logs eink-hub`).
    the format are left out of it. The full table of prefixes is in
    [docs-site/development/versioning.md](docs-site/development/versioning.md#commit-message-format).
 4. Check that it builds and the tests pass (see below).
-5. Open a **merge request against `main`**. Describe what changes and why,
+5. Open a **pull request against `main`**. Describe what changes and why,
    and how you tested it (real frame model, or the Test Canvas / simulator).
-   The MR pipeline (build, tests and `npm audit`) must be green.
+   The PR checks (build, tests, `npm audit` and the Docker build) must be green.
 
 Please **don't** bump version numbers or edit `CHANGELOG.md`: releases are cut
 by the maintainer with `scripts/release.mjs`, which does both.
@@ -64,7 +64,7 @@ Match the surrounding code: TypeScript everywhere, small modules, comments
 that explain *why* rather than *what*. UI strings go through the i18n files in
 `apps/web/src/i18n`, and API messages through `apps/server/src/i18n.ts` with
 `apps/server/src/locales`. Please add new keys to every language; if you can't
-translate one, copy the English text and mention it in the MR. `npm test`
+translate one, copy the English text and mention it in the PR. `npm test`
 checks that every language has every key, the same `{placeholders}` and the
 plural forms its language needs.
 

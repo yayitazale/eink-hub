@@ -2,7 +2,7 @@
 
 A Raspberry Pi (Zero 2 W or newer) with a [Pimoroni Inky](https://shop.pimoroni.com/collections/inky) display: Inky Impression (Spectra 6 or 7-colour, 4″ to 13.3″), Inky wHAT or pHAT. It's a ~100-line Python script.
 
-The code is in [`examples/rpi-inky`](https://gitlab.com/yayitazale/eink-hub/-/tree/main/examples/rpi-inky).
+The code is in [`examples/rpi-inky`](https://github.com/yayitazale/eink-hub/tree/main/examples/rpi-inky).
 
 Since a Pi is usually plugged in, this example also uses the **nudge**: it tells the hub a `notify_url`, and the hub pokes it whenever you send a photo, so it shows up within seconds.
 
@@ -14,7 +14,7 @@ Since a Pi is usually plugged in, this example also uses the **nudge**: it tells
 mkdir -p ~/openframe && cd ~/openframe
 python3 -m venv .venv
 .venv/bin/pip install "inky[rpi]" pillow requests
-curl -O https://gitlab.com/yayitazale/eink-hub/-/raw/main/examples/rpi-inky/openframe.py
+curl -O https://raw.githubusercontent.com/yayitazale/eink-hub/main/examples/rpi-inky/openframe.py
 ```
 
 2. In the hub: **Add Canvas → Add manually → DIY frame** with the display's resolution (e.g. 800×480). Copy the **token** from **Connection**.

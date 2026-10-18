@@ -382,7 +382,7 @@ export const zh: Catalogue = {
   'detail.wake_no_reply': '已通过蓝牙发送唤醒信号，但 Canvas 没有通过 Wi-Fi 响应。请靠近后重试。',
   'ble.hub_ok': 'Hub 可以使用服务器的蓝牙（{adapter}）唤醒 Canvas。',
   'ble.hub_disabled': 'Hub 的蓝牙已关闭（BLE_DISABLED）。',
-  'ble.hub_no_dbus': 'Hub 无法访问服务器的蓝牙：请将 /run/dbus 挂载到容器中（仅限 Linux，参见 https://eink-hub-7ba3a3.gitlab.io/guide/bluetooth）。',
+  'ble.hub_no_dbus': 'Hub 无法访问服务器的蓝牙：请将 /run/dbus 挂载到容器中（仅限 Linux，参见 https://yayitazale.github.io/eink-hub/guide/bluetooth）。',
   'ble.hub_no_bluez': 'Hub 能看到 D-Bus，但看不到 BlueZ：请检查服务器上的 bluetooth 服务是否在运行。',
   'ble.hub_no_adapter': '服务器没有蓝牙适配器。',
   'ble.hub_powered_off': '服务器的蓝牙适配器已关闭（bluetoothctl power on）。',

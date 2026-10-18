@@ -1,9 +1,9 @@
 import { defineConfig } from 'vitepress';
 
-const repo = 'https://gitlab.com/yayitazale/eink-hub';
+const repo = 'https://github.com/yayitazale/eink-hub';
 const base = process.env.DOCS_BASE ?? '/';
 
-// Published by the `pages` job in .gitlab-ci.yml to https://eink-hub-7ba3a3.gitlab.io/.
+// Published by the `pages` job in .github/workflows/release.yml to https://yayitazale.github.io/eink-hub/.
 export default defineConfig({
   title: 'E-Ink Hub',
   description: 'Self-hosted control center for e-ink photo frames: BLOOMIN8, SwitchBot, TRMNL and your own DIY frames, with Immich.',
@@ -17,7 +17,7 @@ export default defineConfig({
       __DOCS_ROOT__: JSON.stringify(process.env.DOCS_ROOT ?? '/'),
     },
   },
-  // GitLab Pages serves the `public` folder at the repository root.
+  // build-all.mjs and the Pages workflow pick the site up from `public` at the repository root.
   outDir: '../public',
   cleanUrls: true,
   lastUpdated: true,
@@ -33,7 +33,7 @@ export default defineConfig({
       { text: 'Build your own', link: '/diy/' },
       { text: 'API', link: '/api/' },
       { text: 'Development', link: '/development/' },
-      { text: 'Changelog', link: `${repo}/-/blob/main/CHANGELOG.md` },
+      { text: 'Changelog', link: `${repo}/blob/main/CHANGELOG.md` },
     ],
     sidebar: {
       '/guide/': [
@@ -91,11 +91,11 @@ export default defineConfig({
         },
       ],
     },
-    socialLinks: [{ icon: 'gitlab', link: repo }],
-    editLink: { pattern: `${repo}/-/edit/main/docs-site/:path`, text: 'Edit this page on GitLab' },
+    socialLinks: [{ icon: 'github', link: repo }],
+    editLink: { pattern: `${repo}/edit/main/docs-site/:path`, text: 'Edit this page on GitHub' },
     search: { provider: 'local' },
     footer: {
-      message: `Released under the <a href="${repo}/-/blob/main/LICENSE">MIT License</a>. Not affiliated with BLOOMIN8, SwitchBot or TRMNL.`,
+      message: `Released under the <a href="${repo}/blob/main/LICENSE">MIT License</a>. Not affiliated with BLOOMIN8, SwitchBot or TRMNL.`,
       copyright: '© 2026 <a href="https://josebaegia.me/">Joseba Egia</a>',
     },
   },

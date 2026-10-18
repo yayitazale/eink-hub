@@ -20,7 +20,7 @@ body = """{% if version %}## [{{ version | trim_start_matches(pat="v") }}] - {{ 
 {% for group, commits in commits | group_by(attribute="group") %}
 ### {{ group | striptags | trim }}
 {% for commit in commits %}
-- {% if commit.scope %}**{{ commit.scope }}**: {% endif %}{{ commit.message | upper_first }} ([{{ commit.id | truncate(length=8, end="") }}](https://gitlab.com/yayitazale/eink-hub/-/commit/{{ commit.id }})){% endfor %}
+- {% if commit.scope %}**{{ commit.scope }}**: {% endif %}{{ commit.message | upper_first }} ([{{ commit.id | truncate(length=8, end="") }}](https://github.com/yayitazale/eink-hub/commit/{{ commit.id }})){% endfor %}
 {% endfor %}"""
 trim = false
 footer = ""
@@ -28,8 +28,9 @@ footer = ""
 [git]
 conventional_commits = true
 # Drops anything that doesn't follow the format -- among other things the
-# merge commits GitLab creates when accepting an MR
-# ("Merge branch 'x' into 'main'"), which would otherwise clutter every release.
+# merge commits created when accepting a pull request ("Merge pull request
+# #12 from …", or "Merge branch 'x' into 'main'" from the GitLab days), which
+# would otherwise clutter every release.
 filter_unconventional = true
 split_commits = false
 protect_breaking_commits = false
@@ -39,14 +40,15 @@ topo_order = false
 sort_commits = "oldest"
 
 commit_preprocessors = [
-  # GitLab issue references (#12) as links.
-  { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](https://gitlab.com/yayitazale/eink-hub/-/issues/${2}))" },
+  # Issue and pull request references (#12) as links.
+  { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](https://github.com/yayitazale/eink-hub/issues/${2}))" },
 ]
 
 # Section order inside each release. The HTML comments only sort the groups
 # (git-cliff orders them alphabetically) and are stripped from the output.
 commit_parsers = [
   { message = '^Merge branch', skip = true },
+  { message = '^Merge pull request', skip = true },
   { message = '^chore\(release\)', skip = true },
   { message = '^feat', group = '<!-- 0 -->Added' },
   { message = '^fix', group = '<!-- 1 -->Fixed' },

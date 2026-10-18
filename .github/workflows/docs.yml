@@ -1,0 +1,28 @@
+name: Docs
+
+# Pull requests that touch the docs only build the current version, so broken
+# links fail before merging. The site itself is published by release.yml.
+on:
+  pull_request:
+    paths: ['docs-site/**', 'examples/**']
+
+permissions:
+  contents: read
+
+jobs:
+  docs-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs-site
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: docs-site/package-lock.json
+      - run: npm ci
+      - run: npm run build

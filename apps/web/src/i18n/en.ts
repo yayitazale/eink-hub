@@ -382,7 +382,7 @@ export const en: Messages = {
   'detail.wake_no_reply': 'The Bluetooth wake was sent, but the Canvas did not answer over Wi-Fi. Try again from closer.',
   'ble.hub_ok': 'The hub can wake Canvases with the server’s Bluetooth ({adapter}).',
   'ble.hub_disabled': 'The hub’s Bluetooth is turned off (BLE_DISABLED).',
-  'ble.hub_no_dbus': 'The hub cannot reach the server’s Bluetooth: mount /run/dbus into the container (Linux only, see https://eink-hub-7ba3a3.gitlab.io/guide/bluetooth).',
+  'ble.hub_no_dbus': 'The hub cannot reach the server’s Bluetooth: mount /run/dbus into the container (Linux only, see https://yayitazale.github.io/eink-hub/guide/bluetooth).',
   'ble.hub_no_bluez': 'The hub sees D-Bus but not BlueZ: check that the bluetooth service is running on the server.',
   'ble.hub_no_adapter': 'The server has no Bluetooth adapter.',
   'ble.hub_powered_off': 'The server’s Bluetooth adapter is off (bluetoothctl power on).',

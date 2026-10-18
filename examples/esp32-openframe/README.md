@@ -1,7 +1,7 @@
 # ESP32 Open Frame example
 
-An ESP32 + e-paper frame for [E-Ink Hub](https://eink-hub-7ba3a3.gitlab.io/diy/esp32), using the
-[Open Frame protocol](https://eink-hub-7ba3a3.gitlab.io/diy/protocol). It deep-sleeps between polls
+An ESP32 + e-paper frame for [E-Ink Hub](https://yayitazale.github.io/eink-hub/diy/esp32), using the
+[Open Frame protocol](https://yayitazale.github.io/eink-hub/diy/protocol). It deep-sleeps between polls
 and only redraws when the hub has a new picture.
 
 1. In the hub: **Add Canvas → Add manually → DIY frame**, and copy the endpoint and token from **Connection**.

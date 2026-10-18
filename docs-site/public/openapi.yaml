@@ -17,7 +17,7 @@ servers:
     description: Your hub
 tags:
   - name: Open Frame
-    description: Protocol for DIY frames. See https://eink-hub-7ba3a3.gitlab.io/diy/protocol
+    description: Protocol for DIY frames. See https://yayitazale.github.io/eink-hub/diy/protocol
   - name: TRMNL BYOS
     description: The hub as server for TRMNL firmware. See https://docs.trmnl.com/go/diy/byos
   - name: BLOOMIN8 pull

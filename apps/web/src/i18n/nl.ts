@@ -382,7 +382,7 @@ export const nl: Catalogue = {
   'detail.wake_no_reply': 'Het Bluetooth-wekkersignaal is verzonden, maar het Canvas antwoordde niet via wifi. Probeer het van dichterbij opnieuw.',
   'ble.hub_ok': 'De Hub kan Canvas wakker maken met de Bluetooth van de server ({adapter}).',
   'ble.hub_disabled': 'De Bluetooth van de Hub staat uit (BLE_DISABLED).',
-  'ble.hub_no_dbus': 'De Hub kan de Bluetooth van de server niet bereiken: koppel /run/dbus aan de container (alleen Linux, zie https://eink-hub-7ba3a3.gitlab.io/guide/bluetooth).',
+  'ble.hub_no_dbus': 'De Hub kan de Bluetooth van de server niet bereiken: koppel /run/dbus aan de container (alleen Linux, zie https://yayitazale.github.io/eink-hub/guide/bluetooth).',
   'ble.hub_no_bluez': 'De Hub ziet D-Bus maar niet BlueZ: controleer of de bluetooth-service op de server draait.',
   'ble.hub_no_adapter': 'De server heeft geen Bluetooth-adapter.',
   'ble.hub_powered_off': 'De Bluetooth-adapter van de server staat uit (bluetoothctl power on).',

@@ -5,7 +5,7 @@ Polls E-Ink Hub, shows new pictures and sleeps for as long as the hub says. Beca
 usually on mains power it also listens for the hub's nudge (notify_url), so photos you send
 by hand appear within seconds instead of at the next poll.
 
-Protocol: https://eink-hub-7ba3a3.gitlab.io/diy/protocol
+Protocol: https://yayitazale.github.io/eink-hub/diy/protocol
 """
 import io
 import os

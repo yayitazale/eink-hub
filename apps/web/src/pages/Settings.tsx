@@ -7,7 +7,7 @@ import { APP_VERSION, CHANGELOG_URL } from '../lib/version';
 import { languages, useI18n, type Lang, type MsgKey } from '../i18n';
 import { ServerLogs } from '../components/ServerLogs';
 
-const IMMICH_PERMISSIONS_URL = 'https://eink-hub-7ba3a3.gitlab.io/guide/immich#api-key-permissions';
+const IMMICH_PERMISSIONS_URL = 'https://yayitazale.github.io/eink-hub/guide/immich#api-key-permissions';
 import { Button, Card, Field, SectionTitle, Segmented, Spinner, Toggle, inputClass, useToast } from '../components/ui';
 
 type Tab = 'general' | 'immich' | 'security' | 'logs';

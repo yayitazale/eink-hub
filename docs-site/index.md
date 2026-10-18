@@ -57,8 +57,8 @@ features:
 
 ```bash
 mkdir eink-hub && cd eink-hub
-curl -O https://gitlab.com/yayitazale/eink-hub/-/raw/main/docker-compose.yml
-curl -o .env https://gitlab.com/yayitazale/eink-hub/-/raw/main/.env.example
+curl -O https://raw.githubusercontent.com/yayitazale/eink-hub/main/docker-compose.yml
+curl -o .env https://raw.githubusercontent.com/yayitazale/eink-hub/main/.env.example
 docker compose up -d
 ```
 

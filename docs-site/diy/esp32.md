@@ -2,7 +2,7 @@
 
 A battery-friendly frame with an ESP32 and an e-paper panel, written with Arduino + PlatformIO. It wakes, asks the hub, redraws only when there is a new picture, and deep-sleeps for as long as the hub says (a few µA in between).
 
-The code is in [`examples/esp32-openframe`](https://gitlab.com/yayitazale/eink-hub/-/tree/main/examples/esp32-openframe).
+The code is in [`examples/esp32-openframe`](https://github.com/yayitazale/eink-hub/tree/main/examples/esp32-openframe).
 
 ## Hardware
 
