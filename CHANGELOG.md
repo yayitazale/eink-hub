@@ -9,6 +9,12 @@ web share a single number (see `VERSION` at the repository root).
 Generated automatically from commit messages. The 0.1.0 entry is the only
 one written by hand: it summarises everything before the first release.
 
+## [0.3.5] - 2026-10-18
+
+### Maintenance
+
+- Move the project to GitHub ([8c7762e3](https://github.com/yayitazale/eink-hub/commit/8c7762e3cb960e1764b6dd3d0422b806e18f5768))
+
 ## [0.3.4] - 2026-10-09
 
 ### Documentation
