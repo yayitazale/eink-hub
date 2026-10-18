@@ -22,4 +22,4 @@ The [Reflection Frame](https://www.reflectionframe.com/) (Spectra 6, 10″ and 1
 
 ## Something else?
 
-If your frame has a local or cloud API, a driver is usually a small file (see `apps/server/src/device/drivers/`). [Open an issue](https://gitlab.com/yayitazale/eink-hub/-/issues) with links to its API. If it's an ESP32 or Raspberry Pi board, it can probably run the [Open Frame](/diy/) examples or [TRMNL firmware](/devices/trmnl) today.
+If your frame has a local or cloud API, a driver is usually a small file (see `apps/server/src/device/drivers/`). [Open an issue](https://github.com/yayitazale/eink-hub/issues) with links to its API. If it's an ESP32 or Raspberry Pi board, it can probably run the [Open Frame](/diy/) examples or [TRMNL firmware](/devices/trmnl) today.

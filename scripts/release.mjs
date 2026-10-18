@@ -12,7 +12,7 @@
  * it doesn't depend on Git Bash.
  *
  * It does not push on purpose (see the end): publishing must always be a
- * deliberate act, because the tag is what triggers the release build on GitLab.
+ * deliberate act, because the tag is what triggers the release build on GitHub.
  */
 
 import { execFileSync, execSync } from 'node:child_process'
@@ -164,7 +164,7 @@ console.log(`
     Review with:   git show v${version}
     Publish with:  git push origin main --follow-tags
 
-    When the tag arrives, GitLab checks it matches VERSION, builds the image
+    When the tag arrives, GitHub checks it matches VERSION, builds the image
     as :v${version} and :latest, and creates the Release.
 
     If something is wrong, undo it before pushing:

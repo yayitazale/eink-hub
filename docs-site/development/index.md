@@ -1,11 +1,11 @@
 # Contributing
 
-Bug reports, ideas and merge requests are welcome. The full guide is in [CONTRIBUTING.md](https://gitlab.com/yayitazale/eink-hub/-/blob/main/CONTRIBUTING.md). In short:
+Bug reports, ideas and pull requests are welcome. The full guide is in [CONTRIBUTING.md](https://github.com/yayitazale/eink-hub/blob/main/CONTRIBUTING.md). In short:
 
-1. Open an [issue](https://gitlab.com/yayitazale/eink-hub/-/issues) for bugs or ideas.
-2. Fork, branch from `main` and open a **merge request** against `main`.
+1. Open an [issue](https://github.com/yayitazale/eink-hub/issues) for bugs or ideas.
+2. Fork, branch from `main` and open a **pull request** against `main`.
 3. Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) (`feat: …`, `fix: …`): the changelog is generated from them.
-4. Make sure `npm run build` and `npm test` pass; the MR pipeline runs them too.
+4. Make sure `npm run build` and `npm test` pass; the PR checks run them too.
 
 ## Run it locally
 

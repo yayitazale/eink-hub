@@ -32,4 +32,4 @@ curl -b hub.cookie -H 'content-type: application/json' \
   -d '{"imageId": 42, "fit": "cover"}' http://192.168.1.10:8080/api/frames/1/display
 ```
 
-They are not versioned yet and can change between releases. Check the [changelog](https://gitlab.com/yayitazale/eink-hub/-/blob/main/CHANGELOG.md) when you upgrade.
+They are not versioned yet and can change between releases. Check the [changelog](https://github.com/yayitazale/eink-hub/blob/main/CHANGELOG.md) when you upgrade.

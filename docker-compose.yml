@@ -1,7 +1,7 @@
 services:
   eink-hub:
     # Released image; see docker-compose.override.yml.example to build locally.
-    image: registry.gitlab.com/yayitazale/eink-hub:latest
+    image: ghcr.io/yayitazale/eink-hub:latest
     container_name: eink-hub
     restart: unless-stopped
     # Bridge networking (default). "Search the network" finds BLOOMIN8 frames

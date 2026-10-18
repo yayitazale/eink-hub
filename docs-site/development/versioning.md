@@ -50,15 +50,15 @@ For a breaking change, add `!` before the colon (`feat(api)!: ...`) or a
 `BREAKING CHANGE:` line in the body.
 
 A commit that doesn't follow the format **doesn't appear in the changelog**.
-That is what automatically drops the merge commits GitLab creates when
-accepting an MR.
+That is what automatically drops the merge commits created when accepting a
+pull request.
 
 ## The workflow
 
 A tag **is not a branch**: it's a label pinned to one specific commit. Nobody
 works on it or merges it. It goes at the end, not the beginning.
 
-Day-to-day work doesn't change: branches from `main` and merge requests. There
+Day-to-day work doesn't change: branches from `main` and pull requests. There
 is only one extra step, and only when you want to publish.
 
 ```
@@ -72,7 +72,7 @@ main    --*--------*------------*----------*-----
 
 1. Branch from `main` (`feat/blurred-border`).
 2. Commit using the format above (`feat: ...`, `fix: ...`).
-3. Open an MR and merge it into `main`.
+3. Open a pull request and merge it into `main`.
 4. Repeat 1-3 as often as you like.
 5. When what has accumulated deserves a release, from `main`:
    `node scripts/release.mjs`.
@@ -84,11 +84,11 @@ by type.
 
 The maintainer decides when there is a release. Nothing is published
 automatically, and even after running the script, the commit and tag stay
-local until you `push` -- until then GitLab knows nothing and it can be undone
+local until you `push` -- until then GitHub knows nothing and it can be undone
 with no consequences.
 
 Merges to `main` publish no image: only releases reach the registry. Every
-merge request builds the Docker image without pushing it, and it can only be
+pull request builds the Docker image without pushing it, and it can only be
 merged once the tests and that build pass.
 
 ## Cutting a release
@@ -125,27 +125,29 @@ git tag -d vX.Y.Z
 git reset --hard HEAD~1
 ```
 
-## What GitLab does when the tag arrives
+## What GitHub does when the tag arrives
 
-1. **`check-version`** fails the pipeline if the tag doesn't match `VERSION`.
+1. **`check-version`** fails the release workflow if the tag doesn't match `VERSION`.
    It's the safety net against tagging without bumping the version.
 2. **`test`** builds both apps and runs the test suite.
 3. **`build-image`** builds and publishes the image as `:vX.Y.Z` **and**
-   `:latest` in `registry.gitlab.com/yayitazale/eink-hub`.
+   `:latest` in `ghcr.io/yayitazale/eink-hub`, and also in
+   `registry.gitlab.com/yayitazale/eink-hub` for installs from before the move
+   to GitHub.
 4. **`trivy-image`** scans that same image (informational, never blocks).
-5. **`release`** creates the entry in GitLab's *Releases* tab.
+5. **`release`** creates the entry in GitHub's *Releases* tab.
 
 Pushes to `main` without a tag only run the tests.
 **Images, and `:latest`, only move when a tag is published**, so whoever
 deploys by pulling `:latest` gets deliberately released versions and not
 every merge.
 
-Tags also rebuild this website (the `pages` job): the latest release at the
+Tags also rebuild this website on GitHub Pages (the `pages` job): the latest release at the
 root and older releases under `/vX.Y.Z/`. Docs merged to `main` go live with
-the next release, which can be a docs-only one; merge requests still check
+the next release, which can be a docs-only one; pull requests still check
 the docs build (`docs-build`).
 
-Merge requests run `test`, `npm-audit` and `docker-build` (plus `docs-build` when they touch
+Pull requests run `test`, `npm-audit` and `docker-build` (plus `docs-build` when they touch
 the docs or examples); they never publish an image.
 
 ## The changelog
@@ -157,3 +159,8 @@ regenerating the rest, so what has already been published — including the
 hand-written `0.1.0` entry — never changes.
 
 Nothing needs installing: the script calls `npx git-cliff@2`.
+
+The workflows live in `.github/workflows/`: `ci.yml` (pull requests and
+`main`), `docs.yml` (docs build on pull requests), `release.yml` (tags) and
+`mirror-gitlab.yml`, which pushes every branch and tag to the read-only mirror
+at [gitlab.com/yayitazale/eink-hub](https://gitlab.com/yayitazale/eink-hub).

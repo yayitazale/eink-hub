@@ -382,7 +382,7 @@ export const pt: Catalogue = {
   'detail.wake_no_reply': 'O sinal de despertar por Bluetooth foi enviado, mas o Canvas não respondeu por Wi-Fi. Tente novamente mais de perto.',
   'ble.hub_ok': 'O Hub pode acordar Canvas com o Bluetooth do servidor ({adapter}).',
   'ble.hub_disabled': 'O Bluetooth do Hub está desligado (BLE_DISABLED).',
-  'ble.hub_no_dbus': 'O Hub não consegue aceder ao Bluetooth do servidor: monte /run/dbus no contentor (apenas Linux, ver https://eink-hub-7ba3a3.gitlab.io/guide/bluetooth).',
+  'ble.hub_no_dbus': 'O Hub não consegue aceder ao Bluetooth do servidor: monte /run/dbus no contentor (apenas Linux, ver https://yayitazale.github.io/eink-hub/guide/bluetooth).',
   'ble.hub_no_bluez': 'O Hub vê o D-Bus mas não o BlueZ: verifique se o serviço bluetooth está em execução no servidor.',
   'ble.hub_no_adapter': 'O servidor não tem adaptador Bluetooth.',
   'ble.hub_powered_off': 'O adaptador Bluetooth do servidor está desligado (bluetoothctl power on).',

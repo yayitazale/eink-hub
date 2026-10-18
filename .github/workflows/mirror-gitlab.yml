@@ -1,0 +1,34 @@
+name: Mirror to GitLab
+
+# GitHub is where the project is developed; gitlab.com/yayitazale/eink-hub is
+# a read-only mirror, kept so old links and clones keep working. GitLab Free
+# can't pull-mirror, so GitHub pushes every branch and tag there.
+on:
+  push:
+  delete:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-gitlab
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    env:
+      # A GitLab access token with write_repository on yayitazale/eink-hub.
+      GITLAB_TOKEN: ${{ secrets.GITLAB_MIRROR_TOKEN }}
+    steps:
+      - if: env.GITLAB_TOKEN == ''
+        run: echo "::warning::GITLAB_MIRROR_TOKEN is not set; GitLab is not being updated."
+      - if: env.GITLAB_TOKEN != ''
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - if: env.GITLAB_TOKEN != ''
+        run: >
+          git push --prune --force
+          "https://oauth2:${GITLAB_TOKEN}@gitlab.com/yayitazale/eink-hub.git"
+          "refs/remotes/origin/*:refs/heads/*" "refs/tags/*:refs/tags/*"

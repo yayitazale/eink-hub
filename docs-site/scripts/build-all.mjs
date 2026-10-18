@@ -7,8 +7,8 @@
  *   (main's docs only until there is a release: no image ships them, so nobody runs it)
  *   public/versions.json   the list the version switcher reads at runtime
  *
- * GitLab Pages replaces the whole site on every deploy, so all versions are rebuilt from their
- * git tags each time (CI needs the full history and tags: GIT_DEPTH 0).
+ * GitHub Pages replaces the whole site on every deploy, so all versions are rebuilt from their
+ * git tags each time (CI needs the full history and tags: fetch-depth 0).
  *
  * Usage: node docs-site/scripts/build-all.mjs   (from anywhere inside the repo)
  */
@@ -17,10 +17,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-// In CI, follow wherever GitLab actually serves Pages: /eink-hub/ on yayitazale.gitlab.io, but /
-// when the project uses a unique domain (eink-hub-xxxxxx.gitlab.io).
-const pagesPath = process.env.CI_PAGES_URL && new URL(process.env.CI_PAGES_URL).pathname.replace(/\/?$/, '/');
-const ROOT_BASE = process.env.DOCS_ROOT ?? pagesPath ?? '/';
+// In CI the Pages workflow sets DOCS_ROOT to where the site is served: /eink-hub/ on
+// yayitazale.github.io.
+const ROOT_BASE = process.env.DOCS_ROOT ?? '/';
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
 const repo = git('rev-parse', '--show-toplevel');
 const out = path.join(repo, 'public');

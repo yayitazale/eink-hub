@@ -64,8 +64,8 @@ The Canvas **Settings** should then say the hub can wake Canvases with `hci0`.
 
 ## Help
 
-Ask in the [Unraid forum support thread](https://forums.unraid.net/topic/200820-support-yayitazale-eink-hub/), or open an issue on [GitLab](https://gitlab.com/yayitazale/eink-hub/-/issues).
+Ask in the [Unraid forum support thread](https://forums.unraid.net/topic/200820-support-yayitazale-eink-hub/), or open an issue on [GitHub](https://github.com/yayitazale/eink-hub/issues).
 
 ## Update
 
-Unraid tells you when a new release is out: in the **Docker** tab click **Check for updates**, then **apply update** on the container. The template follows `:latest`, which is always the latest release. To pin a version, change **Repository** to e.g. `registry.gitlab.com/yayitazale/eink-hub:v0.2.0`.
+Unraid tells you when a new release is out: in the **Docker** tab click **Check for updates**, then **apply update** on the container. The template follows `:latest`, which is always the latest release. To pin a version, change **Repository** to e.g. `ghcr.io/yayitazale/eink-hub:v0.3.5` (releases up to v0.3.4 are only on `registry.gitlab.com/yayitazale/eink-hub`). Containers installed before the move to GitHub keep updating from GitLab's registry; to switch, set **Repository** to `ghcr.io/yayitazale/eink-hub:latest`.

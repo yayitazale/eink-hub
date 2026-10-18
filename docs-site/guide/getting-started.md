@@ -6,13 +6,17 @@ E-Ink Hub is a single Docker container (Node.js + SQLite) with a web UI. It keep
 
 ```bash
 mkdir eink-hub && cd eink-hub
-curl -O https://gitlab.com/yayitazale/eink-hub/-/raw/main/docker-compose.yml
-curl -o .env https://gitlab.com/yayitazale/eink-hub/-/raw/main/.env.example
+curl -O https://raw.githubusercontent.com/yayitazale/eink-hub/main/docker-compose.yml
+curl -o .env https://raw.githubusercontent.com/yayitazale/eink-hub/main/.env.example
 # Edit .env: LOCAL_URL is this machine's LAN address, e.g. http://192.168.1.10:8080
 docker compose up -d
 ```
 
-This pulls `registry.gitlab.com/yayitazale/eink-hub:latest`, the latest release. Your data (database, originals and render cache) lives in `./data`.
+This pulls `ghcr.io/yayitazale/eink-hub:latest`, the latest release. Your data (database, originals and render cache) lives in `./data`.
+
+::: tip Installed from GitLab?
+The project moved from GitLab to GitHub after v0.3.4. `registry.gitlab.com/yayitazale/eink-hub` still gets every release, so nothing breaks, but `ghcr.io/yayitazale/eink-hub` is the image to use from now on: change `image:` in your `docker-compose.yml` and run `docker compose pull && docker compose up -d`.
+:::
 
 The compose file uses Docker's default **bridge networking**, publishing port 8080. **Search the network** finds BLOOMIN8 frames by scanning the subnet of your `LOCAL_URL`, so set it to this machine's LAN address. You can always add a frame by IP too.
 
