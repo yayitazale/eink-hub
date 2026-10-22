@@ -7,7 +7,7 @@ import { FRAME_COLORS, FRAME_STYLES, KNOWN_DIAGONALS, formatCm, frameGeometry, w
 import { dateTime, formatBytes, formatPercent, relativeTime } from '../lib/format';
 import { useAction, useBleStatus, useFrame, useSettings } from '../lib/hooks';
 import { isPickerCancelled, phoneWakeSupport, wakeWithThisDevice } from '../lib/webBluetooth';
-import { useI18n, type MsgKey } from '../i18n';
+import { useI18n, type MsgKey, type TFunction } from '../i18n';
 import { OrientationField } from '../components/OrientationField';
 import { FrameMockup } from '../components/FrameMockup';
 import { AssignmentEditor } from '../components/AssignmentEditor';
@@ -140,6 +140,9 @@ const FORMATS: { value: string; format: ImageFormat }[] = [
   { value: 'bmp', format: { type: 'bmp' } },
 ];
 const formatKey = (f?: ImageFormat) => (f ? (f.palette ? `${f.type}:${f.palette}` : f.type) : '');
+/** "PNG · Spectra 6", as in the format picker. */
+const formatLabel = (f: ImageFormat | undefined, t: TFunction) =>
+  f ? `${f.type.toUpperCase()}${f.palette ? ` · ${t(`palette.${f.palette}` as MsgKey)}` : ''}` : undefined;
 
 /** How a non-BLOOMIN8 frame reaches the hub: token and URLs for DIY / TRMNL, credentials for SwitchBot. */
 function ConnectionTab({ frame }: { frame: Frame }) {
@@ -208,10 +211,7 @@ function ConnectionTab({ frame }: { frame: Frame }) {
             aria-label={t('connection.format')}
             value={format}
             onChange={setFormat}
-            options={FORMATS.map((x) => ({
-              value: x.value,
-              label: `${x.format.type.toUpperCase()}${x.format.palette ? ` · ${t(`palette.${x.format.palette}` as MsgKey)}` : ''}`,
-            }))}
+            options={FORMATS.map((x) => ({ value: x.value, label: formatLabel(x.format, t)! }))}
           />
         </Field>
         <Field label={t('connection.max_poll')} hint={t('connection.max_poll_hint')}>
@@ -680,12 +680,32 @@ export function FrameDetail() {
             </div>
           </div>
 
+          {/* Eight cells (two rows) for every kind and mode: the firmware goes under the model so it
+              always has a place, and what each kind can't show is replaced by what it can. */}
           <Card className="grid grid-cols-2 gap-4 p-5 sm:grid-cols-4">
             <Info label={t('detail.resolution')} value={`${f.width}×${f.height}`} />
             {f.kind === 'bloomin8' ? <Info label="IP" value={f.host} /> : <Info label={t('detail.kind')} value={t(`kind.${f.kind}` as MsgKey)} />}
             <Info label={t('detail.last_seen')} value={relativeTime(f.lastSeen)} />
-            <Info label={t(f.mode === 'pull' ? 'detail.next_wake' : 'detail.firmware')} value={f.mode === 'pull' ? dateTime(f.nextWake) : f.firmware} />
-            <Info label={t('detail.model')} value={f.model} />
+            {f.mode === 'pull' ? (
+              <Info label={t('detail.next_wake')} value={dateTime(f.nextWake)} />
+            ) : (
+              <Info label={t('detail.wake_model')} value={t(`wake.${f.wakeModel}` as MsgKey)} />
+            )}
+            <Info
+              label={t('detail.model')}
+              value={
+                f.model || f.firmware ? (
+                  <>
+                    {f.model ?? '—'}
+                    {f.firmware && (
+                      <span className="block text-xs font-medium text-muted">
+                        {t('detail.firmware')} {f.firmware}
+                      </span>
+                    )}
+                  </>
+                ) : undefined
+              }
+            />
             {f.kind === 'bloomin8' ? (
               <>
                 <Info label="Wi-Fi" value={info.sta_ssid as string} />
@@ -693,8 +713,8 @@ export function FrameDetail() {
               </>
             ) : (
               <>
-                <Info label={t('detail.firmware')} value={f.firmware} />
-                <Info label={t('detail.wake_model')} value={t(`wake.${f.wakeModel}` as MsgKey)} />
+                {f.mode === 'pull' && <Info label={t('detail.wake_model')} value={t(`wake.${f.wakeModel}` as MsgKey)} />}
+                <Info label={t('connection.format')} value={formatLabel(f.imageFormat, t)} />
               </>
             )}
             <Info label={t('detail.pending')} value={t(f.pendingImageId ? 'detail.pending_photo' : 'detail.pending_none')} />

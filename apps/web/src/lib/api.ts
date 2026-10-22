@@ -79,6 +79,8 @@ export interface Frame {
   deviceId: string | null;
   model: string | null;
   firmware: string | null;
+  /** The image format it is sent. */
+  imageFormat: ImageFormat;
   width: number;
   height: number;
   orientation: 'portrait' | 'landscape';
