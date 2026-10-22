@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { eq } from 'drizzle-orm';
 import sharp from 'sharp';
 import Fastify from 'fastify';
 import multipart from '@fastify/multipart';
@@ -168,6 +169,50 @@ describe('upstream pull protocol', () => {
     }
   });
 
+  it('adds a Canvas hung landscape and greets it with the landscape welcome picture', async () => {
+    const uploads: { name: string; buf: Buffer }[] = [];
+    const device = Fastify();
+    await device.register(multipart);
+    device.get('/deviceInfo', async () => ({ name: 'Wide', screen_model: 'Y', width: 1200, height: 1600, battery: 90 }));
+    device.post<{ Querystring: { filename: string } }>('/upload', async (req) => {
+      uploads.push({ name: req.query.filename, buf: await (await req.file())!.toBuffer() });
+      return { status: 100 };
+    });
+    const addr = await device.listen({ port: 0, host: '127.0.0.1' });
+    try {
+      const frame = (await app.inject({ method: 'POST', url: '/api/frames', payload: { host: addr.replace('http://', ''), orientation: 'landscape' } })).json();
+      expect(frame.orientation).toBe('landscape');
+      expect(uploads.map((u) => u.name)).toEqual([expect.stringMatching(/^welcome_[a-f0-9]{10}_L\.jpg$/)]);
+      // Stored in the panel's portrait buffer, rotated.
+      const meta = await sharp(uploads[0].buf).metadata();
+      expect([meta.width, meta.height]).toEqual([1200, 1600]);
+
+      // Turned back to portrait: the welcome picture is redrawn and sent again.
+      await app.inject({ method: 'PATCH', url: `/api/frames/${frame.id}`, payload: { orientation: 'portrait' } });
+      await vi.waitFor(() => expect(uploads).toHaveLength(2));
+      expect(uploads[1].name).toMatch(/_P\.jpg$/);
+      // Other edits leave the screen alone.
+      await app.inject({ method: 'PATCH', url: `/api/frames/${frame.id}`, payload: { name: 'Wide 2' } });
+      await new Promise((r) => setTimeout(r, 200));
+      expect(uploads).toHaveLength(2);
+    } finally {
+      await device.close();
+    }
+  });
+
+  it('queues the redrawn welcome picture for a pull frame that changes orientation', async () => {
+    const id = db
+      .insert(schema.frames)
+      .values({ name: 'Turned', host: '127.0.0.1:1', upstreamToken: 'turn-token', mode: 'pull', createdAt: Date.now(), welcomeShown: true })
+      .returning()
+      .get().id;
+    await app.inject({ method: 'PATCH', url: `/api/frames/${id}`, payload: { orientation: 'landscape' } });
+    await vi.waitFor(() => expect(db.select().from(schema.frames).where(eq(schema.frames.id, id)).get()!.welcomeShown).toBe(false));
+    const pull = await app.inject({ url: '/eink_pull?pull_id=t', headers: { 'x-access-token': 'turn-token' } }).then((r) => r.json());
+    expect(pull.status).toBe(200);
+    expect(pull.data.image_url).toMatch(/_L\.jpg$/);
+  });
+
   it('rejects schedules more frequent than hourly', async () => {
     const colId = (await app.inject({ url: `/api/frames/${frameId}` })).json().assignment.collectionId;
     const res = await app.inject({
@@ -185,5 +230,61 @@ describe('adding Canvases', () => {
     const res = await app.inject({ method: 'POST', url: '/api/frames', payload: { host: 'http://127.0.0.1:2/' }, headers: { 'x-hub-lang': 'es' } });
     expect(res.statusCode).toBe(409);
     expect(res.json().error).toContain('Salón');
+  });
+});
+
+describe('sending a photo from the gallery', () => {
+  it('can label it with the date it was taken, like a schedule does', async () => {
+    const id = db
+      .insert(schema.frames)
+      .values({ name: 'Galería', host: '127.0.0.1:1', upstreamToken: 'gallery-token', mode: 'pull', createdAt: Date.now(), welcomeShown: true })
+      .returning()
+      .get().id;
+    const photo = await sharp({ create: { width: 1600, height: 1200, channels: 3, background: '#3a7bd5' } }).jpeg().toBuffer();
+    const imageId = (await saveLocalUpload(db, photo, 'dated.jpg')).id;
+    db.update(schema.images).set({ takenAt: Date.UTC(2019, 9, 6, 12) }).where(eq(schema.images.id, imageId)).run();
+
+    const preview = (showDate: boolean) =>
+      app.inject({ method: 'POST', url: '/api/render/preview', payload: { imageId, frameId: id, fit: 'cover', showDate } }).then((r) => r.rawPayload);
+    const [plain, dated] = [await preview(false), await preview(true)];
+    expect(Buffer.compare(plain, dated)).not.toBe(0);
+    // Same white label in the bottom-left corner as the schedule's (see pipeline.test.ts).
+    const { data, info } = await sharp(dated).raw().toBuffer({ resolveWithObject: true });
+    const px = (x: number, y: number) => Array.from(data.subarray((y * info.width + x) * 3, (y * info.width + x) * 3 + 3));
+    const inset = Math.round(Math.min(info.width, info.height) * 0.04);
+    expect(px(inset + 12, info.height - inset - 20).every((c) => c > 240)).toBe(true);
+
+    const res = await app.inject({ method: 'POST', url: `/api/frames/${id}/display`, payload: { imageId, fit: 'cover', showDate: true } });
+    expect(res.json()).toEqual({ method: 'queued' });
+    expect(db.select().from(schema.frames).where(eq(schema.frames.id, id)).get()!.pendingOpts).toMatchObject({ showDate: true });
+  });
+});
+
+describe('pausing a schedule', () => {
+  it('pauses and resumes it, restarting a change that fell due while paused', async () => {
+    const id = db
+      .insert(schema.frames)
+      .values({ name: 'Pausa', host: '127.0.0.1:1', upstreamToken: 'pause-token', mode: 'pull', createdAt: Date.now(), welcomeShown: true })
+      .returning()
+      .get().id;
+    const col = (await app.inject({ method: 'POST', url: '/api/collections', payload: { name: 'Pausa', type: 'manual' } })).json();
+    await app.inject({ method: 'PUT', url: `/api/frames/${id}/assignment`, payload: { collectionId: col.id, schedule: { kind: 'days', days: 1, at: '07:00' } } });
+
+    const paused = await app.inject({ method: 'PATCH', url: `/api/frames/${id}/assignment`, payload: { enabled: false } });
+    expect(paused.json()).toMatchObject({ enabled: false, collectionId: col.id, schedule: { kind: 'days', days: 1, at: '07:00' } });
+
+    // Overdue while paused: resuming schedules the next 07:00 instead of changing at once.
+    db.update(schema.assignments).set({ nextChange: Date.now() - 60_000 }).where(eq(schema.assignments.frameId, id)).run();
+    const resumed = (await app.inject({ method: 'PATCH', url: `/api/frames/${id}/assignment`, payload: { enabled: true } })).json();
+    expect(resumed.enabled).toBe(true);
+    expect(resumed.nextChange).toBeGreaterThan(Date.now());
+    expect(new Date(resumed.nextChange).getHours()).toBe(7);
+  });
+
+  it('does nothing for a Canvas without a schedule', async () => {
+    const id = db.insert(schema.frames).values({ name: 'Sin', host: '127.0.0.1:1', upstreamToken: 'none-token', createdAt: Date.now() }).returning().get().id;
+    const res = await app.inject({ method: 'PATCH', url: `/api/frames/${id}/assignment`, payload: { enabled: false } });
+    expect(res.statusCode).toBe(200);
+    expect(db.select().from(schema.assignments).where(eq(schema.assignments.frameId, id)).get()).toBeUndefined();
   });
 });

@@ -70,6 +70,7 @@ export function SchedulePicker({
   activeFrom,
   activeTo,
   onValidity,
+  disabled,
 }: {
   value: Schedule;
   onChange: (s: Schedule) => void;
@@ -77,6 +78,8 @@ export function SchedulePicker({
   activeFrom?: string | null;
   activeTo?: string | null;
   onValidity?: (ok: boolean) => void;
+  /** Nothing chosen yet (no collection): shown empty and greyed out, no preview. */
+  disabled?: boolean;
 }) {
   const { t, lang } = useI18n();
   const debounced = useDebounced(value, value.kind === 'cron' ? 400 : 0);
@@ -89,11 +92,29 @@ export function SchedulePicker({
         activeTo,
       }),
     placeholderData: (prev) => prev,
+    enabled: !disabled,
   });
   const ok = preview.data?.ok ?? true;
   useEffect(() => onValidity?.(ok), [ok, onValidity]);
 
   const hasTime = value.kind === 'days' || value.kind === 'weeks' || value.kind === 'monthly';
+
+  if (disabled)
+    return (
+      // Same layout as the default "every day at…", so nothing jumps when it comes alive.
+      <fieldset disabled className="space-y-3 opacity-50">
+        <Field label={label ?? t('schedule.change')}>
+          <select className={inputClass} value="">
+            <option value="" />
+          </select>
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label={t('schedule.at')}>
+            <input type="time" className={inputClass} value="" readOnly />
+          </Field>
+        </div>
+      </fieldset>
+    );
 
   return (
     <div className="space-y-3">

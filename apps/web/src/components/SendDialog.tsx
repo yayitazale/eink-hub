@@ -6,7 +6,7 @@ import { useAction, useFrames } from '../lib/hooks';
 import { FrameMockup } from './FrameMockup';
 import { useI18n, type MsgKey } from '../i18n';
 import { BgPicker } from './BgPicker';
-import { Button, Modal, Segmented, Spinner, cx } from './ui';
+import { Button, Modal, Segmented, Spinner, Toggle, cx } from './ui';
 
 type Mode = 'auto' | 'crop' | 'contain' | 'blur';
 
@@ -29,6 +29,7 @@ export function SendDialog({ imageId, open, onClose, defaultFrameId }: { imageId
   const [frameId, setFrameId] = useState<number | undefined>(defaultFrameId);
   const [mode, setMode] = useState<Mode>('auto');
   const [bg, setBg] = useState('#ffffff');
+  const [showDate, setShowDate] = useState(false);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [area, setArea] = useState<Crop | null>(null);
@@ -53,14 +54,15 @@ export function SendDialog({ imageId, open, onClose, defaultFrameId }: { imageId
     });
   }, [open, imageId, frame?.id]);
 
-  useEffect(() => setPreview(null), [mode, bg, area, frame?.id]);
+  useEffect(() => setPreview(null), [mode, bg, area, showDate, frame?.id]);
 
   const options = useMemo(() => {
-    if (mode === 'crop' && area) return { fit: 'cover' as FitMode, crop: area };
-    if (mode === 'contain') return { fit: 'contain' as FitMode, bg, crop: null };
-    if (mode === 'blur') return { fit: 'blur' as FitMode, crop: null };
-    return { fit: 'cover' as FitMode, crop: null };
-  }, [mode, area, bg]);
+    const date = showDate ? { showDate } : {};
+    if (mode === 'crop' && area) return { fit: 'cover' as FitMode, crop: area, ...date };
+    if (mode === 'contain') return { fit: 'contain' as FitMode, bg, crop: null, ...date };
+    if (mode === 'blur') return { fit: 'blur' as FitMode, crop: null, ...date };
+    return { fit: 'cover' as FitMode, crop: null, ...date };
+  }, [mode, area, bg, showDate]);
 
   const showPreview = async () => {
     if (!imageId || !frame) return;
@@ -144,6 +146,9 @@ export function SendDialog({ imageId, open, onClose, defaultFrameId }: { imageId
             {mode === 'contain' && (
               <BgPicker value={bg} onChange={setBg} />
             )}
+            <div className="rounded-2xl bg-surface-2 p-4">
+              <Toggle label={t('assign.show_date')} hint={t('assign.show_date_hint')} checked={showDate} onChange={setShowDate} />
+            </div>
           </div>
 
           <div className="flex min-w-0 flex-col gap-4">

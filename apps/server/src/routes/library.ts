@@ -215,6 +215,22 @@ export function libraryRoutes(app: FastifyInstance, ctx: Ctx) {
       .get();
   });
 
+  // Pause / resume without touching the rest. A change that fell due while paused starts
+  // counting again from now rather than firing the moment it is resumed.
+  app.patch<{ Params: { frameId: string }; Body: { enabled?: boolean } }>('/api/frames/:frameId/assignment', async (req) => {
+    const prev = getAssignment(db, getFrame(db, +req.params.frameId).id);
+    if (!prev) return null;
+    const enabled = req.body?.enabled === true;
+    const window = { activeFrom: prev.activeFrom, activeTo: prev.activeTo };
+    const stale = enabled && !prev.enabled && prev.nextChange !== null && prev.nextChange <= Date.now();
+    return db
+      .update(schema.assignments)
+      .set({ enabled, ...(stale ? { nextChange: firstRun(prev.schedule, new Date(), window)?.getTime() ?? null } : {}) })
+      .where(eq(schema.assignments.id, prev.id))
+      .returning()
+      .get();
+  });
+
   /** Validates a schedule and returns its next runs, so the UI shows exactly what will happen. */
   app.post<{ Body: { schedule: unknown; activeFrom?: string | null; activeTo?: string | null } }>('/api/schedule/preview', async (req) => {
     try {

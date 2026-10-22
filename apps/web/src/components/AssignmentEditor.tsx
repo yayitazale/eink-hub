@@ -1,18 +1,25 @@
-import { useEffect, useState } from 'react';
-import { History } from 'lucide-react';
+import { useState } from 'react';
+import { History, Trash2 } from 'lucide-react';
 import { api, type Assignment, type FitMode, type Frame, type OrderMode, type Schedule } from '../lib/api';
 import { useAction, useCollections } from '../lib/hooks';
 import { SchedulePicker } from './SchedulePicker';
 import { useI18n, type MsgKey } from '../i18n';
 import { BgPicker } from './BgPicker';
-import { Button, Field, Segmented, Toggle, inputClass } from './ui';
+import { Button, Field, Segmented, Toggle, cx, inputClass, useConfirm } from './ui';
 
 const DEFAULT_SCHEDULE: Schedule = { kind: 'days', days: 1, at: '07:00' };
 
-export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: () => void }) {
+/**
+ * Edits one Canvas's schedule. For a new schedule from the Schedule page, pass `choices`
+ * instead of `frame`: the Canvas is picked first.
+ */
+export function AssignmentEditor({ frame: fixed, choices, onSaved }: { frame?: Frame; choices?: Frame[]; onSaved?: () => void }) {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const collections = useCollections();
-  const a = frame.assignment;
+  const [frameId, setFrameId] = useState<number | ''>('');
+  const frame = fixed ?? choices?.find((f) => f.id === frameId);
+  const a = fixed?.assignment;
   const [collectionId, setCollectionId] = useState<number | ''>(a?.collectionId ?? '');
   const [orderMode, setOrderMode] = useState<OrderMode>(a?.orderMode ?? 'random');
   const [schedule, setSchedule] = useState<Schedule>(a?.schedule ?? DEFAULT_SCHEDULE);
@@ -29,10 +36,8 @@ export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: (
   // "On this day" has a fixed timing: one random memory per day, changing at 00:00.
   const isMemories = collection?.type === 'immich_memories';
   const hourly = !isMemories && schedule.kind === 'interval';
-
-  useEffect(() => {
-    if (!collectionId && collections.data?.length) setCollectionId(collections.data[0].id);
-  }, [collections.data, collectionId]);
+  // A new schedule starts empty: everything else waits until a Canvas and a collection are picked.
+  const ready = !!frame && !!collectionId;
 
   const pickCollection = (id: number) => {
     setCollectionId(id);
@@ -41,7 +46,7 @@ export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: (
 
   const save = useAction(
     () =>
-      api.put<Assignment>(`/api/frames/${frame.id}/assignment`, {
+      api.put<Assignment>(`/api/frames/${frame!.id}/assignment`, {
         collectionId,
         orderMode,
         schedule,
@@ -54,7 +59,7 @@ export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: (
       }),
     { success: t('assign.saved'), invalidate: [['frames']] },
   );
-  const remove = useAction(() => api.del(`/api/frames/${frame.id}/assignment`), { success: t('assign.removed') });
+  const remove = useAction(() => api.del(`/api/frames/${frame!.id}/assignment`), { success: t('assign.removed') });
 
   if (collections.data && collections.data.length === 0)
     return <p className="text-sm text-muted">{t('assign.no_collections')}</p>;
@@ -64,8 +69,34 @@ export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: (
       {/* Two columns when the editor itself has room (page vs. popup vs. phone), one otherwise. */}
       <div className="grid gap-5 @xl:grid-cols-2 @xl:gap-x-8">
         <div className="min-w-0 space-y-5">
+          {choices && (
+            <Field label={t('nav.canvas')}>
+              <select className={cx(inputClass, !frame && 'text-muted')} value={frameId} onChange={(e) => setFrameId(Number(e.target.value))}>
+                {!frame && (
+                  <option value="" disabled>
+                    {t('send.pick_canvas')}
+                  </option>
+                )}
+                {choices.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
           <Field label={t('assign.collection')}>
-            <select className={inputClass} value={collectionId} onChange={(e) => pickCollection(Number(e.target.value))}>
+            <select
+              className={cx(inputClass, !collectionId && 'text-muted', 'disabled:opacity-50')}
+              disabled={!frame}
+              value={collectionId}
+              onChange={(e) => pickCollection(Number(e.target.value))}
+            >
+              {!collectionId && (
+                <option value="" disabled>
+                  {t('assign.pick_collection')}
+                </option>
+              )}
               {collections.data?.map((c) => (
                 <option key={c.id} value={c.id}>
                   {/* "On this day" changes daily, so a photo count would be misleading. */}
@@ -87,11 +118,12 @@ export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: (
               activeFrom={hourly && windowOn ? from : null}
               activeTo={hourly && windowOn ? to : null}
               onValidity={setScheduleOk}
+              disabled={!ready}
             />
           )}
         </div>
 
-        <div className="min-w-0 space-y-5">
+        <fieldset disabled={!ready} className={cx('min-w-0 space-y-5', !ready && 'opacity-50')}>
           {!isMemories && (
             <Field label={t('assign.order')} hint={t(`order.${orderMode}_hint`)} group>
               <Segmented
@@ -146,20 +178,28 @@ export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: (
             )}
             <Toggle label={t('assign.enabled')} hint={t('assign.enabled_hint')} checked={enabled} onChange={setEnabled} />
           </div>
-        </div>
+        </fieldset>
       </div>
 
       <div className="flex flex-wrap gap-2">
         <Button
           variant="primary"
           loading={save.isPending}
-          disabled={!collectionId || (!isMemories && !scheduleOk)}
+          disabled={!ready || (!isMemories && !scheduleOk)}
           onClick={() => save.mutate(undefined, { onSuccess: onSaved })}
         >
           {t('common.save')}
         </Button>
         {a && (
-          <Button variant="ghost" loading={remove.isPending} onClick={() => remove.mutate(undefined, { onSuccess: onSaved })}>
+          <Button
+            variant="danger"
+            icon={<Trash2 className="size-4" />}
+            loading={remove.isPending}
+            onClick={async () =>
+              (await confirm({ title: t('assign.remove'), message: t('assign.confirm_remove', { name: frame!.name }) })) &&
+              remove.mutate(undefined, { onSuccess: onSaved })
+            }
+          >
             {t('assign.remove')}
           </Button>
         )}

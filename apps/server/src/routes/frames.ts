@@ -12,7 +12,7 @@ import { discover } from '../device/discovery.js';
 import { inferDiagonal } from '../device/sizes.js';
 import { HttpError, cloudUrlSetting, detectLocalUrl, localUrlSetting, qrUrl, type Ctx } from '../lib/context.js';
 import { prepareCollection } from '../lib/collections.js';
-import { assignmentOptions, chooseNextImage, displayImage, getAssignment, getFrame, markOnline, pushWelcome } from '../lib/display.js';
+import { assignmentOptions, chooseNextImage, displayImage, getAssignment, getFrame, markOnline, pushWelcome, requeueWelcome } from '../lib/display.js';
 import { wakeFrame, withWake } from '../lib/wake.js';
 import { nextRun, parseSchedule } from '../lib/schedule.js';
 import { requestLang, tr } from '../i18n.js';
@@ -100,7 +100,11 @@ export interface AddFrameBody {
   width?: number;
   height?: number;
   format?: ImageFormat;
+  /** How it hangs; defaults to the panel's shape (portrait for a BLOOMIN8). */
+  orientation?: Frame['orientation'];
 }
+
+const parseOrientation = (o: unknown) => (o === 'portrait' || o === 'landscape' ? o : undefined);
 
 /** Panel size → stored portrait-first, with the orientation it hangs in. */
 function panel(width?: number, height?: number, fallback = { width: 800, height: 480 }) {
@@ -159,12 +163,14 @@ async function addOtherFrame(ctx: Ctx, req: FastifyRequest, b: AddFrameBody & { 
       config: format ? { format } : {},
     };
   }
+  const orientation = parseOrientation(b.orientation);
+  if (orientation) values.orientation = orientation;
   const frame = db.insert(schema.frames).values(values).returning().get();
   req.log.info({ frame: frame.id, kind: frame.kind }, `${frame.kind} frame "${frame.name}" added`);
   return frame;
 }
 
-async function addFrame(ctx: Ctx, req: FastifyRequest, host: string, name?: string) {
+async function addFrame(ctx: Ctx, req: FastifyRequest, host: string, name?: string, orientation?: Frame['orientation']) {
   const { db } = ctx;
   let info: DeviceInfo | undefined;
   try {
@@ -184,6 +190,7 @@ async function addFrame(ctx: Ctx, req: FastifyRequest, host: string, name?: stri
       online: !!info,
       lastSeen: info ? Date.now() : null,
       ...(info ? infoToFrame(info) : {}),
+      ...(orientation ? { orientation } : {}),
     })
     .returning()
     .get();
@@ -239,16 +246,16 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
     if (kind !== 'bloomin8') return publicFrame(ctx, await addOtherFrame(ctx, req, { ...b, kind }));
     const host = b.host?.trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
     if (!host) throw new HttpError(400, 'host_missing');
-    return publicFrame(ctx, getFrame(db, (await addFrame(ctx, req, host, b.name)).id));
+    return publicFrame(ctx, getFrame(db, (await addFrame(ctx, req, host, b.name, parseOrientation(b.orientation))).id));
   });
 
   // A simulated Canvas living inside the hub, for trying things out without hardware.
-  app.post<{ Body: { name?: string } }>('/api/frames/test', async (req) => {
+  app.post<{ Body: { name?: string; orientation?: Frame['orientation'] } }>('/api/frames/test', async (req) => {
     const count = db.select().from(schema.frames).all().filter((f) => isSimulated(db, f.id)).length;
     const base = tr(requestLang(req, db), 'test_canvas_name');
     const name = req.body?.name?.trim() || (count ? `${base} ${count + 1}` : base);
     const { sim, host } = await startTestCanvas(ctx, name);
-    const frame = await addFrame(ctx, req, host, name).catch(async (err) => {
+    const frame = await addFrame(ctx, req, host, name, parseOrientation(req.body?.orientation)).catch(async (err) => {
       await sim.close();
       throw err;
     });
@@ -313,7 +320,14 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
         patch.appearance = next;
       }
       if (Object.keys(patch).length) db.update(schema.frames).set(patch).where(eq(schema.frames.id, id)).run();
-      return publicFrame(ctx, getFrame(db, id));
+      const updated = getFrame(db, id);
+      // The welcome picture is drawn for one orientation: redraw it so the Canvas isn't left
+      // showing a sideways one. In the background, as waking the Canvas can take a while.
+      const turned = updated.orientation !== frame.orientation || (updated.orientation === 'landscape' && updated.rotate !== frame.rotate);
+      if (turned && frame.welcomeShown && !frame.currentImageId && !frame.pendingImageId) {
+        requeueWelcome(ctx, updated, qrUrl(db, req)).catch((err) => req.log.warn({ err, frame: id }, 'welcome resend failed'));
+      }
+      return publicFrame(ctx, updated);
     },
   );
 
@@ -384,18 +398,9 @@ export function frameRoutes(app: FastifyInstance, ctx: Ctx) {
         break;
       case 'clear': {
         // "Limpiar" = back to the welcome picture; delivered on next wake if the Canvas is asleep.
-        db.update(schema.frames).set({ welcomeShown: false, pendingImageId: null, pendingOpts: null }).where(eq(schema.frames.id, frame.id)).run();
-        if (!driver.capabilities.push) {
-          driver.nudge?.().catch(() => {});
-          return { ok: true, queued: true };
-        }
-        try {
-          await awake(() => pushWelcome(ctx, frame, qrUrl(db, req)));
-        } catch (err) {
-          if (err instanceof DeviceError && err.offline) return { ok: true, queued: true };
-          throw err;
-        }
-        return { ok: true };
+        db.update(schema.frames).set({ pendingImageId: null, pendingOpts: null }).where(eq(schema.frames.id, frame.id)).run();
+        const { queued } = await requeueWelcome(ctx, frame, qrUrl(db, req));
+        return queued ? { ok: true, queued } : { ok: true };
       }
       case 'whistle':
         await awake(() => device(DEVICE_ACTIONS.whistle));

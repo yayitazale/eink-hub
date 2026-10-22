@@ -3,12 +3,12 @@ import { CheckCircle2, Images, ScrollText, ShieldCheck, SlidersHorizontal, XCirc
 import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { useAction, useSettings } from '../lib/hooks';
-import { APP_VERSION, CHANGELOG_URL } from '../lib/version';
+import { AboutLinks, UpdateNotice } from '../components/About';
 import { languages, useI18n, type Lang, type MsgKey } from '../i18n';
 import { ServerLogs } from '../components/ServerLogs';
 
 const IMMICH_PERMISSIONS_URL = 'https://yayitazale.github.io/eink-hub/guide/immich#api-key-permissions';
-import { Button, Card, Field, SectionTitle, Segmented, Spinner, Toggle, inputClass, useToast } from '../components/ui';
+import { Button, Card, Field, SectionTitle, Segmented, Spinner, Toggle, inputClass, useConfirm, useToast } from '../components/ui';
 
 type Tab = 'general' | 'immich' | 'security' | 'logs';
 
@@ -48,6 +48,7 @@ function LanguageSettings() {
 
 function ImmichSettings() {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const settings = useSettings();
   const [url, setUrl] = useState('');
   const [key, setKey] = useState('');
@@ -113,8 +114,8 @@ function ImmichSettings() {
               variant="danger"
               className="sm:ml-auto"
               loading={remove.isPending}
-              onClick={() =>
-                confirm(t('settings.immich_confirm_remove')) &&
+              onClick={async () =>
+                (await confirm({ title: t('settings.immich_remove'), message: t('settings.immich_confirm_remove') })) &&
                 remove.mutate(undefined, {
                   onSuccess: () => {
                     setUrl('');
@@ -257,10 +258,11 @@ export function SettingsPage() {
           <LanguageSettings />
           <HubSettings />
           <StatsSettings />
-          {/* The sidebar shows the version on desktop; on mobile this is the only place. */}
-          <a href={CHANGELOG_URL} target="_blank" rel="noreferrer" className="text-[12px] font-semibold text-muted hover:text-ink md:hidden">
-            E-Ink Hub v{APP_VERSION}
-          </a>
+          {/* The sidebar shows these on desktop; on mobile this is the only place. */}
+          <div className="space-y-3 md:hidden">
+            <UpdateNotice />
+            <AboutLinks className="text-[12px]" />
+          </div>
         </div>
       )}
       {tab === 'immich' && (

@@ -7,7 +7,7 @@ import { useI18n } from '../i18n';
 import { useAction, useCollections } from '../lib/hooks';
 import { PhotoGrid } from '../components/PhotoGrid';
 import { SendDialog } from '../components/SendDialog';
-import { Button, Card, Empty, Field, Modal, Pill, SectionTitle, Spinner, inputClass, useToast } from '../components/ui';
+import { Button, Card, Empty, Field, Modal, Pill, SectionTitle, Spinner, inputClass, useConfirm, useToast } from '../components/ui';
 
 export function NewCollectionDialog({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated?: (c: Collection) => void }) {
   const { t } = useI18n();
@@ -65,6 +65,7 @@ function CollectionCard({ c, onOpen }: { c: Collection; onOpen: () => void }) {
 
 function CollectionView({ collection, onBack }: { collection: Collection; onBack: () => void }) {
   const { t, tn } = useI18n();
+  const confirm = useConfirm();
   const qc = useQueryClient();
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -147,7 +148,10 @@ function CollectionView({ collection, onBack }: { collection: Collection; onBack
             <Button
               variant="danger"
               icon={<Trash2 className="size-4" />}
-              onClick={() => confirm(t('library.confirm_delete', { name: collection.name })) && deleteCol.mutate(undefined, { onSuccess: onBack })}
+              onClick={async () =>
+                (await confirm({ title: t('common.delete'), message: t('library.confirm_delete', { name: collection.name }) })) &&
+                deleteCol.mutate(undefined, { onSuccess: onBack })
+              }
             >
               {t('common.delete')}
             </Button>
