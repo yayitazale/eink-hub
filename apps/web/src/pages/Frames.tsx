@@ -6,6 +6,7 @@ import { relativeTime } from '../lib/format';
 import { useAction, useCollections, useFrames } from '../lib/hooks';
 import { useI18n } from '../i18n';
 import { FrameMockup } from '../components/FrameMockup';
+import { OrientationField, type Orientation } from '../components/OrientationField';
 import { Button, Empty, Field, Modal, Pill, SectionTitle, Segmented, Spinner, inputClass } from '../components/ui';
 
 export function Battery({ value }: { value: number | null }) {
@@ -241,10 +242,18 @@ function AddFrameDialog({ open, onClose }: { open: boolean; onClose: () => void 
   const [picked, setPicked] = useState<DiscoveredFrame | null>(null);
   const pick = (f: DiscoveredFrame | null) => {
     setPicked(f);
+    setOrientation('portrait');
     setName(f?.name ?? '');
     setManual(false);
   };
-  const [brand, setBrand] = useState<FrameKind | 'simulated'>('bloomin8');
+  const [brand, setBrandState] = useState<FrameKind | 'simulated'>('bloomin8');
+  // Asked up front so the welcome picture comes out the right way. BLOOMIN8s usually hang
+  // portrait; SwitchBot and TRMNL panels are landscape. DIY frames take it from their size.
+  const [orientation, setOrientation] = useState<Orientation>('portrait');
+  const setBrand = (b: FrameKind | 'simulated') => {
+    setBrandState(b);
+    setOrientation(b === 'switchbot' || b === 'trmnl' ? 'landscape' : 'portrait');
+  };
   const nav = useNavigate();
   const add = useAction((b: { kind?: FrameKind; host?: string; name?: string } & Record<string, unknown>) => api.post<Frame>('/api/frames', b), {
     success: t('canvas.added'),
@@ -254,7 +263,7 @@ function AddFrameDialog({ open, onClose }: { open: boolean; onClose: () => void 
     add.mutate(b, { onSuccess: (f) => (f.capabilities.push ? onClose() : nav(`/frames/${f.id}?tab=connection`)) });
   // mDNS and a subnet scan together: mDNS can't cross Docker's bridge network, the scan can.
   const discover = useAction(() => api.post<DiscoveredFrame[]>('/api/frames/discover', { scan: true }), { invalidate: [] });
-  const addTest = useAction((b: { name?: string }) => api.post<Frame>('/api/frames/test', b), { success: t('canvas.added') });
+  const addTest = useAction((b: { name?: string; orientation?: Orientation }) => api.post<Frame>('/api/frames/test', b), { success: t('canvas.added') });
 
 
   return (
@@ -303,11 +312,12 @@ function AddFrameDialog({ open, onClose }: { open: boolean; onClose: () => void 
             <Field label={t('common.name')}>
               <input className={inputClass} autoFocus value={name} onChange={(e) => setName(e.target.value)} />
             </Field>
+            <OrientationField value={orientation} onChange={setOrientation} />
             <Button
               variant="primary"
               className="w-full"
               loading={add.isPending}
-              onClick={() => add.mutate({ host: picked.host, name: name.trim() || picked.name }, { onSuccess: onClose })}
+              onClick={() => add.mutate({ host: picked.host, name: name.trim() || picked.name, orientation }, { onSuccess: onClose })}
             >
               {t('common.save')}
             </Button>
@@ -354,6 +364,7 @@ function AddFrameDialog({ open, onClose }: { open: boolean; onClose: () => void 
               />
             </div>
           </div>
+          {brand !== 'openframe' && <OrientationField value={orientation} onChange={setOrientation} />}
           {brand === 'bloomin8' ? (
             <div className="space-y-3">
               <Field label={t('canvas.ip')} hint={t('canvas.ip_hint')}>
@@ -362,12 +373,12 @@ function AddFrameDialog({ open, onClose }: { open: boolean; onClose: () => void 
               <Field label={t('canvas.name_optional')}>
                 <input className={inputClass} placeholder={t('canvas.name_placeholder')} value={name} onChange={(e) => setName(e.target.value)} />
               </Field>
-              <Button variant="primary" className="w-full" disabled={!host} loading={add.isPending} onClick={() => add.mutate({ host, name }, { onSuccess: onClose })}>
+              <Button variant="primary" className="w-full" disabled={!host} loading={add.isPending} onClick={() => add.mutate({ host, name, orientation }, { onSuccess: onClose })}>
                 {t('canvas.add')}
               </Button>
             </div>
           ) : brand === 'switchbot' ? (
-            <SwitchBotForm name={name} setName={setName} loading={add.isPending} onAdd={(b) => add.mutate({ kind: 'switchbot', name, ...b }, { onSuccess: onClose })} />
+            <SwitchBotForm name={name} setName={setName} loading={add.isPending} onAdd={(b) => add.mutate({ kind: 'switchbot', name, orientation, ...b }, { onSuccess: onClose })} />
           ) : brand === 'trmnl' ? (
             <div className="space-y-3">
               <p className="text-xs text-muted">{t('canvas.trmnl_hint')}</p>
@@ -377,7 +388,7 @@ function AddFrameDialog({ open, onClose }: { open: boolean; onClose: () => void 
               <Field label={t('canvas.name_optional')}>
                 <input className={inputClass} placeholder="TRMNL" value={name} onChange={(e) => setName(e.target.value)} />
               </Field>
-              <Button variant="primary" className="w-full" disabled={!host.trim()} loading={add.isPending} onClick={() => addAndOpen({ kind: 'trmnl', mac: host, name })}>
+              <Button variant="primary" className="w-full" disabled={!host.trim()} loading={add.isPending} onClick={() => addAndOpen({ kind: 'trmnl', mac: host, name, orientation })}>
                 {t('canvas.add')}
               </Button>
             </div>
@@ -389,7 +400,7 @@ function AddFrameDialog({ open, onClose }: { open: boolean; onClose: () => void 
               <Field label={t('canvas.name_optional')}>
                 <input className={inputClass} placeholder={t('canvas.brand_simulated')} value={name} onChange={(e) => setName(e.target.value)} />
               </Field>
-              <Button variant="primary" className="w-full" loading={addTest.isPending} onClick={() => addTest.mutate({ name }, { onSuccess: onClose })}>
+              <Button variant="primary" className="w-full" loading={addTest.isPending} onClick={() => addTest.mutate({ name, orientation }, { onSuccess: onClose })}>
                 {t('canvas.test_create')}
               </Button>
             </div>

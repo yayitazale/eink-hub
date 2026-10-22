@@ -84,7 +84,8 @@ export async function renderWelcomeFor(db: DB, frame: Frame, hubUrl: string): Pr
   const landscape = frame.orientation === 'landscape';
   const lang = hubLang(db);
   const params = {
-    v: 2,
+    // v3: side-by-side landscape layout (portrait renders are unchanged, so they keep v2).
+    v: landscape ? 3 : 2,
     welcome: true,
     width: frame.width,
     height: frame.height,
@@ -119,6 +120,27 @@ export async function pushWelcome(ctx: Ctx, frame: Frame, hubUrl: string) {
   await driverFor(ctx.db, frame).show!(r);
   markOnline(ctx.db, frame.id, true, { welcomeShown: true, currentImageId: null, currentRender: r.hash });
   ctx.log.info({ frame: frame.id }, `welcome picture shown on ${frame.name}`);
+}
+
+/**
+ * Put the welcome picture back on screen: now if the frame is reachable (waking it if
+ * auto-wake is on), else on its next wake or poll.
+ */
+export async function requeueWelcome(ctx: Ctx, frame: Frame, hubUrl: string): Promise<{ queued: boolean }> {
+  ctx.db.update(schema.frames).set({ welcomeShown: false }).where(eq(schema.frames.id, frame.id)).run();
+  const driver = driverFor(ctx.db, frame);
+  if (!driver.capabilities.push) {
+    driver.nudge?.().catch(() => {});
+    return { queued: true };
+  }
+  try {
+    await withWake(ctx, frame, () => pushWelcome(ctx, frame, hubUrl));
+    return { queued: false };
+  } catch (err) {
+    if (!(err instanceof DeviceError && err.offline)) throw err;
+    markOnline(ctx.db, frame.id, false);
+    return { queued: true };
+  }
 }
 
 /**

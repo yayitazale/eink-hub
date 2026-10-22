@@ -43,6 +43,7 @@ export function FrameMockup({
 }: {
   frame: Pick<Frame, 'orientation' | 'currentRender' | 'currentImageId' | 'width' | 'height'> & {
     kind?: Frame['kind'];
+    rotate?: number;
     diagonal?: number | null;
     appearance?: FrameAppearance;
   };
@@ -61,6 +62,10 @@ export function FrameMockup({
       : frame.currentImageId
         ? thumbUrl(frame.currentImageId)
         : null);
+  // No photo behind it (the welcome picture): turn the stored portrait render back upright.
+  const turned = !image && rotated && frame.currentRender ? renderUrl(frame.currentRender) : null;
+  const long = Math.max(frame.width, frame.height);
+  const short = Math.min(frame.width, frame.height);
   const look = withDefaults(override ?? frame.appearance);
   const g = frameGeometry(frame, look);
   const F = g.face;
@@ -104,6 +109,18 @@ export function FrameMockup({
       <div className="frame-screen" style={{ inset: mm(F + g.mat) }}>
         {image ? (
           <img src={image} alt="" className="absolute inset-0 size-full object-cover" loading="lazy" />
+        ) : turned ? (
+          <img
+            src={turned}
+            alt=""
+            className="absolute left-1/2 top-1/2 max-w-none"
+            style={{
+              width: `${(short / long) * 100}%`,
+              height: `${(long / short) * 100}%`,
+              transform: `translate(-50%, -50%) rotate(-${frame.rotate ?? 90}deg)`,
+            }}
+            loading="lazy"
+          />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-[#b9b4aa]">
             <ImageOff className="size-8" strokeWidth={1.5} />

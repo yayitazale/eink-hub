@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { eq } from 'drizzle-orm';
 import sharp from 'sharp';
 import Fastify from 'fastify';
 import multipart from '@fastify/multipart';
@@ -166,6 +167,50 @@ describe('upstream pull protocol', () => {
     } finally {
       await device.close();
     }
+  });
+
+  it('adds a Canvas hung landscape and greets it with the landscape welcome picture', async () => {
+    const uploads: { name: string; buf: Buffer }[] = [];
+    const device = Fastify();
+    await device.register(multipart);
+    device.get('/deviceInfo', async () => ({ name: 'Wide', screen_model: 'Y', width: 1200, height: 1600, battery: 90 }));
+    device.post<{ Querystring: { filename: string } }>('/upload', async (req) => {
+      uploads.push({ name: req.query.filename, buf: await (await req.file())!.toBuffer() });
+      return { status: 100 };
+    });
+    const addr = await device.listen({ port: 0, host: '127.0.0.1' });
+    try {
+      const frame = (await app.inject({ method: 'POST', url: '/api/frames', payload: { host: addr.replace('http://', ''), orientation: 'landscape' } })).json();
+      expect(frame.orientation).toBe('landscape');
+      expect(uploads.map((u) => u.name)).toEqual([expect.stringMatching(/^welcome_[a-f0-9]{10}_L\.jpg$/)]);
+      // Stored in the panel's portrait buffer, rotated.
+      const meta = await sharp(uploads[0].buf).metadata();
+      expect([meta.width, meta.height]).toEqual([1200, 1600]);
+
+      // Turned back to portrait: the welcome picture is redrawn and sent again.
+      await app.inject({ method: 'PATCH', url: `/api/frames/${frame.id}`, payload: { orientation: 'portrait' } });
+      await vi.waitFor(() => expect(uploads).toHaveLength(2));
+      expect(uploads[1].name).toMatch(/_P\.jpg$/);
+      // Other edits leave the screen alone.
+      await app.inject({ method: 'PATCH', url: `/api/frames/${frame.id}`, payload: { name: 'Wide 2' } });
+      await new Promise((r) => setTimeout(r, 200));
+      expect(uploads).toHaveLength(2);
+    } finally {
+      await device.close();
+    }
+  });
+
+  it('queues the redrawn welcome picture for a pull frame that changes orientation', async () => {
+    const id = db
+      .insert(schema.frames)
+      .values({ name: 'Turned', host: '127.0.0.1:1', upstreamToken: 'turn-token', mode: 'pull', createdAt: Date.now(), welcomeShown: true })
+      .returning()
+      .get().id;
+    await app.inject({ method: 'PATCH', url: `/api/frames/${id}`, payload: { orientation: 'landscape' } });
+    await vi.waitFor(() => expect(db.select().from(schema.frames).where(eq(schema.frames.id, id)).get()!.welcomeShown).toBe(false));
+    const pull = await app.inject({ url: '/eink_pull?pull_id=t', headers: { 'x-access-token': 'turn-token' } }).then((r) => r.json());
+    expect(pull.status).toBe(200);
+    expect(pull.data.image_url).toMatch(/_L\.jpg$/);
   });
 
   it('rejects schedules more frequent than hourly', async () => {

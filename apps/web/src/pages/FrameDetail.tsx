@@ -8,6 +8,7 @@ import { dateTime, formatBytes, formatPercent, relativeTime } from '../lib/forma
 import { useAction, useBleStatus, useFrame, useSettings } from '../lib/hooks';
 import { isPickerCancelled, phoneWakeSupport, wakeWithThisDevice } from '../lib/webBluetooth';
 import { useI18n, type MsgKey } from '../i18n';
+import { OrientationField } from '../components/OrientationField';
 import { FrameMockup } from '../components/FrameMockup';
 import { AssignmentEditor } from '../components/AssignmentEditor';
 import { StatsTab } from '../components/StatsTab';
@@ -496,17 +497,7 @@ function SettingsTab({ frame }: { frame: Frame }) {
             <input className={inputClass} value={host} onChange={(e) => setHost(e.target.value)} />
           </Field>
         )}
-        <Field label={t('canvasSettings.orientation')} group>
-          <Segmented
-            fill
-            value={orientation}
-            onChange={setOrientation}
-            options={[
-              { value: 'portrait', label: t('canvasSettings.portrait') },
-              { value: 'landscape', label: t('canvasSettings.landscape') },
-            ]}
-          />
-        </Field>
+        <OrientationField value={orientation} onChange={setOrientation} />
         {orientation === 'landscape' && frame.kind === 'bloomin8' && (
           <Field label={t('canvasSettings.rotation')} group>
             <Segmented
