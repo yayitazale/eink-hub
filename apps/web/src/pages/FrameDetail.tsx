@@ -30,6 +30,29 @@ function Info({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+/** A value with a smaller, muted line under it. */
+function TwoLines({ main, sub }: { main: React.ReactNode; sub?: React.ReactNode }) {
+  return (
+    <>
+      {main}
+      {sub && <span className="block text-xs font-medium text-muted">{sub}</span>}
+    </>
+  );
+}
+
+/** When the schedule changes the photo next: pull frames on their next wake, push ones at the schedule's time. */
+function NextChange({ frame: f }: { frame: Frame }) {
+  const { t } = useI18n();
+  const a = f.assignment;
+  if (!a) return <>—</>;
+  if (!a.enabled) return <>{t('scheduleView.paused')}</>;
+  const next = f.mode === 'pull' ? f.nextWake : a.nextChange;
+  // No time yet, or already past: it waits for the Canvas.
+  if (next === null || next < Date.now() - 60_000)
+    return <TwoLines main={t('detail.pending')} sub={t(f.mode === 'pull' ? 'detail.when_wakes' : 'detail.when_responds')} />;
+  return <TwoLines main={relativeTime(next)} sub={dateTime(next)} />;
+}
+
 /** Free storage on the Canvas: share of the card first, the absolute size beside it. */
 function FreeSpace({ free, total }: { free: number; total: number }) {
   if (!free) return null;
@@ -680,43 +703,22 @@ export function FrameDetail() {
             </div>
           </div>
 
-          {/* Eight cells (two rows) for every kind and mode: the firmware goes under the model so it
-              always has a place, and what each kind can't show is replaced by what it can. */}
+          {/* The same eight fields for every kind of frame (two rows); what a frame doesn't report shows "—". */}
           <Card className="grid grid-cols-2 gap-4 p-5 sm:grid-cols-4">
             <Info label={t('detail.resolution')} value={`${f.width}×${f.height}`} />
-            {f.kind === 'bloomin8' ? <Info label="IP" value={f.host} /> : <Info label={t('detail.kind')} value={t(`kind.${f.kind}` as MsgKey)} />}
-            <Info label={t('detail.last_seen')} value={relativeTime(f.lastSeen)} />
-            {f.mode === 'pull' ? (
-              <Info label={t('detail.next_wake')} value={dateTime(f.nextWake)} />
-            ) : (
-              <Info label={t('detail.wake_model')} value={t(`wake.${f.wakeModel}` as MsgKey)} />
-            )}
+            {/* Frames that don't report a model (DIY) show their kind, as on their chip. */}
             <Info
               label={t('detail.model')}
-              value={
-                f.model || f.firmware ? (
-                  <>
-                    {f.model ?? '—'}
-                    {f.firmware && (
-                      <span className="block text-xs font-medium text-muted">
-                        {t('detail.firmware')} {f.firmware}
-                      </span>
-                    )}
-                  </>
-                ) : undefined
-              }
+              value={<TwoLines main={f.model || t(`kind_short.${f.kind}` as MsgKey)} sub={f.firmware && `${t('detail.firmware')} ${f.firmware}`} />}
             />
-            {f.kind === 'bloomin8' ? (
-              <>
-                <Info label="Wi-Fi" value={info.sta_ssid as string} />
-                <Info label={t('detail.free')} value={info.free_size ? <FreeSpace free={Number(info.free_size)} total={Number(info.total_size)} /> : undefined} />
-              </>
-            ) : (
-              <>
-                {f.mode === 'pull' && <Info label={t('detail.wake_model')} value={t(`wake.${f.wakeModel}` as MsgKey)} />}
-                <Info label={t('connection.format')} value={formatLabel(f.imageFormat, t)} />
-              </>
-            )}
+            <Info label={t('detail.last_seen')} value={relativeTime(f.lastSeen)} />
+            <Info label={t('detail.next_change')} value={<NextChange frame={f} />} />
+            <Info
+              label="Wi-Fi"
+              value={f.kind === 'bloomin8' && (info.sta_ssid || f.host) ? <TwoLines main={(info.sta_ssid as string) || '—'} sub={f.host} /> : undefined}
+            />
+            <Info label={t('detail.wake_model')} value={<TwoLines main={t(`wake_title.${f.wakeModel}` as MsgKey)} sub={t(`wake.${f.wakeModel}` as MsgKey)} />} />
+            <Info label={t('detail.free')} value={info.free_size ? <FreeSpace free={Number(info.free_size)} total={Number(info.total_size)} /> : undefined} />
             <Info label={t('detail.pending')} value={t(f.pendingImageId ? 'detail.pending_photo' : 'detail.pending_none')} />
           </Card>
 

@@ -5,7 +5,7 @@ import { schema, setSetting } from '../db/index.js';
 import { FRAME_COLORS, FRAME_STYLES, SECRET_CONFIG_KEYS, type DisplayOptions, type Frame, type FrameAppearance, type FrameConfig } from '../db/schema.js';
 import { bleStatus, normalizeMac } from '../device/ble.js';
 import { DeviceError, FrameClient, type DeviceInfo, type Playlist } from '../device/client.js';
-import { describeKind, driverFor, isFrameKind, palettes, renderTarget, type DeviceAction, type FrameKind, type ImageFormat } from '../device/drivers/index.js';
+import { describeKind, driverFor, isFrameKind, palettes, type DeviceAction, type FrameKind, type ImageFormat } from '../device/drivers/index.js';
 import { infoToFrame } from '../device/drivers/bloomin8.js';
 import { SWITCHBOT_SIZES, SwitchBotApi, type SwitchBotSize } from '../device/drivers/switchbot.js';
 import { discover } from '../device/discovery.js';
@@ -53,8 +53,6 @@ export function publicFrame(ctx: Ctx, f: Frame) {
     diagonal,
     diagonalInferred: f.diagonal == null,
     ...kind,
-    // What it is actually sent (TRMNL's depends on the model, SwitchBot is always JPEG).
-    imageFormat: renderTarget(f).format,
     assignment: getAssignment(ctx.db, f.id) ?? null,
     simulated: isSimulated(ctx.db, f.id),
   };
