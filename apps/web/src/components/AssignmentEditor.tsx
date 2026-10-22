@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { History } from 'lucide-react';
+import { History, Trash2 } from 'lucide-react';
 import { api, type Assignment, type FitMode, type Frame, type OrderMode, type Schedule } from '../lib/api';
 import { useAction, useCollections } from '../lib/hooks';
 import { SchedulePicker } from './SchedulePicker';
@@ -192,7 +192,8 @@ export function AssignmentEditor({ frame: fixed, choices, onSaved }: { frame?: F
         </Button>
         {a && (
           <Button
-            variant="ghost"
+            variant="danger"
+            icon={<Trash2 className="size-4" />}
             loading={remove.isPending}
             onClick={async () =>
               (await confirm({ title: t('assign.remove'), message: t('assign.confirm_remove', { name: frame!.name }) })) &&
