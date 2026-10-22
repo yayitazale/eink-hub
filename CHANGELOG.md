@@ -9,6 +9,34 @@ web share a single number (see `VERSION` at the repository root).
 Generated automatically from commit messages. The 0.1.0 entry is the only
 one written by hand: it summarises everything before the first release.
 
+## [0.4.0] - 2026-10-22
+
+### Added
+
+- Ask for the orientation when adding a Canvas; landscape welcome picture ([94c043b3](https://github.com/yayitazale/eink-hub/commit/94c043b3d2397def070a79fc45726dcf09c86fb0))
+- **web**: "Show the photo's date" when sending from the library ([c9a7bbfc](https://github.com/yayitazale/eink-hub/commit/c9a7bbfc652d16dce35cf865ab0dbc6a4159c202))
+- **web**: Roomier schedule cards and swipe-down-to-close sheets on phones ([04a6b432](https://github.com/yayitazale/eink-hub/commit/04a6b432a099018e418b29704ef66809e577ecb4))
+- **web**: Schedule cards open the editor on click, with the Canvas cards' hover ([94a7aa8d](https://github.com/yayitazale/eink-hub/commit/94a7aa8d7de9fd627c6f4df2f1249801d03fa281))
+- **web**: Push/Pull chip on schedule cards with its own icon and colour ([f281849f](https://github.com/yayitazale/eink-hub/commit/f281849ff1b11ea4fa830233cf1dfd431241dfdf))
+- **web**: In-app confirmation dialogs instead of the browser's confirm() ([637b4229](https://github.com/yayitazale/eink-hub/commit/637b4229faa9b8991838030917dd716f7bd613ab))
+- Create, pause and remove schedules from the Schedule page; empty editor for a new one ([52ce8e19](https://github.com/yayitazale/eink-hub/commit/52ce8e19ac000f3ef41fa93531ab83e60eaf3286))
+- **web**: Schedule page lists only existing schedules; create picks the Canvas ([749b8acd](https://github.com/yayitazale/eink-hub/commit/749b8acd50c1ba0563fcac6236496b86a2081462))
+- **web**: Next change row and soonest-first order on schedule cards ([09313fdf](https://github.com/yayitazale/eink-hub/commit/09313fdf3caaf5d83520bdb8ba230d9dc5905532))
+- **web**: Paused schedules grouped at the end and visibly dimmed ([7f1d780a](https://github.com/yayitazale/eink-hub/commit/7f1d780ad8f151f2b50d7d21bbc11c2001744d21))
+- Docs and repo links next to the version; update check with a notice ([2e71f570](https://github.com/yayitazale/eink-hub/commit/2e71f5706065cf435e4de49d84c4bca82dfa4d85))
+
+### Fixed
+
+- **web**: Phone schedule buttons stay bottom-right when paused; icon on the Paused chip ([aaa874f8](https://github.com/yayitazale/eink-hub/commit/aaa874f8a86ae90351ae4ab7ff3fe50383017f25))
+- **web**: Schedule cards say when a change is pending instead of hiding it ([0b4f8db1](https://github.com/yayitazale/eink-hub/commit/0b4f8db11846186b5500c2c654fa110303dd705b))
+
+### Documentation
+
+- Add UI screenshots to the README and docs home ([187d47dc](https://github.com/yayitazale/eink-hub/commit/187d47dc12dcc7c961896d7783608928e779c3e4))
+- Drop the phone screenshot ([b6952573](https://github.com/yayitazale/eink-hub/commit/b6952573f2dd065de253d7285b33ac3d2b00d485))
+- Add the Canvas detail screenshot ([ea053743](https://github.com/yayitazale/eink-hub/commit/ea053743df2cec8fe0c5507b70a3259deac5b379))
+- Click a screenshot to see it full size ([cec9f3c6](https://github.com/yayitazale/eink-hub/commit/cec9f3c60f49c639c813071cfca7b79468b56a69))
+
 ## [0.3.5] - 2026-10-18
 
 ### Maintenance
