@@ -19,9 +19,8 @@ Self-hosted control center for e-ink photo frames, with **Immich** integration. 
 ![My Canvases: every frame with its current photo, battery and status](docs-site/public/screenshots/canvases.webp)
 
 <p>
-  <img src="docs-site/public/screenshots/immich.webp" alt="Browsing an Immich album, filtered to landscape photos" width="39%" />
-  <img src="docs-site/public/screenshots/schedule.webp" alt="Schedule: what each Canvas shows and when it changes" width="39%" />
-  <img src="docs-site/public/screenshots/mobile.jpg" alt="The Canvas list on a phone, in dark mode" width="18%" />
+  <img src="docs-site/public/screenshots/immich.webp" alt="Browsing an Immich album, filtered to landscape photos" width="49%" />
+  <img src="docs-site/public/screenshots/schedule.webp" alt="Schedule: what each Canvas shows and when it changes" width="49%" />
 </p>
 
 ## Quick start

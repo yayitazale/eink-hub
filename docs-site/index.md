@@ -63,14 +63,12 @@ features:
 
 ![Schedule: what each Canvas shows and when it changes](/screenshots/schedule.webp)
 
-![The Canvas list on a phone, in dark mode](/screenshots/mobile.jpg)
-
 </div>
 
 <style>
 .screenshots {
   display: grid;
-  grid-template-columns: 1fr 1fr 0.45fr;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
   align-items: start;
 }
@@ -78,9 +76,6 @@ features:
 .vp-doc img[src*="/screenshots/"] {
   border: 1px solid var(--vp-c-divider);
   border-radius: 8px;
-}
-@media (max-width: 640px) {
-  .screenshots { grid-template-columns: 1fr 1fr; }
 }
 </style>
 
