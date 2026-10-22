@@ -57,13 +57,9 @@ export function Schedule() {
                       <Pill>{f.mode === 'pull' ? 'Pull' : 'Push'}</Pill>
                       {a && !a.enabled && <Pill tone="warn">{t('scheduleView.paused')}</Pill>}
                     </div>
-                    <Button
-                      size="sm"
-                      className="size-9 shrink-0 px-0 sm:hidden"
-                      icon={<Pencil className="size-3.5" />}
-                      aria-label={t('common.edit')}
-                      onClick={() => setEditing(f)}
-                    />
+                    <Button size="sm" className="shrink-0 sm:hidden" icon={<Pencil className="size-3.5" />} onClick={() => setEditing(f)}>
+                      {t('common.edit')}
+                    </Button>
                   </div>
                 </div>
                 <Button size="sm" className="max-sm:hidden" icon={<Pencil className="size-3.5" />} onClick={() => setEditing(f)}>
