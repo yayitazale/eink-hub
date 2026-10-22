@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { CalendarClock, Pencil } from 'lucide-react';
+import { CalendarClock, ChevronRight } from 'lucide-react';
 import type { Frame } from '../lib/api';
 import { dateTime, describeSchedule, relativeTime } from '../lib/format';
 import { useI18n } from '../i18n';
 import { useCollections, useFrames } from '../lib/hooks';
 import { AssignmentEditor } from '../components/AssignmentEditor';
 import { FrameMockup } from '../components/FrameMockup';
-import { Button, Card, Empty, Modal, Pill, SectionTitle, Spinner } from '../components/ui';
+import { Card, Empty, Modal, Pill, SectionTitle, Spinner } from '../components/ui';
 
 export function Schedule() {
   const { t, tn } = useI18n();
@@ -31,11 +30,18 @@ export function Schedule() {
             const nextChange = f.mode === 'pull' ? f.nextWake : (a?.nextChange ?? null);
             return (
               // The picture runs down the left; name, playlist, timing and chips stack beside it.
-              // Edit sits bottom-right on a phone, centred on the right on wider screens.
-              <Card key={f.id} className="flex items-center gap-4 p-4 sm:gap-5 sm:pr-5">
-                <Link to={`/frames/${f.id}`} className="w-20 shrink-0">
-                  <FrameMockup frame={f} />
-                </Link>
+              // The whole card opens the editor, a list row with a chevron. Same hover as the
+              // Canvas cards: the background lightens and the picture lifts.
+              <Card key={f.id} className="group relative flex items-center gap-3 p-4 transition hover:bg-surface-2 sm:gap-5 sm:pr-5">
+                <button
+                  type="button"
+                  className="absolute inset-0 cursor-pointer rounded-[inherit] transition active:bg-ink/5"
+                  aria-label={`${t('common.edit')} · ${f.name}`}
+                  onClick={() => setEditing(f)}
+                />
+                <div className="w-20 shrink-0">
+                  <FrameMockup frame={f} className="transition group-hover:-translate-y-1" />
+                </div>
                 <div className="flex min-w-0 flex-1 flex-col self-stretch justify-center">
                   <h3 className="truncate font-bold">{f.name}</h3>
                   {a && col ? (
@@ -52,19 +58,12 @@ export function Schedule() {
                   ) : (
                     <p className="mt-0.5 text-sm text-muted">{t('canvas.no_schedule')}</p>
                   )}
-                  <div className="mt-2 flex items-end justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Pill>{f.mode === 'pull' ? 'Pull' : 'Push'}</Pill>
-                      {a && !a.enabled && <Pill tone="warn">{t('scheduleView.paused')}</Pill>}
-                    </div>
-                    <Button size="sm" className="h-7! shrink-0 gap-1! px-2.5! text-xs! sm:hidden" icon={<Pencil className="size-3" />} onClick={() => setEditing(f)}>
-                      {t('common.edit')}
-                    </Button>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Pill>{f.mode === 'pull' ? 'Pull' : 'Push'}</Pill>
+                    {a && !a.enabled && <Pill tone="warn">{t('scheduleView.paused')}</Pill>}
                   </div>
                 </div>
-                <Button size="sm" className="max-sm:hidden" icon={<Pencil className="size-3.5" />} onClick={() => setEditing(f)}>
-                  {t('common.edit')}
-                </Button>
+                <ChevronRight className="size-5 shrink-0 text-muted transition group-hover:translate-x-0.5 group-hover:text-ink-2" aria-hidden />
               </Card>
             );
           })}
