@@ -30,27 +30,14 @@ export function Schedule() {
             const col = collections.data?.find((c) => c.id === a?.collectionId);
             const nextChange = f.mode === 'pull' ? f.nextWake : (a?.nextChange ?? null);
             return (
-              // Phone: picture, name and Edit on one row, the schedule details full width below.
-              // Wider: the details sit under the name, next to the picture.
-              <Card key={f.id} className="grid grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 p-4 sm:grid-cols-[5rem_minmax(0,1fr)_auto] sm:gap-x-5 sm:gap-y-0 sm:pr-5">
-                <Link to={`/frames/${f.id}`} className="sm:row-span-2">
+              // The picture runs down the left; name, playlist, timing and chips stack beside it.
+              // Edit sits bottom-right on a phone, centred on the right on wider screens.
+              <Card key={f.id} className="flex items-center gap-4 p-4 sm:gap-5 sm:pr-5">
+                <Link to={`/frames/${f.id}`} className="w-20 shrink-0">
                   <FrameMockup frame={f} />
                 </Link>
-                <div className="flex min-w-0 flex-wrap items-center gap-2 sm:self-end">
+                <div className="flex min-w-0 flex-1 flex-col self-stretch justify-center">
                   <h3 className="truncate font-bold">{f.name}</h3>
-                  {a && !a.enabled && <Pill tone="warn">{t('scheduleView.paused')}</Pill>}
-                  <Pill>{f.mode === 'pull' ? 'Pull' : 'Push'}</Pill>
-                </div>
-                <Button
-                  size="sm"
-                  className="max-sm:size-9 max-sm:px-0 sm:row-span-2"
-                  icon={<Pencil className="size-3.5" />}
-                  aria-label={t('common.edit')}
-                  onClick={() => setEditing(f)}
-                >
-                  <span className="max-sm:hidden">{t('common.edit')}</span>
-                </Button>
-                <div className="col-span-3 min-w-0 sm:col-span-1 sm:col-start-2 sm:self-start">
                   {a && col ? (
                     <>
                       <p className="mt-0.5 truncate text-sm text-ink-2">
@@ -65,7 +52,23 @@ export function Schedule() {
                   ) : (
                     <p className="mt-0.5 text-sm text-muted">{t('canvas.no_schedule')}</p>
                   )}
+                  <div className="mt-2 flex items-end justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Pill>{f.mode === 'pull' ? 'Pull' : 'Push'}</Pill>
+                      {a && !a.enabled && <Pill tone="warn">{t('scheduleView.paused')}</Pill>}
+                    </div>
+                    <Button
+                      size="sm"
+                      className="size-9 shrink-0 px-0 sm:hidden"
+                      icon={<Pencil className="size-3.5" />}
+                      aria-label={t('common.edit')}
+                      onClick={() => setEditing(f)}
+                    />
+                  </div>
                 </div>
+                <Button size="sm" className="max-sm:hidden" icon={<Pencil className="size-3.5" />} onClick={() => setEditing(f)}>
+                  {t('common.edit')}
+                </Button>
               </Card>
             );
           })}
