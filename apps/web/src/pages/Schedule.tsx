@@ -6,6 +6,7 @@ import { useI18n } from '../i18n';
 import { useCollections, useFrames } from '../lib/hooks';
 import { AssignmentEditor } from '../components/AssignmentEditor';
 import { FrameMockup } from '../components/FrameMockup';
+import { FrameStatus } from './Frames';
 import { Card, Empty, Modal, Pill, SectionTitle, Spinner } from '../components/ui';
 
 export function Schedule() {
@@ -59,7 +60,7 @@ export function Schedule() {
                     <p className="mt-0.5 text-sm text-muted">{t('canvas.no_schedule')}</p>
                   )}
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <Pill>{f.mode === 'pull' ? 'Pull' : 'Push'}</Pill>
+                    <FrameStatus frame={f} />
                     {a && !a.enabled && <Pill tone="warn">{t('scheduleView.paused')}</Pill>}
                   </div>
                 </div>
