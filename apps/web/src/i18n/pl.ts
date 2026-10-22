@@ -15,6 +15,10 @@ export const pl: Catalogue = {
   'layout.expand': 'Rozwiń menu',
   'layout.collapse': 'Zwiń menu',
   'layout.toggle_theme': 'Przełącz motyw',
+  'about.docs': 'Dokumentacja',
+  'about.repo': 'Kod źródłowy',
+  'update.available': 'Nowa wersja: {version}',
+  'update.whats_new': 'Co nowego',
 
   'common.add': 'Dodaj',
   'common.cancel': 'Anuluj',

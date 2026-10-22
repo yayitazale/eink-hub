@@ -15,6 +15,10 @@ export const en: Messages = {
   'layout.expand': 'Expand menu',
   'layout.collapse': 'Collapse menu',
   'layout.toggle_theme': 'Toggle theme',
+  'about.docs': 'Documentation',
+  'about.repo': 'Source code',
+  'update.available': 'New version: {version}',
+  'update.whats_new': 'What’s new',
 
   'common.add': 'Add',
   'common.cancel': 'Cancel',

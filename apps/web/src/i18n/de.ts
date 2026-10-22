@@ -15,6 +15,10 @@ export const de: Catalogue = {
   'layout.expand': 'Menü ausklappen',
   'layout.collapse': 'Menü einklappen',
   'layout.toggle_theme': 'Design wechseln',
+  'about.docs': 'Dokumentation',
+  'about.repo': 'Quellcode',
+  'update.available': 'Neue Version: {version}',
+  'update.whats_new': 'Neuerungen',
 
   'common.add': 'Hinzufügen',
   'common.cancel': 'Abbrechen',

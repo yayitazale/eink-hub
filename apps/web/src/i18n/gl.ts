@@ -15,6 +15,10 @@ export const gl: Catalogue = {
   'layout.expand': 'Despregar o menú',
   'layout.collapse': 'Recoller o menú',
   'layout.toggle_theme': 'Cambiar o tema',
+  'about.docs': 'Documentación',
+  'about.repo': 'Código fonte',
+  'update.available': 'Nova versión: {version}',
+  'update.whats_new': 'Novidades',
 
   'common.add': 'Engadir',
   'common.cancel': 'Cancelar',

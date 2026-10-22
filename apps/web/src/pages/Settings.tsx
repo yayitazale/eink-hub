@@ -3,7 +3,7 @@ import { CheckCircle2, Images, ScrollText, ShieldCheck, SlidersHorizontal, XCirc
 import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { useAction, useSettings } from '../lib/hooks';
-import { APP_VERSION, CHANGELOG_URL } from '../lib/version';
+import { AboutLinks, UpdateNotice } from '../components/About';
 import { languages, useI18n, type Lang, type MsgKey } from '../i18n';
 import { ServerLogs } from '../components/ServerLogs';
 
@@ -258,10 +258,11 @@ export function SettingsPage() {
           <LanguageSettings />
           <HubSettings />
           <StatsSettings />
-          {/* The sidebar shows the version on desktop; on mobile this is the only place. */}
-          <a href={CHANGELOG_URL} target="_blank" rel="noreferrer" className="text-[12px] font-semibold text-muted hover:text-ink md:hidden">
-            E-Ink Hub v{APP_VERSION}
-          </a>
+          {/* The sidebar shows these on desktop; on mobile this is the only place. */}
+          <div className="space-y-3 md:hidden">
+            <UpdateNotice />
+            <AboutLinks className="text-[12px]" />
+          </div>
         </div>
       )}
       {tab === 'immich' && (

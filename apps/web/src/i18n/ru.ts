@@ -15,6 +15,10 @@ export const ru: Catalogue = {
   'layout.expand': 'Развернуть меню',
   'layout.collapse': 'Свернуть меню',
   'layout.toggle_theme': 'Сменить тему',
+  'about.docs': 'Документация',
+  'about.repo': 'Исходный код',
+  'update.available': 'Новая версия: {version}',
+  'update.whats_new': 'Что нового',
 
   'common.add': 'Добавить',
   'common.cancel': 'Отмена',

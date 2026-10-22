@@ -15,6 +15,10 @@ export const ko: Catalogue = {
   'layout.expand': '메뉴 펼치기',
   'layout.collapse': '메뉴 접기',
   'layout.toggle_theme': '테마 전환',
+  'about.docs': '문서',
+  'about.repo': '소스 코드',
+  'update.available': '새 버전: {version}',
+  'update.whats_new': '새로운 기능',
 
   'common.add': '추가',
   'common.cancel': '취소',

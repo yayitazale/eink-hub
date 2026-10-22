@@ -14,6 +14,10 @@ export const es = {
   'layout.expand': 'Expandir menú',
   'layout.collapse': 'Contraer menú',
   'layout.toggle_theme': 'Cambiar tema',
+  'about.docs': 'Documentación',
+  'about.repo': 'Código fuente',
+  'update.available': 'Nueva versión: {version}',
+  'update.whats_new': 'Novedades',
 
   'common.add': 'Añadir',
   'common.cancel': 'Cancelar',

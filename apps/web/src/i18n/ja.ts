@@ -15,6 +15,10 @@ export const ja: Catalogue = {
   'layout.expand': 'メニューを展開',
   'layout.collapse': 'メニューを折りたたむ',
   'layout.toggle_theme': 'テーマを切り替え',
+  'about.docs': 'ドキュメント',
+  'about.repo': 'ソースコード',
+  'update.available': '新しいバージョン：{version}',
+  'update.whats_new': '新機能',
 
   'common.add': '追加',
   'common.cancel': 'キャンセル',

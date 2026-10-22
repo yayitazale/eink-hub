@@ -15,6 +15,10 @@ export const eu: Messages = {
   'layout.expand': 'Menua zabaldu',
   'layout.collapse': 'Menua tolestu',
   'layout.toggle_theme': 'Gaia aldatu',
+  'about.docs': 'Dokumentazioa',
+  'about.repo': 'Iturburu-kodea',
+  'update.available': 'Bertsio berria: {version}',
+  'update.whats_new': 'Berritasunak',
 
   'common.add': 'Gehitu',
   'common.cancel': 'Utzi',

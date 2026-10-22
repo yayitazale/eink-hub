@@ -21,6 +21,7 @@ import { upstreamRoutes } from './upstream/routes.js';
 import { openFrameRoutes } from './upstream/openframe.js';
 import { trmnlRoutes } from './upstream/trmnl.js';
 import { APP_VERSION } from './version.js';
+import { checkUpdate } from './lib/updates.js';
 
 export async function buildApp(db: DB, opts: { logger?: boolean; logDir?: string } = {}) {
   const app = Fastify({
@@ -46,6 +47,7 @@ export async function buildApp(db: DB, opts: { logger?: boolean; logDir?: string
 
   await setupAuth(app, db);
   app.get('/api/health', async () => ({ ok: true, version: APP_VERSION }));
+  app.get('/api/update', async () => checkUpdate({ enabled: config.updateCheck }));
   upstreamRoutes(app, ctx);
   openFrameRoutes(app, ctx);
   trmnlRoutes(app, ctx);

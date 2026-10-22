@@ -15,6 +15,10 @@ export const cs: Catalogue = {
   'layout.expand': 'Rozbalit nabídku',
   'layout.collapse': 'Sbalit nabídku',
   'layout.toggle_theme': 'Přepnout motiv',
+  'about.docs': 'Dokumentace',
+  'about.repo': 'Zdrojový kód',
+  'update.available': 'Nová verze: {version}',
+  'update.whats_new': 'Co je nového',
 
   'common.add': 'Přidat',
   'common.cancel': 'Zrušit',

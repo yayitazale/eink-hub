@@ -15,6 +15,10 @@ export const nl: Catalogue = {
   'layout.expand': 'Menu uitklappen',
   'layout.collapse': 'Menu inklappen',
   'layout.toggle_theme': 'Thema wisselen',
+  'about.docs': 'Documentatie',
+  'about.repo': 'Broncode',
+  'update.available': 'Nieuwe versie: {version}',
+  'update.whats_new': 'Wat is er nieuw',
 
   'common.add': 'Toevoegen',
   'common.cancel': 'Annuleren',

@@ -15,6 +15,10 @@ export const zh: Catalogue = {
   'layout.expand': '展开菜单',
   'layout.collapse': '收起菜单',
   'layout.toggle_theme': '切换主题',
+  'about.docs': '文档',
+  'about.repo': '源代码',
+  'update.available': '新版本：{version}',
+  'update.whats_new': '新功能',
 
   'common.add': '添加',
   'common.cancel': '取消',

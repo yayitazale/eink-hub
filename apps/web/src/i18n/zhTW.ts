@@ -15,6 +15,10 @@ export const zhTW: Catalogue = {
   'layout.expand': '展開選單',
   'layout.collapse': '收合選單',
   'layout.toggle_theme': '切換主題',
+  'about.docs': '文件',
+  'about.repo': '原始碼',
+  'update.available': '新版本：{version}',
+  'update.whats_new': '新功能',
 
   'common.add': '新增',
   'common.cancel': '取消',

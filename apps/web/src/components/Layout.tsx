@@ -3,7 +3,7 @@ import { CalendarClock, Frame as FrameIcon, Images, LogOut, Moon, PanelLeftClose
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { useImmichStatus } from '../lib/hooks';
-import { APP_VERSION, CHANGELOG_URL } from '../lib/version';
+import { AboutLinks, UpdateNotice } from './About';
 import { useI18n } from '../i18n';
 import { cx } from './ui';
 
@@ -148,21 +148,18 @@ export function Layout({ authDisabled }: { authDisabled: boolean }) {
             </button>
           )}
         </div>
-        <a
-          href={CHANGELOG_URL}
-          target="_blank"
-          rel="noreferrer"
-          className={cx('mt-2 text-[11px] font-semibold text-muted/70 transition hover:text-ink', collapsed ? 'text-center' : 'px-4')}
-        >
-          v{APP_VERSION}
-        </a>
+        <UpdateNotice compact={collapsed} className="mt-3" />
+        <AboutLinks compact={collapsed} className={cx('mt-3', !collapsed && 'px-4')} />
       </aside>
 
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line/60 bg-paper/85 px-4 py-3 backdrop-blur md:hidden">
         <Logo />
-        <button onClick={toggleTheme} className="rounded-full p-2 text-muted" aria-label={t('layout.toggle_theme')}>
-          {theme === 'dark' ? <Sun className="size-5" /> : <Moon className="size-5" />}
-        </button>
+        <div className="flex items-center gap-1">
+          <UpdateNotice compact className="p-2" />
+          <button onClick={toggleTheme} className="rounded-full p-2 text-muted" aria-label={t('layout.toggle_theme')}>
+            {theme === 'dark' ? <Sun className="size-5" /> : <Moon className="size-5" />}
+          </button>
+        </div>
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-6 pb-28 md:px-10 md:pt-10 md:pb-12">

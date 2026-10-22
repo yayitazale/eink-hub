@@ -15,6 +15,10 @@ export const ca: Catalogue = {
   'layout.expand': 'Desplega el menú',
   'layout.collapse': 'Replega el menú',
   'layout.toggle_theme': 'Canvia el tema',
+  'about.docs': 'Documentació',
+  'about.repo': 'Codi font',
+  'update.available': 'Nova versió: {version}',
+  'update.whats_new': 'Novetats',
 
   'common.add': 'Afegeix',
   'common.cancel': 'Cancel·la',
