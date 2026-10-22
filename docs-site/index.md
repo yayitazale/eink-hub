@@ -59,6 +59,8 @@ features:
 
 <div class="screenshots">
 
+![A Canvas: device details and its schedule](/screenshots/canvas.webp)
+
 ![Browsing an Immich album, filtered to landscape photos](/screenshots/immich.webp)
 
 ![Schedule: what each Canvas shows and when it changes](/screenshots/schedule.webp)
@@ -68,7 +70,7 @@ features:
 <style>
 .screenshots {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   align-items: start;
 }
@@ -76,6 +78,9 @@ features:
 .vp-doc img[src*="/screenshots/"] {
   border: 1px solid var(--vp-c-divider);
   border-radius: 8px;
+}
+@media (max-width: 640px) {
+  .screenshots { grid-template-columns: 1fr; }
 }
 </style>
 
