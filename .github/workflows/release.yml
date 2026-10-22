@@ -149,9 +149,12 @@ jobs:
     permissions:
       contents: write
     steps:
+      # The notes are this version's section of CHANGELOG.md (written by
+      # scripts/release.mjs into the tagged commit), so the release page and
+      # the hub's "What's new" link show the changes themselves.
+      - uses: actions/checkout@v4
+      - run: node scripts/release-notes.mjs "$GITHUB_REF_NAME" > release-notes.md
       - env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --title "$GITHUB_REF_NAME" --notes "Image: \`$GHCR_IMAGE:$GITHUB_REF_NAME\`
-
-          Changes in this version: [CHANGELOG.md]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$GITHUB_REF_NAME/CHANGELOG.md)"
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --title "$GITHUB_REF_NAME" --notes-file release-notes.md
