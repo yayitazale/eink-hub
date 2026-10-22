@@ -9,6 +9,16 @@ web share a single number (see `VERSION` at the repository root).
 Generated automatically from commit messages. The 0.1.0 entry is the only
 one written by hand: it summarises everything before the first release.
 
+## [0.5.1] - 2026-10-22
+
+### Fixed
+
+- Update check reads the docs' versions.json, every 2 h, only when the hub is opened ([bfa1d8ab](https://github.com/yayitazale/eink-hub/commit/bfa1d8ab01bf30641e0ab76031d42f667211fcb8))
+
+### Maintenance
+
+- Release notes carry the version's CHANGELOG section ([a8c7a4bd](https://github.com/yayitazale/eink-hub/commit/a8c7a4bde6b1d6315ee9ca2d2e7d14a5c621d2b7))
+
 ## [0.5.0] - 2026-10-22
 
 ### Added
