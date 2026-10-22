@@ -9,6 +9,21 @@ web share a single number (see `VERSION` at the repository root).
 Generated automatically from commit messages. The 0.1.0 entry is the only
 one written by hand: it summarises everything before the first release.
 
+## [0.5.0] - 2026-10-22
+
+### Added
+
+- **web**: Our own Material You dropdowns and time picker instead of the native ones ([97f900bd](https://github.com/yayitazale/eink-hub/commit/97f900bdde443c083d455b9e1bb7c1b5046d8087))
+- **web**: Firmware always shown on the Canvas page, under the model ([08c3464d](https://github.com/yayitazale/eink-hub/commit/08c3464d18399dd61c8f4bb4723ccb4fa58dc7e2))
+- **web**: The same eight fields on every Canvas page ([3cc15964](https://github.com/yayitazale/eink-hub/commit/3cc15964d59ea191549ff25bbe62536b3bc3f297))
+- DIY frames report their Wi-Fi, address and free storage ([c6f833f6](https://github.com/yayitazale/eink-hub/commit/c6f833f6ef38354f6ae80be8790ac50343dcd7a2))
+- **web**: "Wakes up" and "Pending" say what actually happens ([43d6ee03](https://github.com/yayitazale/eink-hub/commit/43d6ee039143ac696fa68cdb5cfa6cf0e369e489))
+
+### Fixed
+
+- **web**: Page action buttons always under the subtitle on phones ([7aa3347e](https://github.com/yayitazale/eink-hub/commit/7aa3347e2b2967acedc552384189f43723d8b0b2))
+- **server**: Welcome picture with the same sizes in both orientations, even margins ([617f17a7](https://github.com/yayitazale/eink-hub/commit/617f17a787c0f5f293233457b12086a30a8a28a9))
+
 ## [0.4.0] - 2026-10-22
 
 ### Added
