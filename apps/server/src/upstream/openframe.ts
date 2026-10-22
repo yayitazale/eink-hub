@@ -17,6 +17,12 @@ export const OPEN_FRAME_VERSION = 1;
 type DisplayQuery = {
   battery?: string;
   rssi?: string;
+  /** Wi-Fi network name and the frame's address on it. */
+  ssid?: string;
+  ip?: string;
+  /** Local storage, in bytes. */
+  storage_free?: string;
+  storage_total?: string;
   fw?: string;
   w?: string;
   h?: string;
@@ -60,7 +66,14 @@ function selfDescription(frame: Frame, q: DisplayQuery): Partial<Frame> {
   if (q.notify_url !== undefined) config.notifyUrl = /^https?:\/\//.test(q.notify_url) ? q.notify_url : undefined;
   if (JSON.stringify(config) !== JSON.stringify(frame.config)) patch.config = config;
   if (q.fw) patch.firmware = q.fw.slice(0, 40);
-  patch.lastInfo = { ...(frame.lastInfo ?? {}), rssi: q.rssi !== undefined ? Number(q.rssi) : undefined, w, h };
+  // Same keys a BLOOMIN8 reports, so the Canvas page reads them the same way for every frame.
+  const bytes = (v?: string) => (v !== undefined && Number(v) >= 0 && Number.isFinite(Number(v)) ? Number(v) : undefined);
+  const info: Record<string, unknown> = { ...(frame.lastInfo ?? {}), rssi: q.rssi !== undefined ? Number(q.rssi) : undefined, w, h };
+  if (q.ssid !== undefined) info.sta_ssid = q.ssid.slice(0, 64) || undefined;
+  if (q.ip !== undefined) info.sta_ip = /^[0-9a-fA-F:.]{2,45}$/.test(q.ip) ? q.ip : undefined;
+  if (q.storage_free !== undefined) info.free_size = bytes(q.storage_free);
+  if (q.storage_total !== undefined) info.total_size = bytes(q.storage_total);
+  patch.lastInfo = info;
   return patch;
 }
 

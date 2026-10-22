@@ -8,7 +8,7 @@
 #define HUB_URL "http://192.168.1.10:8080"
 #define FRAME_TOKEN "paste-the-token-here"
 
-#define FW_VERSION "esp32-openframe-1.0"
+#define FW_VERSION "esp32-openframe-1.1"
 
 // Pick one panel. Black & white is the easiest (1-bit BMP, ~48 KB, fits in RAM).
 #define PANEL_BW_750      // 7.5" 800×480 black/white (GDEY075T7, Waveshare 7.5" V2)

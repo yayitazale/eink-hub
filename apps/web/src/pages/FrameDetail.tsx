@@ -630,6 +630,8 @@ export function FrameDetail() {
   if (!frame.data) return <Spinner />;
   const f = frame.data;
   const info = f.lastInfo ?? {};
+  const ssid = (info.sta_ssid as string | undefined) || undefined;
+  const ip = f.kind === 'bloomin8' ? f.host : (info.sta_ip as string | undefined);
   // How this Canvas can be woken from here: the hub's Bluetooth first (no device picker), else this phone's.
   const caps = f.capabilities;
   const wakeVia = !caps.bleWake ? null : f.bleMac && (f.simulated || ble.data?.available) ? 'hub' : !f.simulated && phoneWakeSupport() === 'ok' ? 'phone' : null;
@@ -713,10 +715,8 @@ export function FrameDetail() {
             />
             <Info label={t('detail.last_seen')} value={relativeTime(f.lastSeen)} />
             <Info label={t('detail.next_change')} value={<NextChange frame={f} />} />
-            <Info
-              label="Wi-Fi"
-              value={f.kind === 'bloomin8' && (info.sta_ssid || f.host) ? <TwoLines main={(info.sta_ssid as string) || '—'} sub={f.host} /> : undefined}
-            />
+            {/* A BLOOMIN8 is reached at its host; DIY frames report their network (Open Frame `ssid`, `ip`). */}
+            <Info label="Wi-Fi" value={ssid || ip ? <TwoLines main={ssid || '—'} sub={ip} /> : undefined} />
             <Info label={t('detail.wake_model')} value={<TwoLines main={t(`wake_title.${f.wakeModel}` as MsgKey)} sub={t(`wake.${f.wakeModel}` as MsgKey)} />} />
             <Info label={t('detail.free')} value={info.free_size ? <FreeSpace free={Number(info.free_size)} total={Number(info.total_size)} /> : undefined} />
             <Info label={t('detail.pending')} value={t(f.pendingImageId ? 'detail.pending_photo' : 'detail.pending_none')} />

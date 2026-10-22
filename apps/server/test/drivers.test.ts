@@ -92,6 +92,19 @@ describe('Open Frame protocol', () => {
     expect(body.next_poll_s).toBeLessThanOrEqual(3600);
   });
 
+  it('keeps the Wi-Fi, address and storage the frame reports, under the same keys as a BLOOMIN8', async () => {
+    await poll('?ssid=Casa%20WiFi&ip=192.168.1.42&storage_free=7000000000&storage_total=8000000000&fw=1.2');
+    const f = (await app.inject({ url: `/api/frames/${frameId}` })).json();
+    expect(f.lastInfo).toMatchObject({ sta_ssid: 'Casa WiFi', sta_ip: '192.168.1.42', free_size: 7e9, total_size: 8e9 });
+    expect(f.firmware).toBe('1.2');
+    // Junk is dropped rather than shown.
+    await poll('?ip=not%20an%20ip&storage_free=-5');
+    const g = (await app.inject({ url: `/api/frames/${frameId}` })).json();
+    expect(g.lastInfo.sta_ip).toBeUndefined();
+    expect(g.lastInfo.free_size).toBeUndefined();
+    expect(g.lastInfo.sta_ssid).toBe('Casa WiFi');
+  });
+
   it('queues a photo sent by hand and delivers it on the next poll', async () => {
     const res = await app.inject({ method: 'POST', url: `/api/frames/${frameId}/display`, payload: { imageId } });
     expect(res.json()).toEqual({ method: 'queued' });
