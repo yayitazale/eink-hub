@@ -210,6 +210,8 @@ export const es = {
   'assign.enabled_hint': 'Desactívala para pausar los cambios automáticos sin perder esta programación. Podrás seguir enviando fotos a mano.',
   'assign.show_date_hint_memories': 'Una etiqueta del tipo «Un día como hoy hace 5 años» en la esquina inferior izquierda.',
   'assign.remove': 'Quitar programación',
+  'assign.pick_collection': 'Elige una colección',
+  'assign.confirm_remove': '¿Quitar la programación de «{name}»? La colección y sus fotos no se borran.',
 
   'order.random': 'Aleatorio',
   'order.sequential': 'En orden',
@@ -265,6 +267,9 @@ export const es = {
   'scheduleView.empty': 'Sin Canvas',
   'scheduleView.empty_hint': 'Añade un Canvas para programar sus fotos.',
   'scheduleView.paused': 'Pausada',
+  'scheduleView.create': 'Crear programación',
+  'scheduleView.pause': 'Pausar',
+  'scheduleView.resume': 'Reanudar',
   'scheduleView.window': 'de {from} a {to}',
   'scheduleView.next_change': 'próximo cambio {when} ({date})',
 

@@ -211,6 +211,8 @@ export const gl: Catalogue = {
   'assign.enabled_hint': 'Desactívaa para pausar os cambios automáticos sen perder esta programación. Aínda podes enviar fotos manualmente.',
   'assign.show_date_hint_memories': 'Unha etiqueta como «Un día coma hoxe hai 5 anos» na esquina inferior esquerda.',
   'assign.remove': 'Eliminar programación',
+  'assign.pick_collection': 'Escolle unha colección',
+  'assign.confirm_remove': 'Eliminar a programación de «{name}»? A colección e as súas fotos non se borran.',
 
   'order.random': 'Aleatorio',
   'order.sequential': 'En orde',
@@ -266,6 +268,9 @@ export const gl: Catalogue = {
   'scheduleView.empty': 'Ningún Canvas',
   'scheduleView.empty_hint': 'Engade un Canvas para programar as súas fotos.',
   'scheduleView.paused': 'En pausa',
+  'scheduleView.create': 'Crear programación',
+  'scheduleView.pause': 'Pausar',
+  'scheduleView.resume': 'Retomar',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'seguinte cambio {when} ({date})',
 

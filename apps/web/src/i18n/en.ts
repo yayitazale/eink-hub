@@ -211,6 +211,8 @@ export const en: Messages = {
   'assign.enabled_hint': 'Turn it off to pause automatic changes without losing this schedule. You can still send photos manually.',
   'assign.show_date_hint_memories': 'A label like “On this day 5 years ago” in the bottom-left corner.',
   'assign.remove': 'Remove schedule',
+  'assign.pick_collection': 'Choose a collection',
+  'assign.confirm_remove': 'Remove the schedule from “{name}”? The collection and its photos are kept.',
 
   'order.random': 'Random',
   'order.sequential': 'In order',
@@ -266,6 +268,9 @@ export const en: Messages = {
   'scheduleView.empty': 'No Canvases',
   'scheduleView.empty_hint': 'Add a Canvas to schedule its photos.',
   'scheduleView.paused': 'Paused',
+  'scheduleView.create': 'Create schedule',
+  'scheduleView.pause': 'Pause',
+  'scheduleView.resume': 'Resume',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'next change {when} ({date})',
 

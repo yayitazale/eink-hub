@@ -211,6 +211,8 @@ export const ko: Catalogue = {
   'assign.enabled_hint': '끄면 이 일정을 유지한 채 자동 전환을 일시 중지합니다. 사진은 계속 수동으로 보낼 수 있습니다.',
   'assign.show_date_hint_memories': '왼쪽 아래에 “5년 전 오늘” 같은 라벨을 표시합니다.',
   'assign.remove': '일정 제거',
+  'assign.pick_collection': '컬렉션 선택',
+  'assign.confirm_remove': '‘{name}’의 일정을 제거할까요? 컬렉션과 사진은 그대로 유지됩니다.',
 
   'order.random': '무작위',
   'order.sequential': '순서대로',
@@ -266,6 +268,9 @@ export const ko: Catalogue = {
   'scheduleView.empty': 'Canvas 없음',
   'scheduleView.empty_hint': 'Canvas를 추가하여 사진 일정을 설정하세요.',
   'scheduleView.paused': '일시 중지됨',
+  'scheduleView.create': '일정 만들기',
+  'scheduleView.pause': '일시 중지',
+  'scheduleView.resume': '재개',
   'scheduleView.window': '{from}~{to}',
   'scheduleView.next_change': '다음 전환 {when}({date})',
 

@@ -211,6 +211,8 @@ export const eu: Messages = {
   'assign.enabled_hint': 'Desaktibatu aldaketa automatikoak eteteko, programazio hau galdu gabe. Argazkiak eskuz bidaltzen jarraitu ahal izango duzu.',
   'assign.show_date_hint_memories': '«Duela 5 urte, gaur bezalako egun batean» bezalako etiketa bat, beheko ezkerreko izkinan.',
   'assign.remove': 'Kendu programazioa',
+  'assign.pick_collection': 'Aukeratu bilduma bat',
+  'assign.confirm_remove': '«{name}»(r)en programazioa kendu? Bilduma eta bere argazkiak ez dira ezabatzen.',
 
   'order.random': 'Ausaz',
   'order.sequential': 'Ordenan',
@@ -266,6 +268,9 @@ export const eu: Messages = {
   'scheduleView.empty': 'Canvasik ez',
   'scheduleView.empty_hint': 'Gehitu Canvas bat bere argazkiak programatzeko.',
   'scheduleView.paused': 'Etenda',
+  'scheduleView.create': 'Sortu programazioa',
+  'scheduleView.pause': 'Eten',
+  'scheduleView.resume': 'Berrekin',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'hurrengo aldaketa {when} ({date})',
 

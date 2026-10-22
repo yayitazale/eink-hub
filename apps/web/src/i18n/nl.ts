@@ -211,6 +211,8 @@ export const nl: Catalogue = {
   'assign.enabled_hint': 'Zet uit om automatische wisselingen te pauzeren zonder deze planning te verliezen. Je kunt nog steeds handmatig foto’s sturen.',
   'assign.show_date_hint_memories': 'Een label zoals “Vandaag 5 jaar geleden” linksonder.',
   'assign.remove': 'Planning verwijderen',
+  'assign.pick_collection': 'Kies een collectie',
+  'assign.confirm_remove': 'Planning van ‘{name}’ verwijderen? De collectie en de foto’s blijven bewaard.',
 
   'order.random': 'Willekeurig',
   'order.sequential': 'Op volgorde',
@@ -266,6 +268,9 @@ export const nl: Catalogue = {
   'scheduleView.empty': 'Geen Canvas',
   'scheduleView.empty_hint': 'Voeg een Canvas toe om de foto’s te plannen.',
   'scheduleView.paused': 'Gepauzeerd',
+  'scheduleView.create': 'Planning maken',
+  'scheduleView.pause': 'Pauzeren',
+  'scheduleView.resume': 'Hervatten',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'volgende wissel {when} ({date})',
 

@@ -211,6 +211,8 @@ export const de: Catalogue = {
   'assign.enabled_hint': 'Schalte sie aus, um automatische Wechsel zu pausieren, ohne diesen Zeitplan zu verlieren. Du kannst weiterhin manuell Fotos senden.',
   'assign.show_date_hint_memories': 'Ein Etikett wie „Heute vor 5 Jahren“ in der unteren linken Ecke.',
   'assign.remove': 'Zeitplan entfernen',
+  'assign.pick_collection': 'Sammlung wählen',
+  'assign.confirm_remove': 'Zeitplan von „{name}“ entfernen? Die Sammlung und ihre Fotos bleiben erhalten.',
 
   'order.random': 'Zufällig',
   'order.sequential': 'Der Reihe nach',
@@ -266,6 +268,9 @@ export const de: Catalogue = {
   'scheduleView.empty': 'Keine Canvas',
   'scheduleView.empty_hint': 'Füge ein Canvas hinzu, um seine Fotos zu planen.',
   'scheduleView.paused': 'Pausiert',
+  'scheduleView.create': 'Zeitplan erstellen',
+  'scheduleView.pause': 'Pausieren',
+  'scheduleView.resume': 'Fortsetzen',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'nächster Wechsel {when} ({date})',
 

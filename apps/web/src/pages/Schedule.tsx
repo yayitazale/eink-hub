@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { CalendarClock, ChevronRight, CloudDownload, Send } from 'lucide-react';
-import type { Frame } from '../lib/api';
+import { CalendarClock, ChevronRight, CloudDownload, Pause, Play, Plus, Send, Trash2 } from 'lucide-react';
+import { api, type Frame } from '../lib/api';
 import { dateTime, describeSchedule, relativeTime } from '../lib/format';
 import { useI18n } from '../i18n';
-import { useCollections, useFrames } from '../lib/hooks';
+import { useAction, useCollections, useFrames } from '../lib/hooks';
 import { AssignmentEditor } from '../components/AssignmentEditor';
 import { FrameMockup } from '../components/FrameMockup';
-import { Card, Empty, Modal, Pill, SectionTitle, Spinner } from '../components/ui';
+import { Button, Card, Empty, IconButton, Modal, Pill, SectionTitle, Spinner, useConfirm } from '../components/ui';
 
 /** How the photo reaches the Canvas: the hub pushes it, or the Canvas pulls it when it wakes. */
 function ModePill({ mode }: { mode: Frame['mode'] }) {
@@ -26,6 +26,11 @@ export function Schedule() {
   const frames = useFrames();
   const collections = useCollections();
   const [editing, setEditing] = useState<Frame | null>(null);
+  const confirm = useConfirm();
+  const setEnabled = useAction(({ id, enabled }: { id: number; enabled: boolean }) => api.patch(`/api/frames/${id}/assignment`, { enabled }), {
+    success: t('assign.saved'),
+  });
+  const remove = useAction((id: number) => api.del(`/api/frames/${id}/assignment`), { success: t('assign.removed') });
 
   if (frames.isLoading) return <Spinner />;
   return (
@@ -71,9 +76,42 @@ export function Schedule() {
                   ) : (
                     <p className="mt-0.5 text-sm text-muted">{t('canvas.no_schedule')}</p>
                   )}
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <ModePill mode={f.mode} />
-                    {a && !a.enabled && <Pill tone="warn">{t('scheduleView.paused')}</Pill>}
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <ModePill mode={f.mode} />
+                      {a && !a.enabled && <Pill tone="warn">{t('scheduleView.paused')}</Pill>}
+                    </div>
+                    {/* Above the card-wide button, so they get their own clicks. */}
+                    <div className="relative z-10 flex items-center gap-1">
+                      {a ? (
+                        <>
+                          <IconButton
+                            className="size-8"
+                            title={t(a.enabled ? 'scheduleView.pause' : 'scheduleView.resume')}
+                            aria-label={t(a.enabled ? 'scheduleView.pause' : 'scheduleView.resume')}
+                            disabled={setEnabled.isPending}
+                            onClick={() => setEnabled.mutate({ id: f.id, enabled: !a.enabled })}
+                          >
+                            {a.enabled ? <Pause className="size-4" /> : <Play className="size-4" />}
+                          </IconButton>
+                          <IconButton
+                            className="size-8 hover:text-red-600"
+                            title={t('assign.remove')}
+                            aria-label={t('assign.remove')}
+                            disabled={remove.isPending}
+                            onClick={async () =>
+                              (await confirm({ title: t('assign.remove'), message: t('assign.confirm_remove', { name: f.name }) })) && remove.mutate(f.id)
+                            }
+                          >
+                            <Trash2 className="size-4" />
+                          </IconButton>
+                        </>
+                      ) : (
+                        <Button size="sm" variant="primary" className="h-7! px-2.5! text-xs!" icon={<Plus className="size-3.5" />} onClick={() => setEditing(f)}>
+                          {t('scheduleView.create')}
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <ChevronRight className="size-5 shrink-0 text-muted transition group-hover:translate-x-0.5 group-hover:text-ink-2" aria-hidden />

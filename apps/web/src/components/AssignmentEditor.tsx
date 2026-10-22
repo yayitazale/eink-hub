@@ -1,16 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { History } from 'lucide-react';
 import { api, type Assignment, type FitMode, type Frame, type OrderMode, type Schedule } from '../lib/api';
 import { useAction, useCollections } from '../lib/hooks';
 import { SchedulePicker } from './SchedulePicker';
 import { useI18n, type MsgKey } from '../i18n';
 import { BgPicker } from './BgPicker';
-import { Button, Field, Segmented, Toggle, inputClass } from './ui';
+import { Button, Field, Segmented, Toggle, cx, inputClass, useConfirm } from './ui';
 
 const DEFAULT_SCHEDULE: Schedule = { kind: 'days', days: 1, at: '07:00' };
 
 export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: () => void }) {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const collections = useCollections();
   const a = frame.assignment;
   const [collectionId, setCollectionId] = useState<number | ''>(a?.collectionId ?? '');
@@ -29,10 +30,8 @@ export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: (
   // "On this day" has a fixed timing: one random memory per day, changing at 00:00.
   const isMemories = collection?.type === 'immich_memories';
   const hourly = !isMemories && schedule.kind === 'interval';
-
-  useEffect(() => {
-    if (!collectionId && collections.data?.length) setCollectionId(collections.data[0].id);
-  }, [collections.data, collectionId]);
+  // A new schedule starts empty: everything else waits until a collection is picked.
+  const ready = !!collectionId;
 
   const pickCollection = (id: number) => {
     setCollectionId(id);
@@ -65,7 +64,12 @@ export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: (
       <div className="grid gap-5 @xl:grid-cols-2 @xl:gap-x-8">
         <div className="min-w-0 space-y-5">
           <Field label={t('assign.collection')}>
-            <select className={inputClass} value={collectionId} onChange={(e) => pickCollection(Number(e.target.value))}>
+            <select className={cx(inputClass, !ready && 'text-muted')} value={collectionId} onChange={(e) => pickCollection(Number(e.target.value))}>
+              {!ready && (
+                <option value="" disabled>
+                  {t('assign.pick_collection')}
+                </option>
+              )}
               {collections.data?.map((c) => (
                 <option key={c.id} value={c.id}>
                   {/* "On this day" changes daily, so a photo count would be misleading. */}
@@ -87,11 +91,12 @@ export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: (
               activeFrom={hourly && windowOn ? from : null}
               activeTo={hourly && windowOn ? to : null}
               onValidity={setScheduleOk}
+              disabled={!ready}
             />
           )}
         </div>
 
-        <div className="min-w-0 space-y-5">
+        <fieldset disabled={!ready} className={cx('min-w-0 space-y-5', !ready && 'opacity-50')}>
           {!isMemories && (
             <Field label={t('assign.order')} hint={t(`order.${orderMode}_hint`)} group>
               <Segmented
@@ -146,7 +151,7 @@ export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: (
             )}
             <Toggle label={t('assign.enabled')} hint={t('assign.enabled_hint')} checked={enabled} onChange={setEnabled} />
           </div>
-        </div>
+        </fieldset>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -159,7 +164,14 @@ export function AssignmentEditor({ frame, onSaved }: { frame: Frame; onSaved?: (
           {t('common.save')}
         </Button>
         {a && (
-          <Button variant="ghost" loading={remove.isPending} onClick={() => remove.mutate(undefined, { onSuccess: onSaved })}>
+          <Button
+            variant="ghost"
+            loading={remove.isPending}
+            onClick={async () =>
+              (await confirm({ title: t('assign.remove'), message: t('assign.confirm_remove', { name: frame.name }) })) &&
+              remove.mutate(undefined, { onSuccess: onSaved })
+            }
+          >
             {t('assign.remove')}
           </Button>
         )}

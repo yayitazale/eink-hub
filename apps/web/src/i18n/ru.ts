@@ -219,6 +219,8 @@ export const ru: Catalogue = {
   'assign.enabled_hint': 'Выключите, чтобы приостановить автоматическую смену, не теряя это расписание. Фото по-прежнему можно отправлять вручную.',
   'assign.show_date_hint_memories': 'Подпись вроде «В этот день 5 лет назад» в левом нижнем углу.',
   'assign.remove': 'Удалить расписание',
+  'assign.pick_collection': 'Выберите коллекцию',
+  'assign.confirm_remove': 'Удалить расписание с «{name}»? Коллекция и её фото сохранятся.',
 
   'order.random': 'Случайно',
   'order.sequential': 'По порядку',
@@ -278,6 +280,9 @@ export const ru: Catalogue = {
   'scheduleView.empty': 'Нет Canvas',
   'scheduleView.empty_hint': 'Добавьте Canvas, чтобы составить расписание его фото.',
   'scheduleView.paused': 'Приостановлено',
+  'scheduleView.create': 'Создать расписание',
+  'scheduleView.pause': 'Приостановить',
+  'scheduleView.resume': 'Возобновить',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'следующая смена {when} ({date})',
 

@@ -211,6 +211,8 @@ export const ca: Catalogue = {
   'assign.enabled_hint': 'Desactiva-la per aturar els canvis automàtics sense perdre aquesta programació. Encara pots enviar fotos manualment.',
   'assign.show_date_hint_memories': 'Una etiqueta com «Un dia com avui fa 5 anys» a la cantonada inferior esquerra.',
   'assign.remove': 'Elimina la programació',
+  'assign.pick_collection': 'Tria una col·lecció',
+  'assign.confirm_remove': 'Vols eliminar la programació de «{name}»? La col·lecció i les seves fotos no s’esborren.',
 
   'order.random': 'Aleatori',
   'order.sequential': 'En ordre',
@@ -266,6 +268,9 @@ export const ca: Catalogue = {
   'scheduleView.empty': 'Cap Canvas',
   'scheduleView.empty_hint': 'Afegeix un Canvas per programar-ne les fotos.',
   'scheduleView.paused': 'En pausa',
+  'scheduleView.create': 'Crea una programació',
+  'scheduleView.pause': 'Posa en pausa',
+  'scheduleView.resume': 'Reprèn',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'proper canvi {when} ({date})',
 

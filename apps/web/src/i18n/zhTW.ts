@@ -211,6 +211,8 @@ export const zhTW: Catalogue = {
   'assign.enabled_hint': '關閉後可暫停自動更換，同時保留此排程。你仍可手動傳送照片。',
   'assign.show_date_hint_memories': '在左下角顯示類似「5 年前的今天」的標籤。',
   'assign.remove': '移除排程',
+  'assign.pick_collection': '選擇相簿',
+  'assign.confirm_remove': '移除「{name}」的排程？相簿及其照片會保留。',
 
   'order.random': '隨機',
   'order.sequential': '依順序',
@@ -266,6 +268,9 @@ export const zhTW: Catalogue = {
   'scheduleView.empty': '沒有 Canvas',
   'scheduleView.empty_hint': '新增一台 Canvas 來安排它的照片。',
   'scheduleView.paused': '已暫停',
+  'scheduleView.create': '建立排程',
+  'scheduleView.pause': '暫停',
+  'scheduleView.resume': '繼續',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': '下次更換 {when}（{date}）',
 

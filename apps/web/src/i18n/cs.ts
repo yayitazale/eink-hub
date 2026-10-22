@@ -219,6 +219,8 @@ export const cs: Catalogue = {
   'assign.enabled_hint': 'Vypněte pro pozastavení automatických změn bez ztráty tohoto plánu. Fotky můžete stále posílat ručně.',
   'assign.show_date_hint_memories': 'Štítek jako „Přesně před 5 lety“ v levém dolním rohu.',
   'assign.remove': 'Odstranit plán',
+  'assign.pick_collection': 'Vyberte kolekci',
+  'assign.confirm_remove': 'Odstranit plán z „{name}“? Kolekce a její fotky zůstanou.',
 
   'order.random': 'Náhodně',
   'order.sequential': 'Popořadě',
@@ -278,6 +280,9 @@ export const cs: Catalogue = {
   'scheduleView.empty': 'Žádné Canvasy',
   'scheduleView.empty_hint': 'Přidejte Canvas a naplánujte jeho fotky.',
   'scheduleView.paused': 'Pozastaveno',
+  'scheduleView.create': 'Vytvořit plán',
+  'scheduleView.pause': 'Pozastavit',
+  'scheduleView.resume': 'Pokračovat',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'další změna {when} ({date})',
 

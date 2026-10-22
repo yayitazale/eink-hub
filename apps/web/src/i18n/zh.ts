@@ -211,6 +211,8 @@ export const zh: Catalogue = {
   'assign.enabled_hint': '关闭后可暂停自动更换，同时保留此计划。你仍可手动发送照片。',
   'assign.show_date_hint_memories': '在左下角显示类似“5 年前的今天”的标签。',
   'assign.remove': '移除计划',
+  'assign.pick_collection': '选择图集',
+  'assign.confirm_remove': '移除“{name}”的计划？图集及其照片会保留。',
 
   'order.random': '随机',
   'order.sequential': '按顺序',
@@ -266,6 +268,9 @@ export const zh: Catalogue = {
   'scheduleView.empty': '没有 Canvas',
   'scheduleView.empty_hint': '添加一台 Canvas 来安排它的照片。',
   'scheduleView.paused': '已暂停',
+  'scheduleView.create': '创建计划',
+  'scheduleView.pause': '暂停',
+  'scheduleView.resume': '恢复',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': '下次更换 {when}（{date}）',
 

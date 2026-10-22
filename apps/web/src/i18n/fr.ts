@@ -211,6 +211,8 @@ export const fr: Catalogue = {
   'assign.enabled_hint': 'Désactivez-la pour suspendre les changements automatiques sans perdre ce planning. Vous pouvez toujours envoyer des photos manuellement.',
   'assign.show_date_hint_memories': 'Une étiquette du type « Il y a 5 ans, jour pour jour » dans le coin inférieur gauche.',
   'assign.remove': 'Supprimer le planning',
+  'assign.pick_collection': 'Choisissez une collection',
+  'assign.confirm_remove': 'Supprimer le planning de « {name} » ? La collection et ses photos sont conservées.',
 
   'order.random': 'Aléatoire',
   'order.sequential': 'Dans l’ordre',
@@ -266,6 +268,9 @@ export const fr: Catalogue = {
   'scheduleView.empty': 'Aucun Canvas',
   'scheduleView.empty_hint': 'Ajoutez un Canvas pour planifier ses photos.',
   'scheduleView.paused': 'En pause',
+  'scheduleView.create': 'Créer un planning',
+  'scheduleView.pause': 'Mettre en pause',
+  'scheduleView.resume': 'Reprendre',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'prochain changement {when} ({date})',
 

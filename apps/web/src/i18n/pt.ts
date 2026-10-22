@@ -211,6 +211,8 @@ export const pt: Catalogue = {
   'assign.enabled_hint': 'Desative para pausar as mudanças automáticas sem perder este agendamento. Pode continuar a enviar fotos manualmente.',
   'assign.show_date_hint_memories': 'Uma etiqueta como «Há 5 anos, neste dia» no canto inferior esquerdo.',
   'assign.remove': 'Remover agendamento',
+  'assign.pick_collection': 'Escolha uma coleção',
+  'assign.confirm_remove': 'Remover o agendamento de «{name}»? A coleção e as fotos mantêm-se.',
 
   'order.random': 'Aleatório',
   'order.sequential': 'Por ordem',
@@ -266,6 +268,9 @@ export const pt: Catalogue = {
   'scheduleView.empty': 'Sem Canvas',
   'scheduleView.empty_hint': 'Adicione um Canvas para agendar as suas fotos.',
   'scheduleView.paused': 'Em pausa',
+  'scheduleView.create': 'Criar agendamento',
+  'scheduleView.pause': 'Pausar',
+  'scheduleView.resume': 'Retomar',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'próxima mudança {when} ({date})',
 

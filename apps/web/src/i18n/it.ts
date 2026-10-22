@@ -211,6 +211,8 @@ export const it: Catalogue = {
   'assign.enabled_hint': 'Disattivala per mettere in pausa i cambi automatici senza perdere questa programmazione. Puoi comunque inviare foto manualmente.',
   'assign.show_date_hint_memories': 'Un’etichetta come «Un giorno come oggi 5 anni fa» nell’angolo in basso a sinistra.',
   'assign.remove': 'Rimuovi programmazione',
+  'assign.pick_collection': 'Scegli una raccolta',
+  'assign.confirm_remove': 'Rimuovere la programmazione da «{name}»? La raccolta e le sue foto restano.',
 
   'order.random': 'Casuale',
   'order.sequential': 'In ordine',
@@ -266,6 +268,9 @@ export const it: Catalogue = {
   'scheduleView.empty': 'Nessun Canvas',
   'scheduleView.empty_hint': 'Aggiungi un Canvas per programmarne le foto.',
   'scheduleView.paused': 'In pausa',
+  'scheduleView.create': 'Crea programmazione',
+  'scheduleView.pause': 'Metti in pausa',
+  'scheduleView.resume': 'Riprendi',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'prossimo cambio {when} ({date})',
 

@@ -219,6 +219,8 @@ export const pl: Catalogue = {
   'assign.enabled_hint': 'Wyłącz, aby wstrzymać automatyczne zmiany bez utraty tego harmonogramu. Nadal możesz wysyłać zdjęcia ręcznie.',
   'assign.show_date_hint_memories': 'Etykieta typu „Dokładnie 5 lat temu” w lewym dolnym rogu.',
   'assign.remove': 'Usuń harmonogram',
+  'assign.pick_collection': 'Wybierz kolekcję',
+  'assign.confirm_remove': 'Usunąć harmonogram z „{name}”? Kolekcja i jej zdjęcia zostaną zachowane.',
 
   'order.random': 'Losowo',
   'order.sequential': 'Po kolei',
@@ -278,6 +280,9 @@ export const pl: Catalogue = {
   'scheduleView.empty': 'Brak Canvasów',
   'scheduleView.empty_hint': 'Dodaj Canvas, aby zaplanować jego zdjęcia.',
   'scheduleView.paused': 'Wstrzymano',
+  'scheduleView.create': 'Utwórz harmonogram',
+  'scheduleView.pause': 'Wstrzymaj',
+  'scheduleView.resume': 'Wznów',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'następna zmiana {when} ({date})',
 

@@ -259,3 +259,32 @@ describe('sending a photo from the gallery', () => {
     expect(db.select().from(schema.frames).where(eq(schema.frames.id, id)).get()!.pendingOpts).toMatchObject({ showDate: true });
   });
 });
+
+describe('pausing a schedule', () => {
+  it('pauses and resumes it, restarting a change that fell due while paused', async () => {
+    const id = db
+      .insert(schema.frames)
+      .values({ name: 'Pausa', host: '127.0.0.1:1', upstreamToken: 'pause-token', mode: 'pull', createdAt: Date.now(), welcomeShown: true })
+      .returning()
+      .get().id;
+    const col = (await app.inject({ method: 'POST', url: '/api/collections', payload: { name: 'Pausa', type: 'manual' } })).json();
+    await app.inject({ method: 'PUT', url: `/api/frames/${id}/assignment`, payload: { collectionId: col.id, schedule: { kind: 'days', days: 1, at: '07:00' } } });
+
+    const paused = await app.inject({ method: 'PATCH', url: `/api/frames/${id}/assignment`, payload: { enabled: false } });
+    expect(paused.json()).toMatchObject({ enabled: false, collectionId: col.id, schedule: { kind: 'days', days: 1, at: '07:00' } });
+
+    // Overdue while paused: resuming schedules the next 07:00 instead of changing at once.
+    db.update(schema.assignments).set({ nextChange: Date.now() - 60_000 }).where(eq(schema.assignments.frameId, id)).run();
+    const resumed = (await app.inject({ method: 'PATCH', url: `/api/frames/${id}/assignment`, payload: { enabled: true } })).json();
+    expect(resumed.enabled).toBe(true);
+    expect(resumed.nextChange).toBeGreaterThan(Date.now());
+    expect(new Date(resumed.nextChange).getHours()).toBe(7);
+  });
+
+  it('does nothing for a Canvas without a schedule', async () => {
+    const id = db.insert(schema.frames).values({ name: 'Sin', host: '127.0.0.1:1', upstreamToken: 'none-token', createdAt: Date.now() }).returning().get().id;
+    const res = await app.inject({ method: 'PATCH', url: `/api/frames/${id}/assignment`, payload: { enabled: false } });
+    expect(res.statusCode).toBe(200);
+    expect(db.select().from(schema.assignments).where(eq(schema.assignments.frameId, id)).get()).toBeUndefined();
+  });
+});

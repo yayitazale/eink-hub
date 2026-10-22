@@ -211,6 +211,8 @@ export const ja: Catalogue = {
   'assign.enabled_hint': 'オフにすると、このスケジュールを残したまま自動切り替えを一時停止します。写真の手動送信は引き続き可能です。',
   'assign.show_date_hint_memories': '左下に「5年前の今日」のようなラベルを表示します。',
   'assign.remove': 'スケジュールを削除',
+  'assign.pick_collection': 'コレクションを選択',
+  'assign.confirm_remove': '「{name}」のスケジュールを削除しますか？コレクションと写真は残ります。',
 
   'order.random': 'ランダム',
   'order.sequential': '順番',
@@ -266,6 +268,9 @@ export const ja: Catalogue = {
   'scheduleView.empty': 'Canvasがありません',
   'scheduleView.empty_hint': 'Canvasを追加して、写真のスケジュールを設定しましょう。',
   'scheduleView.paused': '一時停止中',
+  'scheduleView.create': 'スケジュールを作成',
+  'scheduleView.pause': '一時停止',
+  'scheduleView.resume': '再開',
   'scheduleView.window': '{from}～{to}',
   'scheduleView.next_change': '次回の切り替え {when}（{date}）',
 
