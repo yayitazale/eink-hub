@@ -30,16 +30,27 @@ export function Schedule() {
             const col = collections.data?.find((c) => c.id === a?.collectionId);
             const nextChange = f.mode === 'pull' ? f.nextWake : (a?.nextChange ?? null);
             return (
-              <Card key={f.id} className="flex items-center gap-5 p-4 pr-5">
-                <Link to={`/frames/${f.id}`} className="w-16 shrink-0 sm:w-20">
+              // Phone: picture, name and Edit on one row, the schedule details full width below.
+              // Wider: the details sit under the name, next to the picture.
+              <Card key={f.id} className="grid grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 p-4 sm:grid-cols-[5rem_minmax(0,1fr)_auto] sm:gap-x-5 sm:gap-y-0 sm:pr-5">
+                <Link to={`/frames/${f.id}`} className="sm:row-span-2">
                   <FrameMockup frame={f} />
                 </Link>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-bold">{f.name}</h3>
-                    {a && !a.enabled && <Pill tone="warn">{t('scheduleView.paused')}</Pill>}
-                    <Pill>{f.mode === 'pull' ? 'Pull' : 'Push'}</Pill>
-                  </div>
+                <div className="flex min-w-0 flex-wrap items-center gap-2 sm:self-end">
+                  <h3 className="truncate font-bold">{f.name}</h3>
+                  {a && !a.enabled && <Pill tone="warn">{t('scheduleView.paused')}</Pill>}
+                  <Pill>{f.mode === 'pull' ? 'Pull' : 'Push'}</Pill>
+                </div>
+                <Button
+                  size="sm"
+                  className="max-sm:size-9 max-sm:px-0 sm:row-span-2"
+                  icon={<Pencil className="size-3.5" />}
+                  aria-label={t('common.edit')}
+                  onClick={() => setEditing(f)}
+                >
+                  <span className="max-sm:hidden">{t('common.edit')}</span>
+                </Button>
+                <div className="col-span-3 min-w-0 sm:col-span-1 sm:col-start-2 sm:self-start">
                   {a && col ? (
                     <>
                       <p className="mt-0.5 truncate text-sm text-ink-2">
@@ -55,9 +66,6 @@ export function Schedule() {
                     <p className="mt-0.5 text-sm text-muted">{t('canvas.no_schedule')}</p>
                   )}
                 </div>
-                <Button size="sm" icon={<Pencil className="size-3.5" />} onClick={() => setEditing(f)}>
-                  {t('common.edit')}
-                </Button>
               </Card>
             );
           })}

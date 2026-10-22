@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ButtonHTMLAttributes, type PointerEvent, type ReactNode } from 'react';
 import { Loader2, X } from 'lucide-react';
 import { useI18n } from '../i18n';
 
@@ -172,6 +172,7 @@ export function Modal({
   wide?: boolean | 'md';
 }) {
   const { t } = useI18n();
+  const sheet = useSheetDrag(onClose);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -186,18 +187,65 @@ export function Modal({
           'flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[28px] bg-surface shadow-lift sm:rounded-[28px]',
           wide === 'md' ? 'sm:max-w-3xl' : wide ? 'sm:max-w-4xl' : 'sm:max-w-lg',
         )}
+        style={sheet.style}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 pt-5 pb-3">
-          <h2 className="text-lg font-bold">{title}</h2>
-          <IconButton onClick={onClose} aria-label={t('common.close')}>
-            <X className="size-5" />
-          </IconButton>
+        {/* On a phone it is a bottom sheet: drag the top (handle or title) down to close it. */}
+        <div className="touch-none select-none sm:touch-auto sm:select-auto" {...sheet.handlers}>
+          <div className="flex justify-center pt-2.5 sm:hidden" aria-hidden>
+            <span className="h-1.5 w-10 rounded-full bg-line" />
+          </div>
+          <div className="flex items-center justify-between px-6 pt-3 pb-3 sm:pt-5">
+            <h2 className="text-lg font-bold">{title}</h2>
+            <IconButton onClick={onClose} onPointerDown={(e) => e.stopPropagation()} aria-label={t('common.close')}>
+              <X className="size-5" />
+            </IconButton>
+          </div>
         </div>
         <div className="min-w-0 overflow-y-auto overflow-x-hidden px-6 pb-6">{children}</div>
       </div>
     </div>
   );
+}
+
+/** Swipe-down-to-close for bottom sheets (phone layout only). */
+function useSheetDrag(onClose: () => void) {
+  const [dy, setDy] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const start = useRef<{ y: number; t: number } | null>(null);
+  const handlers = {
+    onPointerDown: (e: PointerEvent<HTMLDivElement>) => {
+      if (window.matchMedia('(min-width: 640px)').matches) return;
+      start.current = { y: e.clientY, t: e.timeStamp };
+      e.currentTarget.setPointerCapture(e.pointerId);
+      setDragging(true);
+    },
+    onPointerMove: (e: PointerEvent<HTMLDivElement>) => {
+      if (start.current) setDy(Math.max(0, e.clientY - start.current.y));
+    },
+    onPointerUp: (e: PointerEvent<HTMLDivElement>) => {
+      const s = start.current;
+      if (!s) return;
+      start.current = null;
+      setDragging(false);
+      const moved = Math.max(0, e.clientY - s.y);
+      // Far enough, or a quick flick.
+      if (moved > 120 || (moved > 30 && moved / Math.max(1, e.timeStamp - s.t) > 0.6)) {
+        setDy(window.innerHeight);
+        setTimeout(() => {
+          setDy(0);
+          onClose();
+        }, 180);
+      } else setDy(0);
+    },
+    onPointerCancel: () => {
+      start.current = null;
+      setDragging(false);
+      setDy(0);
+    },
+  };
+  const style = { transform: dy ? `translateY(${dy}px)` : undefined, transition: dragging ? 'none' : 'transform 180ms ease-out' };
+  return { handlers, style };
 }
 
 // --- Toasts ---------------------------------------------------------------------------------
