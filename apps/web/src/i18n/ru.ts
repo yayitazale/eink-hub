@@ -281,6 +281,8 @@ export const ru: Catalogue = {
   'scheduleView.empty_hint': 'Добавьте Canvas, чтобы составить расписание его фото.',
   'scheduleView.paused': 'Приостановлено',
   'scheduleView.create': 'Создать расписание',
+  'scheduleView.none': 'Расписаний пока нет',
+  'scheduleView.none_hint': 'Создайте расписание, чтобы Canvas сам менял фото.',
   'scheduleView.pause': 'Приостановить',
   'scheduleView.resume': 'Возобновить',
   'scheduleView.window': '{from}–{to}',

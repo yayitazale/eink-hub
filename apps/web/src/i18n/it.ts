@@ -269,6 +269,8 @@ export const it: Catalogue = {
   'scheduleView.empty_hint': 'Aggiungi un Canvas per programmarne le foto.',
   'scheduleView.paused': 'In pausa',
   'scheduleView.create': 'Crea programmazione',
+  'scheduleView.none': 'Nessuna programmazione',
+  'scheduleView.none_hint': 'Creane una perché un Canvas cambi foto da solo.',
   'scheduleView.pause': 'Metti in pausa',
   'scheduleView.resume': 'Riprendi',
   'scheduleView.window': '{from}–{to}',

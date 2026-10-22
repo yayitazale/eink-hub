@@ -268,6 +268,8 @@ export const es = {
   'scheduleView.empty_hint': 'Añade un Canvas para programar sus fotos.',
   'scheduleView.paused': 'Pausada',
   'scheduleView.create': 'Crear programación',
+  'scheduleView.none': 'Sin programaciones',
+  'scheduleView.none_hint': 'Crea una para que un Canvas cambie de foto solo.',
   'scheduleView.pause': 'Pausar',
   'scheduleView.resume': 'Reanudar',
   'scheduleView.window': 'de {from} a {to}',

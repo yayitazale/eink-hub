@@ -269,6 +269,8 @@ export const pt: Catalogue = {
   'scheduleView.empty_hint': 'Adicione um Canvas para agendar as suas fotos.',
   'scheduleView.paused': 'Em pausa',
   'scheduleView.create': 'Criar agendamento',
+  'scheduleView.none': 'Sem agendamentos',
+  'scheduleView.none_hint': 'Crie um para que um Canvas mude de foto sozinho.',
   'scheduleView.pause': 'Pausar',
   'scheduleView.resume': 'Retomar',
   'scheduleView.window': '{from}–{to}',

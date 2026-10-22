@@ -269,6 +269,8 @@ export const nl: Catalogue = {
   'scheduleView.empty_hint': 'Voeg een Canvas toe om de foto’s te plannen.',
   'scheduleView.paused': 'Gepauzeerd',
   'scheduleView.create': 'Planning maken',
+  'scheduleView.none': 'Nog geen planningen',
+  'scheduleView.none_hint': 'Maak er een zodat een Canvas zelf van foto wisselt.',
   'scheduleView.pause': 'Pauzeren',
   'scheduleView.resume': 'Hervatten',
   'scheduleView.window': '{from}–{to}',

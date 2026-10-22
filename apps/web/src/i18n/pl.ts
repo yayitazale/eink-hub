@@ -281,6 +281,8 @@ export const pl: Catalogue = {
   'scheduleView.empty_hint': 'Dodaj Canvas, aby zaplanować jego zdjęcia.',
   'scheduleView.paused': 'Wstrzymano',
   'scheduleView.create': 'Utwórz harmonogram',
+  'scheduleView.none': 'Brak harmonogramów',
+  'scheduleView.none_hint': 'Utwórz harmonogram, aby Canvas sam zmieniał zdjęcia.',
   'scheduleView.pause': 'Wstrzymaj',
   'scheduleView.resume': 'Wznów',
   'scheduleView.window': '{from}–{to}',

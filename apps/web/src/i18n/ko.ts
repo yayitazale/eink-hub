@@ -269,6 +269,8 @@ export const ko: Catalogue = {
   'scheduleView.empty_hint': 'Canvas를 추가하여 사진 일정을 설정하세요.',
   'scheduleView.paused': '일시 중지됨',
   'scheduleView.create': '일정 만들기',
+  'scheduleView.none': '아직 일정이 없습니다',
+  'scheduleView.none_hint': '일정을 만들면 Canvas가 사진을 자동으로 바꿉니다.',
   'scheduleView.pause': '일시 중지',
   'scheduleView.resume': '재개',
   'scheduleView.window': '{from}~{to}',

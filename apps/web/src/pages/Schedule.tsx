@@ -25,7 +25,8 @@ export function Schedule() {
   const { t, tn } = useI18n();
   const frames = useFrames();
   const collections = useCollections();
-  const [editing, setEditing] = useState<Frame | null>(null);
+  // A Canvas's schedule, or 'new' to create one (the Canvas is picked in the editor).
+  const [editing, setEditing] = useState<Frame | 'new' | null>(null);
   const confirm = useConfirm();
   const setEnabled = useAction(({ id, enabled }: { id: number; enabled: boolean }) => api.patch(`/api/frames/${id}/assignment`, { enabled }), {
     success: t('assign.saved'),
@@ -33,17 +34,30 @@ export function Schedule() {
   const remove = useAction((id: number) => api.del(`/api/frames/${id}/assignment`), { success: t('assign.removed') });
 
   if (frames.isLoading) return <Spinner />;
+  // Only Canvases that have a schedule get a card; the rest can be picked when creating one.
+  const scheduled = frames.data?.filter((f) => f.assignment) ?? [];
+  const unscheduled = frames.data?.filter((f) => !f.assignment) ?? [];
+  const create = (
+    <Button variant="primary" icon={<Plus className="size-4" />} disabled={!unscheduled.length} onClick={() => setEditing('new')}>
+      {t('scheduleView.create')}
+    </Button>
+  );
   return (
     <>
-      <SectionTitle title={t('nav.schedule')} subtitle={t('scheduleView.subtitle')} />
+      <SectionTitle title={t('nav.schedule')} subtitle={t('scheduleView.subtitle')} action={scheduled.length ? create : undefined} />
       {!frames.data?.length ? (
         <Empty icon={<CalendarClock className="size-6" />} title={t('scheduleView.empty')}>
           {t('scheduleView.empty_hint')}
         </Empty>
+      ) : !scheduled.length ? (
+        <Empty icon={<CalendarClock className="size-6" />} title={t('scheduleView.none')}>
+          <p>{t('scheduleView.none_hint')}</p>
+          <div className="mt-4">{create}</div>
+        </Empty>
       ) : (
         <div className="space-y-4">
-          {frames.data.map((f) => {
-            const a = f.assignment;
+          {scheduled.map((f) => {
+            const a = f.assignment!;
             const col = collections.data?.find((c) => c.id === a?.collectionId);
             const nextChange = f.mode === 'pull' ? f.nextWake : (a?.nextChange ?? null);
             return (
@@ -62,7 +76,7 @@ export function Schedule() {
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col self-stretch justify-center">
                   <h3 className="truncate font-bold">{f.name}</h3>
-                  {a && col ? (
+                  {col && (
                     <>
                       <p className="mt-0.5 truncate text-sm text-ink-2">
                         <span className="font-semibold">{col.name}</span> · {t(`collectionType.${col.type}`)} · {tn('common.photos', col.itemCount)}
@@ -73,44 +87,34 @@ export function Schedule() {
                         {nextChange && ` · ${t('scheduleView.next_change', { when: relativeTime(nextChange), date: dateTime(nextChange) })}`}
                       </p>
                     </>
-                  ) : (
-                    <p className="mt-0.5 text-sm text-muted">{t('canvas.no_schedule')}</p>
                   )}
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <ModePill mode={f.mode} />
-                      {a && !a.enabled && <Pill tone="warn">{t('scheduleView.paused')}</Pill>}
+                      {!a.enabled && <Pill tone="warn">{t('scheduleView.paused')}</Pill>}
                     </div>
                     {/* Above the card-wide button, so they get their own clicks. */}
                     <div className="relative z-10 flex items-center gap-1">
-                      {a ? (
-                        <>
-                          <IconButton
-                            className="size-8"
-                            title={t(a.enabled ? 'scheduleView.pause' : 'scheduleView.resume')}
-                            aria-label={t(a.enabled ? 'scheduleView.pause' : 'scheduleView.resume')}
-                            disabled={setEnabled.isPending}
-                            onClick={() => setEnabled.mutate({ id: f.id, enabled: !a.enabled })}
-                          >
-                            {a.enabled ? <Pause className="size-4" /> : <Play className="size-4" />}
-                          </IconButton>
-                          <IconButton
-                            className="size-8 hover:text-red-600"
-                            title={t('assign.remove')}
-                            aria-label={t('assign.remove')}
-                            disabled={remove.isPending}
-                            onClick={async () =>
-                              (await confirm({ title: t('assign.remove'), message: t('assign.confirm_remove', { name: f.name }) })) && remove.mutate(f.id)
-                            }
-                          >
-                            <Trash2 className="size-4" />
-                          </IconButton>
-                        </>
-                      ) : (
-                        <Button size="sm" variant="primary" className="h-7! px-2.5! text-xs!" icon={<Plus className="size-3.5" />} onClick={() => setEditing(f)}>
-                          {t('scheduleView.create')}
-                        </Button>
-                      )}
+                      <IconButton
+                        className="size-8"
+                        title={t(a.enabled ? 'scheduleView.pause' : 'scheduleView.resume')}
+                        aria-label={t(a.enabled ? 'scheduleView.pause' : 'scheduleView.resume')}
+                        disabled={setEnabled.isPending}
+                        onClick={() => setEnabled.mutate({ id: f.id, enabled: !a.enabled })}
+                      >
+                        {a.enabled ? <Pause className="size-4" /> : <Play className="size-4" />}
+                      </IconButton>
+                      <IconButton
+                        className="size-8 hover:text-red-600"
+                        title={t('assign.remove')}
+                        aria-label={t('assign.remove')}
+                        disabled={remove.isPending}
+                        onClick={async () =>
+                          (await confirm({ title: t('assign.remove'), message: t('assign.confirm_remove', { name: f.name }) })) && remove.mutate(f.id)
+                        }
+                      >
+                        <Trash2 className="size-4" />
+                      </IconButton>
                     </div>
                   </div>
                 </div>
@@ -120,8 +124,16 @@ export function Schedule() {
           })}
         </div>
       )}
-      <Modal open={!!editing} onClose={() => setEditing(null)} title={editing ? `${t('nav.schedule')} · ${editing.name}` : ''}>
-        {editing && <AssignmentEditor frame={editing} onSaved={() => setEditing(null)} />}
+      <Modal
+        open={!!editing}
+        onClose={() => setEditing(null)}
+        title={editing === 'new' ? t('scheduleView.create') : editing ? `${t('nav.schedule')} · ${editing.name}` : ''}
+      >
+        {editing === 'new' ? (
+          <AssignmentEditor choices={unscheduled} onSaved={() => setEditing(null)} />
+        ) : (
+          editing && <AssignmentEditor frame={editing} onSaved={() => setEditing(null)} />
+        )}
       </Modal>
     </>
   );

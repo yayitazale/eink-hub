@@ -269,6 +269,8 @@ export const ja: Catalogue = {
   'scheduleView.empty_hint': 'Canvasを追加して、写真のスケジュールを設定しましょう。',
   'scheduleView.paused': '一時停止中',
   'scheduleView.create': 'スケジュールを作成',
+  'scheduleView.none': 'スケジュールはまだありません',
+  'scheduleView.none_hint': 'スケジュールを作成すると、Canvas の写真が自動で切り替わります。',
   'scheduleView.pause': '一時停止',
   'scheduleView.resume': '再開',
   'scheduleView.window': '{from}～{to}',

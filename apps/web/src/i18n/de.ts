@@ -269,6 +269,8 @@ export const de: Catalogue = {
   'scheduleView.empty_hint': 'Füge ein Canvas hinzu, um seine Fotos zu planen.',
   'scheduleView.paused': 'Pausiert',
   'scheduleView.create': 'Zeitplan erstellen',
+  'scheduleView.none': 'Noch keine Zeitpläne',
+  'scheduleView.none_hint': 'Erstelle einen, damit ein Canvas sein Foto selbst wechselt.',
   'scheduleView.pause': 'Pausieren',
   'scheduleView.resume': 'Fortsetzen',
   'scheduleView.window': '{from}–{to}',

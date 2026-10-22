@@ -101,15 +101,18 @@ export function SchedulePicker({
 
   if (disabled)
     return (
-      <fieldset disabled className="grid grid-cols-2 gap-3 opacity-50">
+      // Same layout as the default "every day at…", so nothing jumps when it comes alive.
+      <fieldset disabled className="space-y-3 opacity-50">
         <Field label={label ?? t('schedule.change')}>
           <select className={inputClass} value="">
             <option value="" />
           </select>
         </Field>
-        <Field label={t('schedule.at')}>
-          <input type="time" className={inputClass} value="" readOnly />
-        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label={t('schedule.at')}>
+            <input type="time" className={inputClass} value="" readOnly />
+          </Field>
+        </div>
       </fieldset>
     );
 

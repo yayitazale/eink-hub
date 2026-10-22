@@ -269,6 +269,8 @@ export const gl: Catalogue = {
   'scheduleView.empty_hint': 'Engade un Canvas para programar as súas fotos.',
   'scheduleView.paused': 'En pausa',
   'scheduleView.create': 'Crear programación',
+  'scheduleView.none': 'Sen programacións',
+  'scheduleView.none_hint': 'Crea unha para que un Canvas cambie de foto só.',
   'scheduleView.pause': 'Pausar',
   'scheduleView.resume': 'Retomar',
   'scheduleView.window': '{from}–{to}',

@@ -281,6 +281,8 @@ export const cs: Catalogue = {
   'scheduleView.empty_hint': 'Přidejte Canvas a naplánujte jeho fotky.',
   'scheduleView.paused': 'Pozastaveno',
   'scheduleView.create': 'Vytvořit plán',
+  'scheduleView.none': 'Zatím žádné plány',
+  'scheduleView.none_hint': 'Vytvořte plán, aby Canvas měnil fotky sám.',
   'scheduleView.pause': 'Pozastavit',
   'scheduleView.resume': 'Pokračovat',
   'scheduleView.window': '{from}–{to}',

@@ -269,6 +269,8 @@ export const eu: Messages = {
   'scheduleView.empty_hint': 'Gehitu Canvas bat bere argazkiak programatzeko.',
   'scheduleView.paused': 'Etenda',
   'scheduleView.create': 'Sortu programazioa',
+  'scheduleView.none': 'Programaziorik ez',
+  'scheduleView.none_hint': 'Sortu bat, Canvas batek argazkia berez alda dezan.',
   'scheduleView.pause': 'Eten',
   'scheduleView.resume': 'Berrekin',
   'scheduleView.window': '{from}–{to}',
