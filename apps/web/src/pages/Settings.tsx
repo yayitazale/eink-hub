@@ -8,7 +8,7 @@ import { languages, useI18n, type Lang, type MsgKey } from '../i18n';
 import { ServerLogs } from '../components/ServerLogs';
 
 const IMMICH_PERMISSIONS_URL = 'https://yayitazale.github.io/eink-hub/guide/immich#api-key-permissions';
-import { Button, Card, Field, SectionTitle, Segmented, Spinner, Toggle, inputClass, useToast } from '../components/ui';
+import { Button, Card, Field, SectionTitle, Segmented, Spinner, Toggle, inputClass, useConfirm, useToast } from '../components/ui';
 
 type Tab = 'general' | 'immich' | 'security' | 'logs';
 
@@ -48,6 +48,7 @@ function LanguageSettings() {
 
 function ImmichSettings() {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const settings = useSettings();
   const [url, setUrl] = useState('');
   const [key, setKey] = useState('');
@@ -113,8 +114,8 @@ function ImmichSettings() {
               variant="danger"
               className="sm:ml-auto"
               loading={remove.isPending}
-              onClick={() =>
-                confirm(t('settings.immich_confirm_remove')) &&
+              onClick={async () =>
+                (await confirm({ title: t('settings.immich_remove'), message: t('settings.immich_confirm_remove') })) &&
                 remove.mutate(undefined, {
                   onSuccess: () => {
                     setUrl('');

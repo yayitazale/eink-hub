@@ -248,6 +248,53 @@ function useSheetDrag(onClose: () => void) {
   return { handlers, style };
 }
 
+// --- Confirm --------------------------------------------------------------------------------
+export interface ConfirmOptions {
+  /** Short heading: the action, e.g. "Delete". Also the confirm button's label. */
+  title: string;
+  /** The question or what will happen. */
+  message: string;
+  /** Red confirm button for destructive actions (default). */
+  danger?: boolean;
+}
+type Ask = ConfirmOptions & { resolve: (ok: boolean) => void };
+const ConfirmCtx = createContext<(o: ConfirmOptions) => Promise<boolean>>(async () => false);
+
+/** In-app replacement for window.confirm(): `if (await confirm({ title, message })) …`. */
+export const useConfirm = () => useContext(ConfirmCtx);
+
+export function ConfirmProvider({ children }: { children: ReactNode }) {
+  const { t } = useI18n();
+  const [ask, setAsk] = useState<Ask | null>(null);
+  const confirm = useCallback((o: ConfirmOptions) => new Promise<boolean>((resolve) => setAsk({ ...o, resolve })), []);
+  const answer = useCallback(
+    (ok: boolean) => {
+      ask?.resolve(ok);
+      setAsk(null);
+    },
+    [ask],
+  );
+  const cancel = useCallback(() => answer(false), [answer]);
+  return (
+    <ConfirmCtx.Provider value={confirm}>
+      {children}
+      <Modal open={!!ask} onClose={cancel} title={ask?.title ?? ''}>
+        {ask && (
+          <>
+            <p className="text-sm text-ink-2">{ask.message}</p>
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button onClick={cancel}>{t('common.cancel')}</Button>
+              <Button variant={ask.danger === false ? 'primary' : 'danger'} autoFocus onClick={() => answer(true)}>
+                {ask.title}
+              </Button>
+            </div>
+          </>
+        )}
+      </Modal>
+    </ConfirmCtx.Provider>
+  );
+}
+
 // --- Toasts ---------------------------------------------------------------------------------
 type Toast = { id: number; text: string; tone: 'ok' | 'error' | 'info' };
 const ToastCtx = createContext<(text: string, tone?: Toast['tone']) => void>(() => {});

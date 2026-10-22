@@ -13,7 +13,7 @@ import { FrameMockup } from '../components/FrameMockup';
 import { AssignmentEditor } from '../components/AssignmentEditor';
 import { StatsTab } from '../components/StatsTab';
 import { SchedulePicker } from '../components/SchedulePicker';
-import { Button, Card, Field, Pill, Segmented, Spinner, Toggle, cx, inputClass } from '../components/ui';
+import { Button, Card, Field, Pill, Segmented, Spinner, Toggle, cx, inputClass, useConfirm } from '../components/ui';
 import { Battery, DOCS_URL, FrameStatus, KindPill, TestPill } from './Frames';
 
 type Tab = 'schedule' | 'mode' | 'connection' | 'history' | 'stats' | 'device' | 'settings';
@@ -250,6 +250,7 @@ const DEFAULT_GALLERY = 'default';
 
 function DeviceTab({ frame }: { frame: Frame }) {
   const { t, tn } = useI18n();
+  const confirm = useConfirm();
   const galleries = useQuery({
     queryKey: ['device-galleries', frame.id],
     queryFn: () => api.get<{ name: string; total: number; images: { name: string; time: number }[] }[]>(`/api/frames/${frame.id}/galleries`),
@@ -294,7 +295,9 @@ function DeviceTab({ frame }: { frame: Frame }) {
                     size="sm"
                     variant="danger"
                     aria-label={t('common.delete')}
-                    onClick={() => confirm(t('device.confirm_delete_gallery', { name: g.name })) && delGallery.mutate(g.name)}
+                    onClick={async () =>
+                      (await confirm({ title: t('common.delete'), message: t('device.confirm_delete_gallery', { name: g.name }) })) && delGallery.mutate(g.name)
+                    }
                   >
                     <Trash2 className="size-3.5" />
                   </Button>
@@ -462,6 +465,7 @@ function BluetoothSettings({ frame }: { frame: Frame }) {
 
 function SettingsTab({ frame }: { frame: Frame }) {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const nav = useNavigate();
   const info = frame.lastInfo ?? {};
   const [name, setName] = useState(frame.name);
@@ -542,7 +546,10 @@ function SettingsTab({ frame }: { frame: Frame }) {
           variant="danger"
           icon={<Trash2 className="size-4" />}
           loading={remove.isPending}
-          onClick={() => confirm(t('canvasSettings.confirm_delete', { name: frame.name })) && remove.mutate(undefined, { onSuccess: () => nav('/') })}
+          onClick={async () =>
+            (await confirm({ title: t('canvasSettings.delete'), message: t('canvasSettings.confirm_delete', { name: frame.name }) })) &&
+            remove.mutate(undefined, { onSuccess: () => nav('/') })
+          }
         >
           {t('canvasSettings.delete')}
         </Button>
@@ -553,6 +560,7 @@ function SettingsTab({ frame }: { frame: Frame }) {
 
 export function FrameDetail() {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const id = Number(useParams().id);
   const frame = useFrame(id);
   const [params] = useSearchParams();
@@ -641,7 +649,7 @@ export function FrameDetail() {
               )
             )}
             {caps.reboot && (
-              <Button size="sm" icon={<RotateCcw className="size-4" />} onClick={() => confirm(t('detail.confirm_reboot')) && action.mutate('reboot')}>
+              <Button size="sm" icon={<RotateCcw className="size-4" />} onClick={async () => (await confirm({ title: t('detail.reboot'), message: t('detail.confirm_reboot'), danger: false })) && action.mutate('reboot')}>
                 {t('detail.reboot')}
               </Button>
             )}
