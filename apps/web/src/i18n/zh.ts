@@ -275,6 +275,8 @@ export const zh: Catalogue = {
   'scheduleView.resume': '恢复',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': '下次更换 {when}（{date}）',
+  'scheduleView.pending_push': '等待更换：Canvas 响应后立即更换',
+  'scheduleView.pending_pull': '等待更换：Canvas 唤醒时更换',
 
   'send.title': '在 Canvas 上显示',
   'send.no_canvas': '请先添加一台 Canvas。',

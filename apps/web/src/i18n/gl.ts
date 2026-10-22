@@ -275,6 +275,8 @@ export const gl: Catalogue = {
   'scheduleView.resume': 'Retomar',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'seguinte cambio {when} ({date})',
+  'scheduleView.pending_push': 'Cambio pendente: farase en canto o Canvas responda',
+  'scheduleView.pending_pull': 'Cambio pendente: farase cando o Canvas esperte',
 
   'send.title': 'Mostrar nun Canvas',
   'send.no_canvas': 'Engade primeiro un Canvas.',

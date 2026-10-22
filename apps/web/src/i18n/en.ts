@@ -275,6 +275,8 @@ export const en: Messages = {
   'scheduleView.resume': 'Resume',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'next change {when} ({date})',
+  'scheduleView.pending_push': 'Change pending: it happens as soon as the Canvas responds',
+  'scheduleView.pending_pull': 'Change pending: it happens when the Canvas wakes up',
 
   'send.title': 'Show on a Canvas',
   'send.no_canvas': 'Add a Canvas first.',

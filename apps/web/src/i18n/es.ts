@@ -274,6 +274,8 @@ export const es = {
   'scheduleView.resume': 'Reanudar',
   'scheduleView.window': 'de {from} a {to}',
   'scheduleView.next_change': 'próximo cambio {when} ({date})',
+  'scheduleView.pending_push': 'Cambio pendiente: se hará en cuanto el Canvas responda',
+  'scheduleView.pending_pull': 'Cambio pendiente: se hará cuando el Canvas despierte',
 
   'send.title': 'Mostrar en un Canvas',
   'send.no_canvas': 'Añade primero un Canvas.',

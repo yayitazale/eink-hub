@@ -275,6 +275,8 @@ export const it: Catalogue = {
   'scheduleView.resume': 'Riprendi',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'prossimo cambio {when} ({date})',
+  'scheduleView.pending_push': 'Cambio in sospeso: avverrà appena il Canvas risponde',
+  'scheduleView.pending_pull': 'Cambio in sospeso: avverrà al risveglio del Canvas',
 
   'send.title': 'Mostra su un Canvas',
   'send.no_canvas': 'Aggiungi prima un Canvas.',

@@ -275,6 +275,8 @@ export const ca: Catalogue = {
   'scheduleView.resume': 'Reprèn',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'proper canvi {when} ({date})',
+  'scheduleView.pending_push': 'Canvi pendent: es farà tan aviat com el Canvas respongui',
+  'scheduleView.pending_pull': 'Canvi pendent: es farà quan el Canvas es desperti',
 
   'send.title': 'Mostra en un Canvas',
   'send.no_canvas': 'Afegeix primer un Canvas.',

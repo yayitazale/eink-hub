@@ -37,7 +37,12 @@ export function Schedule() {
   // Only Canvases that have a schedule get a card, soonest change first (paused ones last);
   // the rest can be picked when creating one.
   const nextChangeOf = (f: Frame) => (f.mode === 'pull' ? f.nextWake : (f.assignment?.nextChange ?? null));
-  const sortKey = (f: Frame) => (f.assignment?.enabled ? (nextChangeOf(f) ?? Number.MAX_SAFE_INTEGER) : Infinity);
+  // No time yet, or already past: the change is waiting for the Canvas (sorted first).
+  const pending = (f: Frame) => {
+    const n = nextChangeOf(f);
+    return n === null || n < Date.now() - 60_000;
+  };
+  const sortKey = (f: Frame) => (!f.assignment?.enabled ? Infinity : pending(f) ? 0 : nextChangeOf(f)!);
   const scheduled = (frames.data?.filter((f) => f.assignment) ?? []).sort((x, y) => sortKey(x) - sortKey(y));
   const unscheduled = frames.data?.filter((f) => !f.assignment) ?? [];
   const create = (
@@ -116,11 +121,13 @@ export function Schedule() {
                     {describeSchedule(a.schedule, t, tn)}, {t(`order.${a.orderMode}_lc`)}
                     {a.activeFrom && ` · ${t('scheduleView.window', { from: a.activeFrom, to: a.activeTo ?? '' })}`}
                   </p>
-                  {a.enabled && nextChange && (
-                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-ink-2">
-                      <CalendarClock className="size-3.5 shrink-0" />
+                  {a.enabled && (
+                    <p className="mt-1 flex items-start gap-1.5 text-xs font-medium text-ink-2">
+                      <CalendarClock className="mt-px size-3.5 shrink-0" />
                       <span className="first-letter:uppercase">
-                        {t('scheduleView.next_change', { when: relativeTime(nextChange), date: dateTime(nextChange) })}
+                        {pending(f)
+                          ? t(f.mode === 'pull' ? 'scheduleView.pending_pull' : 'scheduleView.pending_push')
+                          : t('scheduleView.next_change', { when: relativeTime(nextChange!), date: dateTime(nextChange!) })}
                       </span>
                     </p>
                   )}

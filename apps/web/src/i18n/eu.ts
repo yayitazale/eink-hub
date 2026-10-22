@@ -275,6 +275,8 @@ export const eu: Messages = {
   'scheduleView.resume': 'Berrekin',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'hurrengo aldaketa {when} ({date})',
+  'scheduleView.pending_push': 'Aldaketa zain: Canvasak erantzun bezain laster egingo da',
+  'scheduleView.pending_pull': 'Aldaketa zain: Canvasa esnatzen denean egingo da',
 
   'send.title': 'Erakutsi Canvas batean',
   'send.no_canvas': 'Gehitu lehenik Canvas bat.',

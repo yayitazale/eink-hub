@@ -287,6 +287,8 @@ export const cs: Catalogue = {
   'scheduleView.resume': 'Pokračovat',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'další změna {when} ({date})',
+  'scheduleView.pending_push': 'Změna čeká: proběhne, jakmile Canvas odpoví',
+  'scheduleView.pending_pull': 'Změna čeká: proběhne, až se Canvas probudí',
 
   'send.title': 'Zobrazit na Canvasu',
   'send.no_canvas': 'Nejprve přidejte Canvas.',

@@ -275,6 +275,8 @@ export const de: Catalogue = {
   'scheduleView.resume': 'Fortsetzen',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'nächster Wechsel {when} ({date})',
+  'scheduleView.pending_push': 'Wechsel ausstehend: sobald der Canvas antwortet',
+  'scheduleView.pending_pull': 'Wechsel ausstehend: wenn der Canvas aufwacht',
 
   'send.title': 'Auf einem Canvas anzeigen',
   'send.no_canvas': 'Füge zuerst ein Canvas hinzu.',

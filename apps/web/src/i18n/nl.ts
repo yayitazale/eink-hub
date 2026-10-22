@@ -275,6 +275,8 @@ export const nl: Catalogue = {
   'scheduleView.resume': 'Hervatten',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'volgende wissel {when} ({date})',
+  'scheduleView.pending_push': 'Wissel in afwachting: zodra de Canvas reageert',
+  'scheduleView.pending_pull': 'Wissel in afwachting: wanneer de Canvas wakker wordt',
 
   'send.title': 'Tonen op een Canvas',
   'send.no_canvas': 'Voeg eerst een Canvas toe.',

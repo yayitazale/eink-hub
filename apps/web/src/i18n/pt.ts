@@ -275,6 +275,8 @@ export const pt: Catalogue = {
   'scheduleView.resume': 'Retomar',
   'scheduleView.window': '{from}–{to}',
   'scheduleView.next_change': 'próxima mudança {when} ({date})',
+  'scheduleView.pending_push': 'Mudança pendente: acontece assim que o Canvas responder',
+  'scheduleView.pending_pull': 'Mudança pendente: acontece quando o Canvas acordar',
 
   'send.title': 'Mostrar num Canvas',
   'send.no_canvas': 'Adicione primeiro um Canvas.',

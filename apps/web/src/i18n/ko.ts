@@ -275,6 +275,8 @@ export const ko: Catalogue = {
   'scheduleView.resume': '재개',
   'scheduleView.window': '{from}~{to}',
   'scheduleView.next_change': '다음 전환 {when}({date})',
+  'scheduleView.pending_push': '변경 대기 중: Canvas가 응답하면 바로 바뀝니다',
+  'scheduleView.pending_pull': '변경 대기 중: Canvas가 깨어나면 바뀝니다',
 
   'send.title': 'Canvas에 표시',
   'send.no_canvas': '먼저 Canvas를 추가하세요.',

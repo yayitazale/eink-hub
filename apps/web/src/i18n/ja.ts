@@ -275,6 +275,8 @@ export const ja: Catalogue = {
   'scheduleView.resume': '再開',
   'scheduleView.window': '{from}～{to}',
   'scheduleView.next_change': '次回の切り替え {when}（{date}）',
+  'scheduleView.pending_push': '変更待ち：Canvas が応答しだい切り替わります',
+  'scheduleView.pending_pull': '変更待ち：Canvas が起動したときに切り替わります',
 
   'send.title': 'Canvasに表示',
   'send.no_canvas': '先にCanvasを追加してください。',
