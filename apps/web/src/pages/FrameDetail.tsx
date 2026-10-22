@@ -636,6 +636,19 @@ export function FrameDetail() {
   const caps = f.capabilities;
   const wakeVia = !caps.bleWake ? null : f.bleMac && (f.simulated || ble.data?.available) ? 'hub' : !f.simulated && phoneWakeSupport() === 'ok' ? 'phone' : null;
   const waking = wake.isPending || phoneWake.isPending;
+  // How it wakes up, as far as this hub can tell: pull frames ask on their own; a BLOOMIN8 in push
+  // mode is woken over Bluetooth (the hub's, else this phone's) or only by its button.
+  const wakeLabel = ((): [MsgKey, MsgKey] => {
+    if (f.wakeModel === 'notify') return ['wake.always_on', 'wake.always_on_sub'];
+    if (f.wakeModel === 'cloud') return ['wake.cloud', 'wake.cloud_sub'];
+    if (f.mode === 'pull' || f.wakeModel === 'scheduled-pull') return ['wake.scheduled', 'wake.scheduled_sub'];
+    if (wakeVia === 'hub') return ['wake.bluetooth', f.bleAutoWake ? 'wake.automatic' : 'wake.manual'];
+    if (wakeVia === 'phone') return ['wake.phone', 'wake.manual'];
+    return ['wake.button', 'wake.button_sub'];
+  })();
+  // What is waiting to be delivered, and whether it goes out now or on the next wake.
+  const queued: MsgKey | null = f.pendingImageId ? 'detail.pending_photo' : !f.welcomeShown ? 'detail.pending_welcome' : null;
+  const instant = f.wakeModel === 'notify' || (f.mode === 'push' && wakeVia === 'hub' && f.bleAutoWake);
 
   return (
     <div>
@@ -717,9 +730,12 @@ export function FrameDetail() {
             <Info label={t('detail.next_change')} value={<NextChange frame={f} />} />
             {/* A BLOOMIN8 is reached at its host; DIY frames report their network (Open Frame `ssid`, `ip`). */}
             <Info label="Wi-Fi" value={ssid || ip ? <TwoLines main={ssid || '—'} sub={ip} /> : undefined} />
-            <Info label={t('detail.wake_model')} value={<TwoLines main={t(`wake_title.${f.wakeModel}` as MsgKey)} sub={t(`wake.${f.wakeModel}` as MsgKey)} />} />
+            <Info label={t('detail.wake_model')} value={<TwoLines main={t(wakeLabel[0])} sub={t(wakeLabel[1])} />} />
             <Info label={t('detail.free')} value={info.free_size ? <FreeSpace free={Number(info.free_size)} total={Number(info.total_size)} /> : undefined} />
-            <Info label={t('detail.pending')} value={t(f.pendingImageId ? 'detail.pending_photo' : 'detail.pending_none')} />
+            <Info
+              label={t('detail.pending')}
+              value={queued ? <TwoLines main={t(queued)} sub={t(instant ? 'detail.delivery_now' : 'detail.delivery_on_wake')} /> : t('detail.pending_none')}
+            />
           </Card>
 
           <Segmented

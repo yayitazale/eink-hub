@@ -90,6 +90,8 @@ export interface Frame {
   mode: 'push' | 'pull';
   pullSchedule: Schedule;
   pendingImageId: number | null;
+  /** False while the welcome picture waits to be delivered (first contact, or after "Clear"). */
+  welcomeShown: boolean;
   currentImageId: number | null;
   currentRender: string | null;
   nextWake: number | null;
