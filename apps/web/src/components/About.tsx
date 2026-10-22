@@ -17,9 +17,15 @@ export interface UpdateInfo {
   latestDocsUrl?: string;
 }
 
-/** The hub asks GitHub a few times a day; the UI just reads its answer. */
+/** Asks the hub, which checks the published releases at most every couple of hours; a tab left open asks again hourly. */
 export function useUpdate() {
-  return useQuery({ queryKey: ['update'], queryFn: () => api.get<UpdateInfo>('/api/update'), staleTime: 3600_000, retry: false });
+  return useQuery({
+    queryKey: ['update'],
+    queryFn: () => api.get<UpdateInfo>('/api/update'),
+    staleTime: 3600_000,
+    refetchInterval: 3600_000,
+    retry: false,
+  });
 }
 
 function GitHubMark(props: SVGProps<SVGSVGElement>) {

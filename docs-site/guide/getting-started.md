@@ -62,7 +62,7 @@ Give each frame a collection and a schedule under **Schedule**. See [Collections
 docker compose pull && docker compose up -d
 ```
 
-The hub checks GitHub for new releases a few times a day. When there is one, the sidebar (on a phone, the top bar and **Settings**) shows it with links to what's new and to its documentation. The version number at the bottom of the sidebar opens the changelog, next to links to these docs and to the source code. To turn the check off, set `UPDATE_CHECK_DISABLED=true` in `.env`.
+When someone opens it, the hub checks whether there is a newer release (at most every couple of hours, from the list of versions published with these docs; a hub nobody opens never checks). When there is one, the sidebar (on a phone, the top bar and **Settings**) shows it with links to what's new and to its documentation. The version number at the bottom of the sidebar opens the changelog, next to links to these docs and to the source code. To turn the check off, set `UPDATE_CHECK_DISABLED=true` in `.env`.
 
 | Image tag | What it is |
 | --- | --- |

@@ -3,7 +3,11 @@ import { APP_VERSION } from '../version.js';
 const REPO = 'yayitazale/eink-hub';
 /** Latest release at the root, older ones under /vX.Y.Z/ (see .github/workflows/release.yml). */
 const DOCS_ROOT = 'https://yayitazale.github.io/eink-hub/';
-const OK_TTL = 6 * 3600_000;
+/** Updated by every release (the docs' version switcher reads it): a static file on GitHub's CDN. */
+const VERSIONS_URL = `${DOCS_ROOT}versions.json`;
+const OK_TTL = 2 * 3600_000;
+/** Spreads the checks of many hubs over time instead of all at the same moment after a release. */
+const JITTER = 20 * 60_000;
 const FAIL_TTL = 3600_000;
 
 export interface UpdateInfo {
@@ -29,32 +33,39 @@ export function isNewer(candidate: string, than: string): boolean {
   return false;
 }
 
-let cache: { at: number; ttl: number; latest: string | null; url?: string } | null = null;
+let cache: { at: number; ttl: number; latest: string | null; etag?: string } | null = null;
 
-/** Asks GitHub for the latest release, at most every few hours; offline or rate-limited just means "no update". */
-async function latestRelease(fetchFn: typeof fetch, now: number) {
+/**
+ * The latest release, from the docs' versions.json. Only asked when someone opens the hub (the UI
+ * calls /api/update), and at most every couple of hours; unchanged answers are an empty 304.
+ * Offline or failing just means "no update".
+ */
+async function latestRelease(fetchFn: typeof fetch, now: number, rand: () => number) {
   if (cache && now - cache.at < cache.ttl) return cache;
+  const ttl = OK_TTL + Math.round(rand() * JITTER);
   try {
-    const res = await fetchFn(`https://api.github.com/repos/${REPO}/releases/latest`, {
-      headers: { accept: 'application/vnd.github+json', 'user-agent': `eink-hub/${APP_VERSION}` },
+    const res = await fetchFn(VERSIONS_URL, {
+      headers: { accept: 'application/json', 'user-agent': `eink-hub/${APP_VERSION}`, ...(cache?.etag ? { 'if-none-match': cache.etag } : {}) },
       signal: AbortSignal.timeout(5000),
     });
-    if (!res.ok) throw new Error(`GitHub ${res.status}`);
-    const r = (await res.json()) as { tag_name?: string; html_url?: string };
-    cache = { at: now, ttl: OK_TTL, latest: r.tag_name?.replace(/^v/, '') ?? null, url: r.html_url };
+    if (res.status === 304 && cache) return (cache = { ...cache, at: now, ttl });
+    if (!res.ok) throw new Error(`versions.json ${res.status}`);
+    const list = (await res.json()) as { version?: string; latest?: boolean }[];
+    const tag = Array.isArray(list) ? list.find((v) => v.latest)?.version : undefined;
+    cache = { at: now, ttl, latest: tag?.replace(/^v/, '') ?? null, etag: res.headers.get('etag') ?? undefined };
   } catch {
-    cache = { at: now, ttl: FAIL_TTL, latest: cache?.latest ?? null, url: cache?.url };
+    cache = { at: now, ttl: FAIL_TTL, latest: cache?.latest ?? null, etag: cache?.etag };
   }
   return cache;
 }
 
-export async function checkUpdate({ enabled = true, current = APP_VERSION, fetchFn = fetch, now = Date.now() } = {}): Promise<UpdateInfo> {
+export async function checkUpdate({ enabled = true, current = APP_VERSION, fetchFn = fetch, now = Date.now(), rand = Math.random } = {}): Promise<UpdateInfo> {
   const base = {
     current,
     repoUrl: `https://github.com/${REPO}`,
     changelogUrl: `https://github.com/${REPO}/blob/v${current}/CHANGELOG.md`,
   };
-  const latest = enabled ? (await latestRelease(fetchFn, now)).latest : null;
+  const latest = enabled ? (await latestRelease(fetchFn, now, rand)).latest : null;
   if (!latest || !isNewer(latest, current)) return { ...base, latest, available: false, docsUrl: DOCS_ROOT };
   return {
     ...base,
@@ -62,7 +73,7 @@ export async function checkUpdate({ enabled = true, current = APP_VERSION, fetch
     available: true,
     docsUrl: `${DOCS_ROOT}v${current}/`,
     latestDocsUrl: DOCS_ROOT,
-    releaseUrl: cache?.url ?? `https://github.com/${REPO}/releases/tag/v${latest}`,
+    releaseUrl: `https://github.com/${REPO}/releases/tag/v${latest}`,
   };
 }
 
