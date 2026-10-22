@@ -135,7 +135,7 @@ git reset --hard HEAD~1
    `registry.gitlab.com/yayitazale/eink-hub` for installs from before the move
    to GitHub.
 4. **`trivy-image`** scans that same image (informational, never blocks).
-5. **`release`** creates the entry in GitHub's *Releases* tab.
+5. **`release`** creates the entry in GitHub's *Releases* tab, with the image and this version's section of `CHANGELOG.md` as its notes (`scripts/release-notes.mjs`). The hub's update notice links there.
 
 Pushes to `main` without a tag only run the tests.
 **Images, and `:latest`, only move when a tag is published**, so whoever
