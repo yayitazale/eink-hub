@@ -1,13 +1,25 @@
 import { useState } from 'react';
-import { CalendarClock, ChevronRight } from 'lucide-react';
+import { CalendarClock, ChevronRight, CloudDownload, Send } from 'lucide-react';
 import type { Frame } from '../lib/api';
 import { dateTime, describeSchedule, relativeTime } from '../lib/format';
 import { useI18n } from '../i18n';
 import { useCollections, useFrames } from '../lib/hooks';
 import { AssignmentEditor } from '../components/AssignmentEditor';
 import { FrameMockup } from '../components/FrameMockup';
-import { FrameStatus } from './Frames';
 import { Card, Empty, Modal, Pill, SectionTitle, Spinner } from '../components/ui';
+
+/** How the photo reaches the Canvas: the hub pushes it, or the Canvas pulls it when it wakes. */
+function ModePill({ mode }: { mode: Frame['mode'] }) {
+  return mode === 'pull' ? (
+    <Pill tone="ok">
+      <CloudDownload className="size-3" /> Pull
+    </Pill>
+  ) : (
+    <Pill tone="accent">
+      <Send className="size-3" /> Push
+    </Pill>
+  );
+}
 
 export function Schedule() {
   const { t, tn } = useI18n();
@@ -60,7 +72,7 @@ export function Schedule() {
                     <p className="mt-0.5 text-sm text-muted">{t('canvas.no_schedule')}</p>
                   )}
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <FrameStatus frame={f} />
+                    <ModePill mode={f.mode} />
                     {a && !a.enabled && <Pill tone="warn">{t('scheduleView.paused')}</Pill>}
                   </div>
                 </div>
