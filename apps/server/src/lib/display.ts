@@ -84,8 +84,8 @@ export async function renderWelcomeFor(db: DB, frame: Frame, hubUrl: string): Pr
   const landscape = frame.orientation === 'landscape';
   const lang = hubLang(db);
   const params = {
-    // v3: side-by-side landscape layout (portrait renders are unchanged, so they keep v2).
-    v: landscape ? 3 : 2,
+    // v4: bigger logo, smaller QR and even margins in both orientations.
+    v: 4,
     welcome: true,
     width: frame.width,
     height: frame.height,

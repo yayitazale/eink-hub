@@ -37,15 +37,20 @@ export interface WelcomeOptions {
 export async function renderWelcome(o: WelcomeOptions): Promise<Buffer> {
   const { w, h } = targetSize(o);
   const unit = Math.min(w, h);
-  // Landscape: brand on the left, QR on the right, so neither has to shrink to fit the short side.
+  // Landscape: brand on the left, QR on the right, as one block centred on the page so both side
+  // margins match; each column centred vertically.
   const sideBySide = o.landscape && !!o.url;
-  const colW = sideBySide ? Math.round(w * 0.46) : w;
+  const colW = sideBySide ? Math.round(w * 0.42) : w;
   const brand = await brandStack(o, unit, colW);
   const code = await qrStack(o, unit, colW);
 
   let composites: OverlayOptions[];
   if (sideBySide) {
-    composites = [...place(brand, Math.round(w * 0.04), colW, h), ...place(code, Math.round(w * 0.5), colW, h)];
+    const bw = stackWidth(brand);
+    const cw = stackWidth(code);
+    const gap = Math.round(unit * 0.12);
+    const left = Math.round((w - bw - gap - cw) / 2);
+    composites = [...place(brand, left, bw, h), ...place(code, left + bw + gap, cw, h)];
   } else {
     const all = { layers: [...brand.layers, ...code.layers], gaps: [...brand.gaps, Math.round(unit * 0.08), ...code.gaps] };
     composites = place(all, 0, w, h);
@@ -69,16 +74,17 @@ interface Stack {
 
 /** Logo, "E-INK HUB" and the Canvas name. */
 async function brandStack(o: WelcomeOptions, unit: number, colW: number): Promise<Stack> {
-  const logoSize = Math.round(unit * (o.landscape ? 0.2 : 0.16));
+  // Same sizes in both orientations (relative to the short side); only the arrangement changes.
+  const logoSize = Math.round(unit * 0.22);
   const logo = await sharp(Buffer.from(LOGO), { density: 600 }).resize(logoSize, logoSize).png().toBuffer();
   const title = await text(
     `<span foreground="${INK}" letter_spacing="${Math.round(unit * 0.004) * 1024}">E-INK HUB</span>`,
-    `Inter,Arial,DejaVu Sans,Sans Bold ${Math.round(unit * (o.landscape ? 0.065 : 0.05))}`,
+    `Inter,Arial,DejaVu Sans,Sans Bold ${Math.round(unit * 0.055)}`,
     colW,
   );
   const name = await text(
     `<span foreground="${MUTED}">${esc(o.name)}</span>`,
-    `Inter,Arial,DejaVu Sans,Sans Medium ${Math.round(unit * (o.landscape ? 0.042 : 0.032))}`,
+    `Inter,Arial,DejaVu Sans,Sans Medium ${Math.round(unit * 0.034)}`,
     Math.round(colW * 0.85),
   );
   return {
@@ -98,7 +104,7 @@ async function qrStack(o: WelcomeOptions, unit: number, colW: number): Promise<S
     const hint = await text(`<span foreground="${MUTED}">${esc(o.configureText)}</span>`, hintFont, Math.round(colW * 0.8));
     return { layers: [{ buf: hint.data, width: hint.info.width, height: hint.info.height }], gaps: [] };
   }
-  const qrSize = Math.round(unit * (o.landscape ? 0.6 : 0.42));
+  const qrSize = Math.round(unit * 0.36);
   const qr = await QRCode.toBuffer(o.url, { type: 'png', width: qrSize, margin: 1, errorCorrectionLevel: 'M', color: { dark: INK, light: '#ffffff' } });
   const qrMeta = await sharp(qr).metadata();
   const hint = await text(
@@ -115,6 +121,8 @@ async function qrStack(o: WelcomeOptions, unit: number, colW: number): Promise<S
     gaps: [Math.round(unit * 0.035)],
   };
 }
+
+const stackWidth = (s: Stack) => Math.max(...s.layers.map((l) => l.width));
 
 /** A stack centred in a column [left, left + width) of a canvas `h` tall. */
 function place(s: Stack, left: number, width: number, h: number): OverlayOptions[] {
