@@ -53,6 +53,37 @@ features:
 
 **Local** frames talk to the hub over your network only and keep working without internet. **Cloud** frames go through the manufacturer's servers.
 
+## A quick look
+
+![My Canvases: every frame with its current photo, battery and status](/screenshots/canvases.webp)
+
+<div class="screenshots">
+
+![Browsing an Immich album, filtered to landscape photos](/screenshots/immich.webp)
+
+![Schedule: what each Canvas shows and when it changes](/screenshots/schedule.webp)
+
+![The Canvas list on a phone, in dark mode](/screenshots/mobile.jpg)
+
+</div>
+
+<style>
+.screenshots {
+  display: grid;
+  grid-template-columns: 1fr 1fr 0.45fr;
+  gap: 12px;
+  align-items: start;
+}
+.screenshots p { margin: 0; }
+.vp-doc img[src*="/screenshots/"] {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+}
+@media (max-width: 640px) {
+  .screenshots { grid-template-columns: 1fr 1fr; }
+}
+</style>
+
 ## Up and running in two minutes
 
 ```bash
