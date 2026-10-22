@@ -268,6 +268,7 @@ export const ca: Catalogue = {
   'scheduleView.empty': 'Cap Canvas',
   'scheduleView.empty_hint': 'Afegeix un Canvas per programar-ne les fotos.',
   'scheduleView.paused': 'En pausa',
+  'scheduleView.paused_group': 'En pausa',
   'scheduleView.create': 'Crea una programació',
   'scheduleView.none': 'Sense programacions',
   'scheduleView.none_hint': 'Crea’n una perquè un Canvas canviï de foto tot sol.',

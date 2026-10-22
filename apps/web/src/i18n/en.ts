@@ -268,6 +268,7 @@ export const en: Messages = {
   'scheduleView.empty': 'No Canvases',
   'scheduleView.empty_hint': 'Add a Canvas to schedule its photos.',
   'scheduleView.paused': 'Paused',
+  'scheduleView.paused_group': 'Paused',
   'scheduleView.create': 'Create schedule',
   'scheduleView.none': 'No schedules yet',
   'scheduleView.none_hint': 'Create one so a Canvas changes its photo on its own.',

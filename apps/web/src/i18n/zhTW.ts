@@ -268,6 +268,7 @@ export const zhTW: Catalogue = {
   'scheduleView.empty': '沒有 Canvas',
   'scheduleView.empty_hint': '新增一台 Canvas 來安排它的照片。',
   'scheduleView.paused': '已暫停',
+  'scheduleView.paused_group': '已暫停',
   'scheduleView.create': '建立排程',
   'scheduleView.none': '尚無排程',
   'scheduleView.none_hint': '建立排程，讓 Canvas 自動更換照片。',
