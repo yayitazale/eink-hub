@@ -1,5 +1,6 @@
 import DefaultTheme from 'vitepress/theme';
 import { h } from 'vue';
+import ImageZoom from './ImageZoom.vue';
 import OldVersionBanner from './OldVersionBanner.vue';
 import VersionSwitcher from './VersionSwitcher.vue';
 
@@ -10,5 +11,6 @@ export default {
       'layout-top': () => h(OldVersionBanner),
       'nav-bar-content-after': () => h(VersionSwitcher),
       'nav-screen-content-after': () => h(VersionSwitcher),
+      'layout-bottom': () => h(ImageZoom),
     }),
 };
