@@ -6,18 +6,24 @@ import { useI18n } from '../i18n';
 import { useCollections, useFrames } from '../lib/hooks';
 import { AssignmentEditor } from '../components/AssignmentEditor';
 import { FrameMockup } from '../components/FrameMockup';
-import { Card, Empty, Modal, Pill, SectionTitle, Spinner } from '../components/ui';
+import { Card, Empty, Modal, Pill, SectionTitle, Spinner, cx } from '../components/ui';
 
-/** How the photo reaches the Canvas: the hub pushes it, or the Canvas pulls it when it wakes. */
+/**
+ * How the photo reaches the Canvas: the hub pushes it, or the Canvas pulls it when it wakes.
+ * Neutral palette tones, told apart by icon and by filled vs outlined.
+ */
 function ModePill({ mode }: { mode: Frame['mode'] }) {
-  return mode === 'pull' ? (
-    <Pill tone="ok">
-      <CloudDownload className="size-3" /> Pull
-    </Pill>
-  ) : (
-    <Pill tone="accent">
-      <Send className="size-3" /> Push
-    </Pill>
+  const pull = mode === 'pull';
+  const Icon = pull ? CloudDownload : Send;
+  return (
+    <span
+      className={cx(
+        'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold',
+        pull ? 'border-line text-ink-2' : 'border-transparent bg-ink/10 text-ink',
+      )}
+    >
+      <Icon className="size-3" /> {pull ? 'Pull' : 'Push'}
+    </span>
   );
 }
 
