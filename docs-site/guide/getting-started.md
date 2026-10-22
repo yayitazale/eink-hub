@@ -42,11 +42,13 @@ On Unraid, install **eink-hub** from the **Apps** tab (Community Applications). 
   - **DIY frame**: you get an endpoint and a token for your firmware. See [Build your own](/diy/).
   - **Simulated Canvas**: a virtual frame inside the hub, for trying things out without hardware.
 
-The first time a frame connects it shows a welcome picture with a QR code that opens the hub.
+You also choose how the frame hangs, **portrait** or **landscape** (a DIY frame takes it from the width and height you give it). You can change it later in the frame's **Settings**.
+
+The first time a frame connects it shows a welcome picture with a QR code that opens the hub, laid out for the way the frame hangs. If you change the orientation while the welcome picture is on screen, the hub sends it again the right way round.
 
 ## Send a photo
 
-Upload photos in **Library** (or connect [Immich](/guide/immich)), open one and press **Send**. The preview is exactly what the frame will receive. You can let the hub find the subject (smart crop), crop by hand, fit with a border or fit on a blurred background.
+Upload photos in **Library** (or connect [Immich](/guide/immich)), open one and press **Send**. The preview is exactly what the frame will receive. You can let the hub find the subject (smart crop), crop by hand, fit with a border or fit on a blurred background. Tick **Show the photo's date** to add a small label with the date it was taken in the bottom-left corner, as a schedule can.
 
 If the frame is asleep, the photo is queued and shown the next time it wakes.
 

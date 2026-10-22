@@ -232,3 +232,30 @@ describe('adding Canvases', () => {
     expect(res.json().error).toContain('Salón');
   });
 });
+
+describe('sending a photo from the gallery', () => {
+  it('can label it with the date it was taken, like a schedule does', async () => {
+    const id = db
+      .insert(schema.frames)
+      .values({ name: 'Galería', host: '127.0.0.1:1', upstreamToken: 'gallery-token', mode: 'pull', createdAt: Date.now(), welcomeShown: true })
+      .returning()
+      .get().id;
+    const photo = await sharp({ create: { width: 1600, height: 1200, channels: 3, background: '#3a7bd5' } }).jpeg().toBuffer();
+    const imageId = (await saveLocalUpload(db, photo, 'dated.jpg')).id;
+    db.update(schema.images).set({ takenAt: Date.UTC(2019, 9, 6, 12) }).where(eq(schema.images.id, imageId)).run();
+
+    const preview = (showDate: boolean) =>
+      app.inject({ method: 'POST', url: '/api/render/preview', payload: { imageId, frameId: id, fit: 'cover', showDate } }).then((r) => r.rawPayload);
+    const [plain, dated] = [await preview(false), await preview(true)];
+    expect(Buffer.compare(plain, dated)).not.toBe(0);
+    // Same white label in the bottom-left corner as the schedule's (see pipeline.test.ts).
+    const { data, info } = await sharp(dated).raw().toBuffer({ resolveWithObject: true });
+    const px = (x: number, y: number) => Array.from(data.subarray((y * info.width + x) * 3, (y * info.width + x) * 3 + 3));
+    const inset = Math.round(Math.min(info.width, info.height) * 0.04);
+    expect(px(inset + 12, info.height - inset - 20).every((c) => c > 240)).toBe(true);
+
+    const res = await app.inject({ method: 'POST', url: `/api/frames/${id}/display`, payload: { imageId, fit: 'cover', showDate: true } });
+    expect(res.json()).toEqual({ method: 'queued' });
+    expect(db.select().from(schema.frames).where(eq(schema.frames.id, id)).get()!.pendingOpts).toMatchObject({ showDate: true });
+  });
+});
