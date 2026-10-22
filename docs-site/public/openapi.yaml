@@ -39,13 +39,17 @@ paths:
       parameters:
         - { name: battery, in: query, schema: { type: integer, minimum: 0, maximum: 100 }, description: Battery level (%) }
         - { name: rssi, in: query, schema: { type: integer }, description: Wi-Fi signal (dBm) }
+        - { name: ssid, in: query, schema: { type: string }, description: "Wi-Fi network name, shown on the frame's page" }
+        - { name: ip, in: query, schema: { type: string }, description: The frame's address on that network }
+        - { name: storage_free, in: query, schema: { type: integer }, description: Free local storage (bytes) }
+        - { name: storage_total, in: query, schema: { type: integer }, description: Total local storage (bytes) }
         - { name: fw, in: query, schema: { type: string }, description: Firmware version }
         - { name: w, in: query, schema: { type: integer }, description: Panel width as hung (px) }
         - { name: h, in: query, schema: { type: integer }, description: Panel height as hung (px) }
         - { name: format, in: query, schema: { type: string, enum: [jpeg, png, bmp] }, description: Image format wanted (remembered) }
         - { name: palette, in: query, schema: { $ref: '#/components/schemas/Palette' }, description: Dither in the hub to this palette (remembered) }
         - { name: current, in: query, schema: { type: string }, description: id of the picture on screen }
-        - { name: notify_url, in: query, schema: { type: string, format: uri }, description: Always-on frames, where the hub POSTs when there is something new. Empty removes it }
+        - { name: notify_url, in: query, schema: { type: string, format: uri }, description: "Always-on frames: where the hub POSTs when there is something new. Empty removes it" }
       responses:
         '200':
           description: Show a picture, or nothing.

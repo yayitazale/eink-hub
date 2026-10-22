@@ -6,6 +6,8 @@ import { SchedulePicker } from './SchedulePicker';
 import { useI18n, type MsgKey } from '../i18n';
 import { BgPicker } from './BgPicker';
 import { Button, Field, Segmented, Toggle, cx, inputClass, useConfirm } from './ui';
+import { Select } from './Select';
+import { TimeField } from './TimeField';
 
 const DEFAULT_SCHEDULE: Schedule = { kind: 'days', days: 1, at: '07:00' };
 
@@ -70,40 +72,26 @@ export function AssignmentEditor({ frame: fixed, choices, onSaved }: { frame?: F
       <div className="grid gap-5 @xl:grid-cols-2 @xl:gap-x-8">
         <div className="min-w-0 space-y-5">
           {choices && (
-            <Field label={t('nav.canvas')}>
-              <select className={cx(inputClass, !frame && 'text-muted')} value={frameId} onChange={(e) => setFrameId(Number(e.target.value))}>
-                {!frame && (
-                  <option value="" disabled>
-                    {t('send.pick_canvas')}
-                  </option>
-                )}
-                {choices.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name}
-                  </option>
-                ))}
-              </select>
+            <Field label={t('nav.canvas')} group>
+              <Select
+                aria-label={t('nav.canvas')}
+                value={frameId}
+                onChange={setFrameId}
+                placeholder={t('send.pick_canvas')}
+                options={choices.map((f) => ({ value: f.id, label: f.name }))}
+              />
             </Field>
           )}
-          <Field label={t('assign.collection')}>
-            <select
-              className={cx(inputClass, !collectionId && 'text-muted', 'disabled:opacity-50')}
+          <Field label={t('assign.collection')} group>
+            <Select
+              aria-label={t('assign.collection')}
               disabled={!frame}
               value={collectionId}
-              onChange={(e) => pickCollection(Number(e.target.value))}
-            >
-              {!collectionId && (
-                <option value="" disabled>
-                  {t('assign.pick_collection')}
-                </option>
-              )}
-              {collections.data?.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {/* "On this day" changes daily, so a photo count would be misleading. */}
-                  {c.type === 'immich_memories' ? c.name : `${c.name} (${c.itemCount})`}
-                </option>
-              ))}
-            </select>
+              onChange={pickCollection}
+              placeholder={t('assign.pick_collection')}
+              // "On this day" changes daily, so a photo count would be misleading.
+              options={(collections.data ?? []).map((c) => ({ value: c.id, label: c.type === 'immich_memories' ? c.name : `${c.name} (${c.itemCount})` }))}
+            />
           </Field>
 
           {isMemories ? (
@@ -169,9 +157,9 @@ export function AssignmentEditor({ frame: fixed, choices, onSaved }: { frame?: F
                 <Toggle label={t('assign.window')} hint={t('assign.window_hint')} checked={windowOn} onChange={setWindowOn} />
                 {windowOn && (
                   <div className="mt-3 flex items-center gap-3">
-                    <input type="time" className={inputClass} value={from} onChange={(e) => setFrom(e.target.value)} />
+                    <TimeField aria-label={t('assign.window')} value={from} onChange={setFrom} />
                     <span className="text-muted">→</span>
-                    <input type="time" className={inputClass} value={to} onChange={(e) => setTo(e.target.value)} />
+                    <TimeField aria-label={t('assign.window')} value={to} onChange={setTo} />
                   </div>
                 )}
               </div>

@@ -9,7 +9,9 @@ Protocol: https://yayitazale.github.io/eink-hub/diy/protocol
 """
 import io
 import os
+import shutil
 import socket
+import subprocess
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -37,6 +39,20 @@ def lan_ip() -> str:
         return s.getsockname()[0]
 
 
+def wifi_ssid() -> str:
+    # wireless-tools (iwgetid) on older Raspberry Pi OS, NetworkManager (nmcli) on Bookworm and later.
+    for cmd in (["iwgetid", "-r"], ["nmcli", "-t", "-f", "active,ssid", "dev", "wifi"]):
+        try:
+            out = subprocess.run(cmd, capture_output=True, text=True, timeout=5).stdout
+        except (OSError, subprocess.SubprocessError):
+            continue
+        if cmd[0] == "nmcli":
+            out = next((line[4:] for line in out.splitlines() if line.startswith("yes:")), "")
+        if out.strip():
+            return out.strip()
+    return ""
+
+
 class Nudge(BaseHTTPRequestHandler):
     """The hub POSTs here (with our token) when there is something new."""
 
@@ -58,8 +74,15 @@ def poll() -> int:
         "h": inky.height,
         # Full-colour PNG: the inky library dithers it with its own tuned palette.
         "format": "png",
-        "fw": "rpi-inky-1.0",
+        "fw": "rpi-inky-1.1",
+        # Shown on the frame's page in the hub (Wi-Fi, address, free space on the SD card).
+        "ip": lan_ip(),
     }
+    ssid = wifi_ssid()
+    if ssid:
+        params["ssid"] = ssid
+    disk = shutil.disk_usage("/")
+    params["storage_free"], params["storage_total"] = disk.free, disk.total
     if current:
         params["current"] = current
     if NOTIFY_PORT:

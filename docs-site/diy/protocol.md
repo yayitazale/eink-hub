@@ -33,6 +33,8 @@ All query parameters are optional:
 | --- | --- |
 | `battery` | Battery level, 0–100 (%). Shown in the hub and in its statistics |
 | `rssi` | Wi-Fi signal (dBm) |
+| `ssid`, `ip` | Wi-Fi network name and the frame's address on it. Shown on the frame's page |
+| `storage_free`, `storage_total` | Local storage in bytes (e.g. the SD card of a Pi), shown as free space. Leave them out if the frame stores nothing |
 | `fw` | Your firmware version, shown in the hub |
 | `w`, `h` | Panel resolution **as hung** (e.g. `800`×`480` for a landscape panel). The first poll also sets the frame's orientation |
 | `format` | `jpeg`, `png` or `bmp`. Saved: you only need to send it once (or set it in the hub instead) |

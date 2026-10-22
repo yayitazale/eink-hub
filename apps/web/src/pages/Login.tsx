@@ -3,6 +3,7 @@ import { api } from '../lib/api';
 import { languages, useI18n, type Lang } from '../i18n';
 import { Logo } from '../components/Layout';
 import { Button, inputClass } from '../components/ui';
+import { Select } from '../components/Select';
 
 export function Login({ setup, onDone }: { setup: boolean; onDone: () => void }) {
   const { t, lang, setLang } = useI18n();
@@ -33,18 +34,15 @@ export function Login({ setup, onDone }: { setup: boolean; onDone: () => void })
       <form onSubmit={submit} className="w-full max-w-sm rounded-[32px] border border-line/60 bg-surface p-8 shadow-lift">
         <div className="flex items-start justify-between gap-3">
           <Logo />
-          <select
-            aria-label={t('settings.language')}
-            value={lang}
-            onChange={(e) => setLang(e.target.value as Lang)}
-            className="rounded-full border border-line bg-surface-2 px-2.5 py-1 text-xs font-semibold text-ink-2 outline-none"
-          >
-            {languages.map((l) => (
-              <option key={l.code} value={l.code}>
-                {l.label}
-              </option>
-            ))}
-          </select>
+          <div>
+            <Select
+              aria-label={t('settings.language')}
+              value={lang}
+              onChange={(v) => setLang(v as Lang)}
+              options={languages.map((l) => ({ value: l.code, label: l.label }))}
+              className="h-8! w-auto! gap-1! rounded-full! px-3! text-xs! font-semibold text-ink-2"
+            />
+          </div>
         </div>
         <h1 className="mt-8 text-2xl font-bold tracking-tight">{t(setup ? 'login.welcome' : 'login.welcome_back')}</h1>
         <p className="mt-1 text-sm text-muted">{t(setup ? 'login.setup_hint' : 'login.hint')}</p>

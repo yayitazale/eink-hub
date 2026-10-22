@@ -46,7 +46,16 @@ export function publicFrame(ctx: Ctx, f: Frame) {
   const diagonal = f.diagonal ?? inferDiagonal(f);
   const kind = describeKind(f);
   const online = kind.wakeModel === 'ble' ? stillAwake(f) : f.online;
-  return { ...f, online, config, diagonal, diagonalInferred: f.diagonal == null, ...kind, assignment: getAssignment(ctx.db, f.id) ?? null, simulated: isSimulated(ctx.db, f.id) };
+  return {
+    ...f,
+    online,
+    config,
+    diagonal,
+    diagonalInferred: f.diagonal == null,
+    ...kind,
+    assignment: getAssignment(ctx.db, f.id) ?? null,
+    simulated: isSimulated(ctx.db, f.id),
+  };
 }
 
 /**

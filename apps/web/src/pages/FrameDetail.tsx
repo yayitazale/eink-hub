@@ -7,7 +7,7 @@ import { FRAME_COLORS, FRAME_STYLES, KNOWN_DIAGONALS, formatCm, frameGeometry, w
 import { dateTime, formatBytes, formatPercent, relativeTime } from '../lib/format';
 import { useAction, useBleStatus, useFrame, useSettings } from '../lib/hooks';
 import { isPickerCancelled, phoneWakeSupport, wakeWithThisDevice } from '../lib/webBluetooth';
-import { useI18n, type MsgKey } from '../i18n';
+import { useI18n, type MsgKey, type TFunction } from '../i18n';
 import { OrientationField } from '../components/OrientationField';
 import { FrameMockup } from '../components/FrameMockup';
 import { AssignmentEditor } from '../components/AssignmentEditor';
@@ -15,6 +15,7 @@ import { StatsTab } from '../components/StatsTab';
 import { SchedulePicker } from '../components/SchedulePicker';
 import { Button, Card, Field, Pill, Segmented, Spinner, Toggle, cx, inputClass, useConfirm } from '../components/ui';
 import { Battery, DOCS_URL, FrameStatus, KindPill, TestPill } from './Frames';
+import { Select } from '../components/Select';
 
 type Tab = 'schedule' | 'mode' | 'connection' | 'history' | 'stats' | 'device' | 'settings';
 const TABS: Tab[] = ['schedule', 'mode', 'connection', 'history', 'stats', 'device', 'settings'];
@@ -27,6 +28,29 @@ function Info({ label, value }: { label: string; value: React.ReactNode }) {
       <div className="mt-0.5 text-sm font-semibold [overflow-wrap:anywhere]">{value ?? '—'}</div>
     </div>
   );
+}
+
+/** A value with a smaller, muted line under it. */
+function TwoLines({ main, sub }: { main: React.ReactNode; sub?: React.ReactNode }) {
+  return (
+    <>
+      {main}
+      {sub && <span className="block text-xs font-medium text-muted">{sub}</span>}
+    </>
+  );
+}
+
+/** When the schedule changes the photo next: pull frames on their next wake, push ones at the schedule's time. */
+function NextChange({ frame: f }: { frame: Frame }) {
+  const { t } = useI18n();
+  const a = f.assignment;
+  if (!a) return <>—</>;
+  if (!a.enabled) return <>{t('scheduleView.paused')}</>;
+  const next = f.mode === 'pull' ? f.nextWake : a.nextChange;
+  // No time yet, or already past: it waits for the Canvas.
+  if (next === null || next < Date.now() - 60_000)
+    return <TwoLines main={t('detail.pending')} sub={t(f.mode === 'pull' ? 'detail.when_wakes' : 'detail.when_responds')} />;
+  return <TwoLines main={relativeTime(next)} sub={dateTime(next)} />;
 }
 
 /** Free storage on the Canvas: share of the card first, the absolute size beside it. */
@@ -139,6 +163,9 @@ const FORMATS: { value: string; format: ImageFormat }[] = [
   { value: 'bmp', format: { type: 'bmp' } },
 ];
 const formatKey = (f?: ImageFormat) => (f ? (f.palette ? `${f.type}:${f.palette}` : f.type) : '');
+/** "PNG · Spectra 6", as in the format picker. */
+const formatLabel = (f: ImageFormat | undefined, t: TFunction) =>
+  f ? `${f.type.toUpperCase()}${f.palette ? ` · ${t(`palette.${f.palette}` as MsgKey)}` : ''}` : undefined;
 
 /** How a non-BLOOMIN8 frame reaches the hub: token and URLs for DIY / TRMNL, credentials for SwitchBot. */
 function ConnectionTab({ frame }: { frame: Frame }) {
@@ -202,15 +229,13 @@ function ConnectionTab({ frame }: { frame: Frame }) {
         </>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={t('connection.format')} hint={t('connection.format_hint')}>
-          <select className={inputClass} value={format} onChange={(e) => setFormat(e.target.value)}>
-            {FORMATS.map((x) => (
-              <option key={x.value} value={x.value}>
-                {x.format.type.toUpperCase()}
-                {x.format.palette ? ` · ${t(`palette.${x.format.palette}` as MsgKey)}` : ''}
-              </option>
-            ))}
-          </select>
+        <Field label={t('connection.format')} hint={t('connection.format_hint')} group>
+          <Select
+            aria-label={t('connection.format')}
+            value={format}
+            onChange={setFormat}
+            options={FORMATS.map((x) => ({ value: x.value, label: formatLabel(x.format, t)! }))}
+          />
         </Field>
         <Field label={t('connection.max_poll')} hint={t('connection.max_poll_hint')}>
           <input type="number" min={1} max={1440} className={inputClass} value={maxPoll} onChange={(e) => setMaxPoll(Number(e.target.value))} />
@@ -368,6 +393,7 @@ function FrameLookSettings({ frame }: { frame: Frame }) {
       <div className="grid gap-6 sm:grid-cols-[1fr_200px]">
         <div className="space-y-4">
           <Field
+            group
             label={t('canvasSettings.frame_size')}
             hint={
               size !== '' || !frame.diagonalInferred
@@ -378,15 +404,16 @@ function FrameLookSettings({ frame }: { frame: Frame }) {
             }
           >
             <div className="flex gap-2">
-              <select className={inputClass} value={size} onChange={(e) => setSize(e.target.value)}>
-                <option value="">{t('canvasSettings.frame_size_auto')}</option>
-                {KNOWN_DIAGONALS.map((d) => (
-                  <option key={d} value={String(d)}>
-                    {d}″
-                  </option>
-                ))}
-                <option value="other">{t('canvasSettings.frame_size_other')}</option>
-              </select>
+              <Select
+                aria-label={t('canvasSettings.frame_size')}
+                value={size}
+                onChange={setSize}
+                options={[
+                  { value: '', label: t('canvasSettings.frame_size_auto') },
+                  ...KNOWN_DIAGONALS.map((d) => ({ value: String(d), label: `${d}″` })),
+                  { value: 'other', label: t('canvasSettings.frame_size_other') },
+                ]}
+              />
               {size === 'other' && (
                 <input type="number" step="0.1" min="4" max="60" className={cx(inputClass, 'w-28')} value={custom} onChange={(e) => setCustom(e.target.value)} />
               )}
@@ -603,10 +630,25 @@ export function FrameDetail() {
   if (!frame.data) return <Spinner />;
   const f = frame.data;
   const info = f.lastInfo ?? {};
+  const ssid = (info.sta_ssid as string | undefined) || undefined;
+  const ip = f.kind === 'bloomin8' ? f.host : (info.sta_ip as string | undefined);
   // How this Canvas can be woken from here: the hub's Bluetooth first (no device picker), else this phone's.
   const caps = f.capabilities;
   const wakeVia = !caps.bleWake ? null : f.bleMac && (f.simulated || ble.data?.available) ? 'hub' : !f.simulated && phoneWakeSupport() === 'ok' ? 'phone' : null;
   const waking = wake.isPending || phoneWake.isPending;
+  // How it wakes up, as far as this hub can tell: pull frames ask on their own; a BLOOMIN8 in push
+  // mode is woken over Bluetooth (the hub's, else this phone's) or only by its button.
+  const wakeLabel = ((): [MsgKey, MsgKey] => {
+    if (f.wakeModel === 'notify') return ['wake.always_on', 'wake.always_on_sub'];
+    if (f.wakeModel === 'cloud') return ['wake.cloud', 'wake.cloud_sub'];
+    if (f.mode === 'pull' || f.wakeModel === 'scheduled-pull') return ['wake.scheduled', 'wake.scheduled_sub'];
+    if (wakeVia === 'hub') return ['wake.bluetooth', f.bleAutoWake ? 'wake.automatic' : 'wake.manual'];
+    if (wakeVia === 'phone') return ['wake.phone', 'wake.manual'];
+    return ['wake.button', 'wake.button_sub'];
+  })();
+  // What is waiting to be delivered, and whether it goes out now or on the next wake.
+  const queued: MsgKey | null = f.pendingImageId ? 'detail.pending_photo' : !f.welcomeShown ? 'detail.pending_welcome' : null;
+  const instant = f.wakeModel === 'notify' || (f.mode === 'push' && wakeVia === 'hub' && f.bleAutoWake);
 
   return (
     <div>
@@ -676,24 +718,24 @@ export function FrameDetail() {
             </div>
           </div>
 
+          {/* The same eight fields for every kind of frame (two rows); what a frame doesn't report shows "—". */}
           <Card className="grid grid-cols-2 gap-4 p-5 sm:grid-cols-4">
             <Info label={t('detail.resolution')} value={`${f.width}×${f.height}`} />
-            {f.kind === 'bloomin8' ? <Info label="IP" value={f.host} /> : <Info label={t('detail.kind')} value={t(`kind.${f.kind}` as MsgKey)} />}
+            {/* Frames that don't report a model (DIY) show their kind, as on their chip. */}
+            <Info
+              label={t('detail.model')}
+              value={<TwoLines main={f.model || t(`kind_short.${f.kind}` as MsgKey)} sub={f.firmware && `${t('detail.firmware')} ${f.firmware}`} />}
+            />
             <Info label={t('detail.last_seen')} value={relativeTime(f.lastSeen)} />
-            <Info label={t(f.mode === 'pull' ? 'detail.next_wake' : 'detail.firmware')} value={f.mode === 'pull' ? dateTime(f.nextWake) : f.firmware} />
-            <Info label={t('detail.model')} value={f.model} />
-            {f.kind === 'bloomin8' ? (
-              <>
-                <Info label="Wi-Fi" value={info.sta_ssid as string} />
-                <Info label={t('detail.free')} value={info.free_size ? <FreeSpace free={Number(info.free_size)} total={Number(info.total_size)} /> : undefined} />
-              </>
-            ) : (
-              <>
-                <Info label={t('detail.firmware')} value={f.firmware} />
-                <Info label={t('detail.wake_model')} value={t(`wake.${f.wakeModel}` as MsgKey)} />
-              </>
-            )}
-            <Info label={t('detail.pending')} value={t(f.pendingImageId ? 'detail.pending_photo' : 'detail.pending_none')} />
+            <Info label={t('detail.next_change')} value={<NextChange frame={f} />} />
+            {/* A BLOOMIN8 is reached at its host; DIY frames report their network (Open Frame `ssid`, `ip`). */}
+            <Info label="Wi-Fi" value={ssid || ip ? <TwoLines main={ssid || '—'} sub={ip} /> : undefined} />
+            <Info label={t('detail.wake_model')} value={<TwoLines main={t(wakeLabel[0])} sub={t(wakeLabel[1])} />} />
+            <Info label={t('detail.free')} value={info.free_size ? <FreeSpace free={Number(info.free_size)} total={Number(info.total_size)} /> : undefined} />
+            <Info
+              label={t('detail.pending')}
+              value={queued ? <TwoLines main={t(queued)} sub={t(instant ? 'detail.delivery_now' : 'detail.delivery_on_wake')} /> : t('detail.pending_none')}
+            />
           </Card>
 
           <Segmented

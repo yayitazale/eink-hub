@@ -8,6 +8,7 @@ import { useI18n } from '../i18n';
 import { FrameMockup } from '../components/FrameMockup';
 import { OrientationField, type Orientation } from '../components/OrientationField';
 import { Button, Empty, Field, Modal, Pill, SectionTitle, Segmented, Spinner, inputClass } from '../components/ui';
+import { Select } from '../components/Select';
 
 export function Battery({ value }: { value: number | null }) {
   if (value == null) return null;
@@ -159,14 +160,8 @@ function SwitchBotForm({
       {devices && devices.length === 0 && <p className="text-sm text-muted">{t('canvas.switchbot_none')}</p>}
       {devices && devices.length > 0 && (
         <>
-          <Field label={t('canvas.switchbot_device')}>
-            <select className={inputClass} value={deviceId} onChange={(e) => setDeviceId(e.target.value)}>
-              {devices.map((d) => (
-                <option key={d.deviceId} value={d.deviceId}>
-                  {d.deviceName} ({d.deviceType})
-                </option>
-              ))}
-            </select>
+          <Field label={t('canvas.switchbot_device')} group>
+            <Select aria-label={t('canvas.switchbot_device')} value={deviceId} onChange={setDeviceId} options={devices.map((d) => ({ value: d.deviceId, label: `${d.deviceName} (${d.deviceType})` }))} />
           </Field>
           <Field label={t('canvas.switchbot_size')} group>
             <Segmented

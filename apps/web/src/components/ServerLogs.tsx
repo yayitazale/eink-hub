@@ -5,6 +5,7 @@ import { api, type LogEntry, type LogLevel } from '../lib/api';
 import { useFrames } from '../lib/hooks';
 import { useI18n, type MsgKey } from '../i18n';
 import { Button, Card, Empty, Segmented, Spinner, cx, inputClass } from './ui';
+import { Select } from './Select';
 
 const LEVELS: LogLevel[] = ['info', 'warn', 'error'];
 const COLOR: Record<LogLevel, string> = { debug: 'text-muted', info: 'text-muted', warn: 'text-amber-600', error: 'text-red-600' };
@@ -24,14 +25,14 @@ export function ServerLogs() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <Segmented value={level} onChange={setLevel} options={LEVELS.map((l) => ({ value: l, label: t(`logs.level_${l}` as MsgKey) }))} />
-        <select aria-label={t('logs.canvas')} className={cx(inputClass, 'sm:max-w-[200px]')} value={frame} onChange={(e) => setFrame(e.target.value)}>
-          <option value="">{t('logs.all_canvases')}</option>
-          {frames.data?.map((f) => (
-            <option key={f.id} value={f.id}>
-              {f.name}
-            </option>
-          ))}
-        </select>
+        <div className="w-full sm:w-[200px]">
+          <Select
+            aria-label={t('logs.canvas')}
+            value={frame}
+            onChange={setFrame}
+            options={[{ value: '', label: t('logs.all_canvases') }, ...(frames.data ?? []).map((f) => ({ value: String(f.id), label: f.name }))]}
+          />
+        </div>
         <input className={cx(inputClass, 'min-w-0 flex-1 sm:max-w-xs')} placeholder={t('logs.search')} value={q} onChange={(e) => setQ(e.target.value)} />
         <Button size="sm" variant="ghost" icon={<RefreshCw className="size-4" />} loading={logs.isFetching} onClick={() => logs.refetch()}>
           {t('detail.refresh')}

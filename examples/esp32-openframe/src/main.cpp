@@ -36,6 +36,23 @@ static void sleepFor(uint32_t seconds) {
   esp_deep_sleep_start();
 }
 
+/** Percent-encodes a query value (network names can have spaces and symbols). */
+static String urlEncode(const String& v) {
+  static const char* hex = "0123456789ABCDEF";
+  String out;
+  for (size_t i = 0; i < v.length(); i++) {
+    char c = v[i];
+    if (isalnum((unsigned char)c) || c == '-' || c == '_' || c == '.' || c == '~') {
+      out += c;
+    } else {
+      out += '%';
+      out += hex[(c >> 4) & 0xF];
+      out += hex[c & 0xF];
+    }
+  }
+  return out;
+}
+
 static int batteryPercent() {
 #ifdef BATTERY_PIN
   float volts = analogReadMilliVolts(BATTERY_PIN) * BATTERY_DIVIDER / 1000.0f;
@@ -169,6 +186,8 @@ void setup() {
   String url = String(HUB_URL) + "/of/v1/display?format=bmp&palette=" PALETTE "&fw=" FW_VERSION;
   url += "&w=" + String(display.width()) + "&h=" + String(display.height());
   url += "&rssi=" + String(WiFi.RSSI());
+  // Shown on the frame's page in the hub. No local storage to report: pictures go straight to the panel.
+  url += "&ssid=" + urlEncode(WiFi.SSID()) + "&ip=" + WiFi.localIP().toString();
   int battery = batteryPercent();
   if (battery >= 0) url += "&battery=" + String(battery);
   if (currentId[0]) url += "&current=" + String(currentId);

@@ -5,6 +5,8 @@ import { api, type Schedule } from '../lib/api';
 import { dateTime, weekdayName } from '../lib/format';
 import { useI18n, type MsgKey } from '../i18n';
 import { Field, inputClass } from './ui';
+import { Select } from './Select';
+import { TimeField } from './TimeField';
 
 type PresetId = 'h1' | 'h3' | 'h6' | 'h12' | 'd1' | 'd2' | 'd3' | 'w1' | 'w2' | 'm1' | 'cron';
 
@@ -103,14 +105,12 @@ export function SchedulePicker({
     return (
       // Same layout as the default "every day at…", so nothing jumps when it comes alive.
       <fieldset disabled className="space-y-3 opacity-50">
-        <Field label={label ?? t('schedule.change')}>
-          <select className={inputClass} value="">
-            <option value="" />
-          </select>
+        <Field label={label ?? t('schedule.change')} group>
+          <Select value="" onChange={() => {}} options={[]} disabled />
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label={t('schedule.at')}>
-            <input type="time" className={inputClass} value="" readOnly />
+          <Field label={t('schedule.at')} group>
+            <TimeField value="" onChange={() => {}} disabled />
           </Field>
         </div>
       </fieldset>
@@ -118,42 +118,39 @@ export function SchedulePicker({
 
   return (
     <div className="space-y-3">
-      <Field label={label ?? t('schedule.change')}>
-          <select className={inputClass} value={presetOf(value)} onChange={(e) => onChange(fromPreset(e.target.value as PresetId, value))}>
-            {presets.map((p) => (
-              <option key={p.id} value={p.id}>
-                {t(p.label)}
-              </option>
-            ))}
-          </select>
-        </Field>
+      <Field label={label ?? t('schedule.change')} group>
+        <Select
+          aria-label={label ?? t('schedule.change')}
+          value={presetOf(value)}
+          onChange={(id) => onChange(fromPreset(id, value))}
+          options={presets.map((p) => ({ value: p.id, label: t(p.label) }))}
+        />
+      </Field>
       {hasTime && (
       <div className="grid grid-cols-2 gap-3">
         {value.kind === 'weeks' && (
-          <Field label={t('schedule.on_weekday')}>
-            <select className={inputClass} value={value.weekday} onChange={(e) => onChange({ ...value, weekday: Number(e.target.value) })}>
-              {[1, 2, 3, 4, 5, 6, 0].map((d) => (
-                <option key={d} value={d}>
-                  {weekdayName(d)}
-                </option>
-              ))}
-            </select>
+          <Field label={t('schedule.on_weekday')} group>
+            <Select
+              aria-label={t('schedule.on_weekday')}
+              value={value.weekday}
+              onChange={(weekday) => onChange({ ...value, weekday })}
+              options={[1, 2, 3, 4, 5, 6, 0].map((d) => ({ value: d, label: weekdayName(d) }))}
+            />
           </Field>
         )}
         {value.kind === 'monthly' && (
-          <Field label={t('schedule.on_day')}>
-            <select className={inputClass} value={value.day} onChange={(e) => onChange({ ...value, day: Number(e.target.value) })}>
-              {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
+          <Field label={t('schedule.on_day')} group>
+            <Select
+              aria-label={t('schedule.on_day')}
+              value={value.day}
+              onChange={(day) => onChange({ ...value, day })}
+              options={Array.from({ length: 28 }, (_, i) => ({ value: i + 1, label: String(i + 1) }))}
+            />
           </Field>
         )}
         {hasTime && (
-          <Field label={t('schedule.at')}>
-            <input type="time" className={inputClass} value={value.at} onChange={(e) => e.target.value && onChange({ ...value, at: e.target.value })} />
+          <Field label={t('schedule.at')} group>
+            <TimeField aria-label={t('schedule.at')} value={value.at} onChange={(at) => onChange({ ...value, at })} />
           </Field>
         )}
       </div>
