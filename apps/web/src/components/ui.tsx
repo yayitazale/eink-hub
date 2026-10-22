@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ButtonHTMLAttributes, type PointerEvent, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Loader2, X } from 'lucide-react';
 import { useI18n } from '../i18n';
 
@@ -158,6 +159,9 @@ export function Toggle({ label, hint, checked, onChange }: { label: string; hint
 export const inputClass =
   'w-full h-11 rounded-2xl border border-line bg-surface-2 px-4 text-sm outline-none transition focus:border-ink/40 focus:bg-surface placeholder:text-muted';
 
+/** Open dialogs and menus, innermost last: Escape closes only the top one. */
+export const openLayers: symbol[] = [];
+
 export function Modal({
   open,
   onClose,
@@ -169,24 +173,35 @@ export function Modal({
   onClose: () => void;
   title: string;
   children: ReactNode;
-  /** `true`: room for a cropper (4xl); `'md'`: a form next to a small preview (3xl, so long translations fit). */
-  wide?: boolean | 'md';
+  /** `true`: room for a cropper (4xl); `'md'`: a form next to a small preview (3xl, so long translations fit); `'sm'`: a picker. */
+  wide?: boolean | 'md' | 'sm';
 }) {
   const { t } = useI18n();
   const sheet = useSheetDrag(onClose);
+  // Read through a ref: callers pass a new onClose on every render, and re-registering would
+  // move this dialog above a menu or picker opened inside it.
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const id = Symbol();
+    openLayers.push(id);
+    // Only the topmost dialog or menu answers Escape (a picker opened from inside a sheet).
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && openLayers.at(-1) === id && closeRef.current();
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      openLayers.splice(openLayers.indexOf(id), 1);
+    };
+  }, [open]);
   if (!open) return null;
-  return (
+  // In a portal so a dialog opened from inside another one (a picker in a sheet) is never clipped by it.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-[2px] sm:items-center sm:p-6" onClick={onClose}>
       <div
         className={cx(
           'flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[28px] bg-surface shadow-lift sm:rounded-[28px]',
-          wide === 'md' ? 'sm:max-w-3xl' : wide ? 'sm:max-w-4xl' : 'sm:max-w-lg',
+          wide === 'md' ? 'sm:max-w-3xl' : wide === 'sm' ? 'sm:max-w-sm' : wide ? 'sm:max-w-4xl' : 'sm:max-w-lg',
         )}
         style={sheet.style}
         onClick={(e) => e.stopPropagation()}
@@ -205,7 +220,8 @@ export function Modal({
         </div>
         <div className="min-w-0 overflow-y-auto overflow-x-hidden px-6 pb-6">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

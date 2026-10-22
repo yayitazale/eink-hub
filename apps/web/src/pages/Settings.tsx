@@ -9,6 +9,7 @@ import { ServerLogs } from '../components/ServerLogs';
 
 const IMMICH_PERMISSIONS_URL = 'https://yayitazale.github.io/eink-hub/guide/immich#api-key-permissions';
 import { Button, Card, Field, SectionTitle, Segmented, Spinner, Toggle, inputClass, useConfirm, useToast } from '../components/ui';
+import { Select } from '../components/Select';
 
 type Tab = 'general' | 'immich' | 'security' | 'logs';
 
@@ -30,18 +31,14 @@ function LanguageSettings() {
     <Card className="p-6">
       <h2 className="text-lg font-bold">{t('settings.language')}</h2>
       <p className="mt-1 text-sm text-muted">{t('settings.language_hint')}</p>
-      <select
-        aria-label={t('settings.language')}
-        className={`${inputClass} mt-5 sm:max-w-xs`}
-        value={lang}
-        onChange={(e) => change(e.target.value as Lang)}
-      >
-        {languages.map((l) => (
-          <option key={l.code} value={l.code}>
-            {l.label}
-          </option>
-        ))}
-      </select>
+      <div className="mt-5 sm:max-w-xs">
+        <Select
+          aria-label={t('settings.language')}
+          value={lang}
+          onChange={(v) => change(v as Lang)}
+          options={languages.map((l) => ({ value: l.code, label: l.label }))}
+        />
+      </div>
     </Card>
   );
 }

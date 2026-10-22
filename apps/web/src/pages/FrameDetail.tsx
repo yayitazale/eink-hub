@@ -15,6 +15,7 @@ import { StatsTab } from '../components/StatsTab';
 import { SchedulePicker } from '../components/SchedulePicker';
 import { Button, Card, Field, Pill, Segmented, Spinner, Toggle, cx, inputClass, useConfirm } from '../components/ui';
 import { Battery, DOCS_URL, FrameStatus, KindPill, TestPill } from './Frames';
+import { Select } from '../components/Select';
 
 type Tab = 'schedule' | 'mode' | 'connection' | 'history' | 'stats' | 'device' | 'settings';
 const TABS: Tab[] = ['schedule', 'mode', 'connection', 'history', 'stats', 'device', 'settings'];
@@ -202,15 +203,16 @@ function ConnectionTab({ frame }: { frame: Frame }) {
         </>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={t('connection.format')} hint={t('connection.format_hint')}>
-          <select className={inputClass} value={format} onChange={(e) => setFormat(e.target.value)}>
-            {FORMATS.map((x) => (
-              <option key={x.value} value={x.value}>
-                {x.format.type.toUpperCase()}
-                {x.format.palette ? ` · ${t(`palette.${x.format.palette}` as MsgKey)}` : ''}
-              </option>
-            ))}
-          </select>
+        <Field label={t('connection.format')} hint={t('connection.format_hint')} group>
+          <Select
+            aria-label={t('connection.format')}
+            value={format}
+            onChange={setFormat}
+            options={FORMATS.map((x) => ({
+              value: x.value,
+              label: `${x.format.type.toUpperCase()}${x.format.palette ? ` · ${t(`palette.${x.format.palette}` as MsgKey)}` : ''}`,
+            }))}
+          />
         </Field>
         <Field label={t('connection.max_poll')} hint={t('connection.max_poll_hint')}>
           <input type="number" min={1} max={1440} className={inputClass} value={maxPoll} onChange={(e) => setMaxPoll(Number(e.target.value))} />
@@ -368,6 +370,7 @@ function FrameLookSettings({ frame }: { frame: Frame }) {
       <div className="grid gap-6 sm:grid-cols-[1fr_200px]">
         <div className="space-y-4">
           <Field
+            group
             label={t('canvasSettings.frame_size')}
             hint={
               size !== '' || !frame.diagonalInferred
@@ -378,15 +381,16 @@ function FrameLookSettings({ frame }: { frame: Frame }) {
             }
           >
             <div className="flex gap-2">
-              <select className={inputClass} value={size} onChange={(e) => setSize(e.target.value)}>
-                <option value="">{t('canvasSettings.frame_size_auto')}</option>
-                {KNOWN_DIAGONALS.map((d) => (
-                  <option key={d} value={String(d)}>
-                    {d}″
-                  </option>
-                ))}
-                <option value="other">{t('canvasSettings.frame_size_other')}</option>
-              </select>
+              <Select
+                aria-label={t('canvasSettings.frame_size')}
+                value={size}
+                onChange={setSize}
+                options={[
+                  { value: '', label: t('canvasSettings.frame_size_auto') },
+                  ...KNOWN_DIAGONALS.map((d) => ({ value: String(d), label: `${d}″` })),
+                  { value: 'other', label: t('canvasSettings.frame_size_other') },
+                ]}
+              />
               {size === 'other' && (
                 <input type="number" step="0.1" min="4" max="60" className={cx(inputClass, 'w-28')} value={custom} onChange={(e) => setCustom(e.target.value)} />
               )}
