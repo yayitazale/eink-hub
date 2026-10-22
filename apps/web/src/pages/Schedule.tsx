@@ -124,12 +124,18 @@ export function Schedule() {
                       </span>
                     </p>
                   )}
-                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
+                  {/* Chips wrap in their own space and the phone buttons stay bottom-right; only when not
+                      even one chip fits beside them do the buttons drop to their own line (still right). */}
+                  <div className="mt-2 flex flex-wrap items-end gap-2">
+                    <div className="flex min-w-min grow basis-0 flex-wrap items-center gap-1.5">
                       <ModePill mode={f.mode} />
-                      {!a.enabled && <Pill tone="warn">{t('scheduleView.paused')}</Pill>}
+                      {!a.enabled && (
+                        <Pill tone="warn">
+                          <Pause className="size-3" /> {t('scheduleView.paused')}
+                        </Pill>
+                      )}
                     </div>
-                    <div className="relative z-10 flex items-center gap-1.5 sm:hidden">
+                    <div className="relative z-10 ml-auto flex shrink-0 items-center gap-1.5 sm:hidden">
                       {pause(false)}
                       {del(false)}
                     </div>
