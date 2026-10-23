@@ -40,14 +40,15 @@ export function phoneWakeSupport(): PhoneWakeSupport {
   return bluetooth() ? 'ok' : 'unsupported';
 }
 
-/** Opens the browser's device picker, then sends the pulse. Must run from a click. */
-export async function wakeWithThisDevice() {
+/** Opens the browser's device picker, then sends the pulse. Must run from a click. `onPicked` fires once a device is chosen. */
+export async function wakeWithThisDevice(onPicked?: () => void) {
   const bt = bluetooth();
   if (!bt) throw new Error('Web Bluetooth unavailable');
   const device = await bt.requestDevice({
     filters: [{ services: [ADV_SERVICE] }, { services: [WAKE_SERVICE] }, { manufacturerData: [{ companyIdentifier: MANUFACTURER_ID }] }],
     optionalServices: [WAKE_SERVICE],
   });
+  onPicked?.();
   const server = await device.gatt!.connect();
   try {
     const ch = await (await server.getPrimaryService(WAKE_SERVICE)).getCharacteristic(WAKE_CHAR);
@@ -57,6 +58,13 @@ export async function wakeWithThisDevice() {
   } finally {
     if (server.connected) server.disconnect();
   }
+}
+
+/** Test Canvases have no radio: play the same steps (pick, then pulse) without the browser's picker. */
+export async function simulateWake(onPicked?: () => void) {
+  await new Promise((r) => setTimeout(r, 1500));
+  onPicked?.();
+  await new Promise((r) => setTimeout(r, 1500));
 }
 
 /** The user closed the picker: not an error worth a toast. */

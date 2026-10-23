@@ -6,7 +6,8 @@ import { api, thumbUrl, type Frame, type FrameAppearance, type HistoryEntry, typ
 import { FRAME_COLORS, FRAME_STYLES, KNOWN_DIAGONALS, formatCm, frameGeometry, withDefaults } from '../lib/frameGeometry';
 import { dateTime, formatBytes, formatPercent, relativeTime } from '../lib/format';
 import { useAction, useBleStatus, useFrame, useSettings } from '../lib/hooks';
-import { isPickerCancelled, phoneWakeSupport, wakeWithThisDevice } from '../lib/webBluetooth';
+import { phoneWakeSupport } from '../lib/webBluetooth';
+import { PhoneWakeSheet } from '../components/PhoneWakeSheet';
 import { useI18n, type MsgKey, type TFunction } from '../i18n';
 import { OrientationField } from '../components/OrientationField';
 import { FrameMockup } from '../components/FrameMockup';
@@ -467,25 +468,35 @@ function BluetoothSettings({ frame }: { frame: Frame }) {
   });
   const phone = phoneWakeSupport();
   const hub = ble.data;
+  // The MAC and auto-wake only matter when the hub itself can wake the Canvas.
+  const off = hub ? !hub.available : false;
 
   return (
     <div className="border-t border-line pt-6">
-      <h4 className="mb-1 font-bold">Bluetooth</h4>
-      <ul className="mb-4 space-y-1 text-xs text-muted">
-        <li>{hub ? (hub.available ? t('ble.hub_ok', { adapter: hub.adapter }) : t(`ble.hub_${hub.reason}` as MsgKey)) : '…'}</li>
-        <li>{t(`ble.phone_${phone}` as MsgKey)}</li>
-      </ul>
-      <div className="max-w-xs">
-        <Field label={t('ble.mac')} hint={t('ble.mac_hint')}>
-          <input className={inputClass} placeholder="AA:BB:CC:DD:EE:FF" value={mac} onChange={(e) => setMac(e.target.value)} />
-        </Field>
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <h4 className="font-bold">Bluetooth</h4>
+        {hub && <Pill tone={hub.available ? 'ok' : 'warn'}>{t(hub.available ? 'ble.hub_available' : 'ble.hub_unavailable')}</Pill>}
       </div>
-      <div className="mt-4 max-w-xl">
-        <Toggle label={t('ble.auto_wake')} hint={t('ble.auto_wake_hint')} checked={autoWake} onChange={setAutoWake} />
-      </div>
-      <Button className="mt-4" loading={save.isPending} onClick={() => save.mutate()}>
-        {t('common.save')}
-      </Button>
+      <p className="text-xs text-muted">
+        {hub ? (hub.available ? t('ble.hub_ok', { adapter: hub.adapter }) : t(`ble.hub_${hub.reason}` as MsgKey)) : '…'}{' '}
+        <a className="font-semibold text-accent" href={DOCS_URL + 'guide/bluetooth'} target="_blank" rel="noreferrer">
+          {t('ble.docs_link')}
+        </a>
+      </p>
+      <p className="mb-4 mt-1 text-xs text-muted">{t(`ble.phone_${phone}` as MsgKey)}</p>
+      <fieldset disabled={off} className={cx('min-w-0', off && 'opacity-50')}>
+        <div className="max-w-xs">
+          <Field label={t('ble.mac')} hint={t('ble.mac_hint')}>
+            <input className={inputClass} placeholder="AA:BB:CC:DD:EE:FF" value={mac} onChange={(e) => setMac(e.target.value)} />
+          </Field>
+        </div>
+        <div className="mt-4 max-w-xl">
+          <Toggle label={t('ble.auto_wake')} hint={t('ble.auto_wake_hint')} checked={autoWake} onChange={setAutoWake} />
+        </div>
+        <Button className="mt-4" loading={save.isPending} onClick={() => save.mutate()}>
+          {t('common.save')}
+        </Button>
+      </fieldset>
     </div>
   );
 }
@@ -608,24 +619,7 @@ export function FrameDetail() {
   const ble = useBleStatus();
   const settings = useSettings();
   const wake = useAction(() => api.post(`/api/frames/${id}/actions/wake`), { success: t('detail.woken') });
-  // Pulse from this phone, then wait for the Canvas to show up on Wi-Fi.
-  const phoneWake = useAction(
-    async () => {
-      try {
-        await wakeWithThisDevice();
-      } catch (err) {
-        if (isPickerCancelled(err)) return false;
-        throw err;
-      }
-      await new Promise((r) => setTimeout(r, 4000));
-      for (let i = 0; i < 4; i++) {
-        const fr = await api.post<Frame>(`/api/frames/${id}/refresh`);
-        if (fr.online) return true;
-      }
-      throw new Error(t('detail.wake_no_reply'));
-    },
-    { success: (woken) => (woken ? t('detail.woken') : '') },
-  );
+  const [phoneWakeOpen, setPhoneWakeOpen] = useState(false);
 
   if (!frame.data) return <Spinner />;
   const f = frame.data;
@@ -633,9 +627,16 @@ export function FrameDetail() {
   const ssid = (info.sta_ssid as string | undefined) || undefined;
   const ip = f.kind === 'bloomin8' ? f.host : (info.sta_ip as string | undefined);
   // How this Canvas can be woken from here: the hub's Bluetooth first (no device picker), else this phone's.
+  // A test Canvas fakes the phone's radio, so the phone flow can be tried without hardware.
   const caps = f.capabilities;
-  const wakeVia = !caps.bleWake ? null : f.bleMac && (f.simulated || ble.data?.available) ? 'hub' : !f.simulated && phoneWakeSupport() === 'ok' ? 'phone' : null;
-  const waking = wake.isPending || phoneWake.isPending;
+  const wakeVia = !caps.bleWake
+    ? null
+    : f.bleMac && ble.data?.available
+      ? 'hub'
+      : f.simulated || phoneWakeSupport() === 'ok'
+        ? 'phone'
+        : null;
+  const waking = wake.isPending;
   // How it wakes up, as far as this hub can tell: pull frames ask on their own; a BLOOMIN8 in push
   // mode is woken over Bluetooth (the hub's, else this phone's) or only by its button.
   const wakeLabel = ((): [MsgKey, MsgKey] => {
@@ -678,7 +679,7 @@ export function FrameDetail() {
                 icon={wakeVia === 'hub' ? <Bluetooth className="size-4" /> : <Smartphone className="size-4" />}
                 title={t(wakeVia === 'hub' ? 'detail.wake_hint' : 'detail.wake_phone_hint')}
                 loading={waking}
-                onClick={() => (wakeVia === 'hub' ? wake : phoneWake).mutate(undefined)}
+                onClick={() => (wakeVia === 'hub' ? wake.mutate(undefined) : setPhoneWakeOpen(true))}
               >
                 {t('detail.wake')}
               </Button>
@@ -696,6 +697,7 @@ export function FrameDetail() {
               </Button>
             )}
           </div>
+          {wakeVia === 'phone' && <PhoneWakeSheet frame={f} open={phoneWakeOpen} onClose={() => setPhoneWakeOpen(false)} />}
         </div>
 
         <div className="min-w-0 space-y-6">
