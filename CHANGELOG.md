@@ -9,6 +9,12 @@ web share a single number (see `VERSION` at the repository root).
 Generated automatically from commit messages. The 0.1.0 entry is the only
 one written by hand: it summarises everything before the first release.
 
+## [0.6.0] - 2026-10-23
+
+### Added
+
+- Wake with the phone from a bottom sheet; Bluetooth settings show the server's status ([64af84b0](https://github.com/yayitazale/eink-hub/commit/64af84b01e07851aa9f39c7119a6133ee98be470))
+
 ## [0.5.1] - 2026-10-22
 
 ### Fixed
