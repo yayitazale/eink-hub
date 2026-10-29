@@ -3,7 +3,7 @@ import { BleError, bleStatus, bleWake } from '../device/ble.js';
 import { DeviceError, FrameClient, type DeviceInfo } from '../device/client.js';
 import { HttpError, type Ctx } from './context.js';
 import { infoToFrame } from '../device/drivers/bloomin8.js';
-import { getFrame, markOnline } from './display.js';
+import { deliverQueued, getFrame, markOnline } from './display.js';
 import { isSimulated } from './simulators.js';
 
 /** Wi-Fi and the HTTP API take a few seconds to come up after the wake pulse. */
@@ -61,6 +61,7 @@ export async function wakeFrame(ctx: Ctx, frame: Frame, timing = { settleMs: WAK
   }
   markOnline(ctx.db, frame.id, true, infoToFrame(info));
   ctx.log.info({ frame: frame.id }, `${frame.name} is awake`);
+  await deliverQueued(ctx, frame).catch((err) => ctx.log.warn({ err, frame: frame.id }, 'queued delivery failed'));
   return getFrame(ctx.db, frame.id);
 }
 

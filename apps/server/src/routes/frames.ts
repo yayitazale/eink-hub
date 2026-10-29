@@ -12,7 +12,7 @@ import { discover } from '../device/discovery.js';
 import { inferDiagonal } from '../device/sizes.js';
 import { HttpError, cloudUrlSetting, detectLocalUrl, localUrlSetting, qrUrl, type Ctx } from '../lib/context.js';
 import { prepareCollection } from '../lib/collections.js';
-import { assignmentOptions, chooseNextImage, displayImage, getAssignment, getFrame, markOnline, pushWelcome, requeueWelcome } from '../lib/display.js';
+import { assignmentOptions, chooseNextImage, deliverQueued, displayImage, getAssignment, getFrame, markOnline, pushWelcome, requeueWelcome } from '../lib/display.js';
 import { wakeFrame, withWake } from '../lib/wake.js';
 import { nextRun, parseSchedule } from '../lib/schedule.js';
 import { requestLang, tr } from '../i18n.js';
@@ -28,6 +28,11 @@ export async function refreshFrame(ctx: Ctx, frame: Frame, timeoutMs = 5000) {
     if (driver.wakeModel === 'cloud') confirmCloudDelivery(ctx, frame, info.lastInfo);
   } catch {
     markOnline(ctx.db, frame.id, false);
+    return getFrame(ctx.db, frame.id);
+  }
+  // It answered, so it is awake: hand it what is queued now (a cloud already has it).
+  if (driver.wakeModel !== 'cloud') {
+    await deliverQueued(ctx, frame).catch((err) => ctx.log.warn({ err, frame: frame.id }, 'queued delivery failed'));
   }
   return getFrame(ctx.db, frame.id);
 }

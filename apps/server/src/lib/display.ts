@@ -3,7 +3,7 @@ import { schema, type DB } from '../db/index.js';
 import type { Assignment, DisplayOptions, Frame, Image } from '../db/schema.js';
 import { DeviceError } from '../device/client.js';
 import { driverFor, renderTarget } from '../device/drivers/index.js';
-import { HttpError, type Ctx } from './context.js';
+import { HttpError, qrUrl, type Ctx } from './context.js';
 import { getImage, renderFor, type Rendered } from './images.js';
 import { renderWelcome } from '../imaging/welcome.js';
 import { convertRender, formatExt } from '../imaging/pipeline.js';
@@ -141,6 +141,32 @@ export async function requeueWelcome(ctx: Ctx, frame: Frame, hubUrl: string): Pr
     markOnline(ctx.db, frame.id, false);
     return { queued: true };
   }
+}
+
+const delivering = new Map<number, Promise<boolean>>();
+
+/**
+ * Hand a push-mode frame what is waiting for it (queued photo, else the welcome picture).
+ * Called whenever the hub finds it awake, so a Canvas woken from elsewhere (phone, button)
+ * gets it straight away instead of on the next scheduler tick. One delivery per frame at a time.
+ * `run` wraps the device call (the scheduler passes its auto-wake). True when something was sent.
+ */
+export function deliverQueued(ctx: Ctx, frame: Frame, run = (fn: () => Promise<void>) => fn()): Promise<boolean> {
+  const busy = delivering.get(frame.id);
+  if (busy) return busy;
+  if (frame.mode !== 'push' || !driverFor(ctx.db, frame).capabilities.push) return Promise.resolve(false);
+  const p = (async () => {
+    // Re-read: another delivery may just have emptied the queue.
+    const f = getFrame(ctx.db, frame.id);
+    if (!f.welcomeShown) await run(() => pushWelcome(ctx, f, qrUrl(ctx.db)));
+    else if (f.pendingImageId) {
+      const img = getImage(ctx.db, f.pendingImageId);
+      await run(() => pushImage(ctx, f, img, f.pendingOpts ?? {}));
+    } else return false;
+    return true;
+  })().finally(() => delivering.delete(frame.id));
+  delivering.set(frame.id, p);
+  return p;
 }
 
 /**

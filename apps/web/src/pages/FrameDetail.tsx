@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Bluetooth, Copy, Download, Eraser, Moon, Play, RefreshCw, RotateCcw, SkipForward, Smartphone, Trash2 } from 'lucide-react';
 import { api, thumbUrl, type Frame, type FrameAppearance, type HistoryEntry, type ImageFormat, type Schedule } from '../lib/api';
 import { FRAME_COLORS, FRAME_STYLES, KNOWN_DIAGONALS, formatCm, frameGeometry, withDefaults } from '../lib/frameGeometry';
@@ -252,7 +252,12 @@ function ConnectionTab({ frame }: { frame: Frame }) {
 
 function HistoryTab({ frame }: { frame: Frame }) {
   const { t } = useI18n();
-  const history = useQuery({ queryKey: ['history', frame.id], queryFn: () => api.get<HistoryEntry[]>(`/api/frames/${frame.id}/history`) });
+  // Under ['frames', id] so whatever refreshes the frame (a wake, an action) refreshes this too.
+  const history = useQuery({
+    queryKey: ['frames', frame.id, 'history', frame.currentImageId],
+    queryFn: () => api.get<HistoryEntry[]>(`/api/frames/${frame.id}/history`),
+    placeholderData: keepPreviousData,
+  });
   if (!history.data) return <Spinner />;
   if (!history.data.length) return <p className="text-sm text-muted">{t('history.empty')}</p>;
   return (

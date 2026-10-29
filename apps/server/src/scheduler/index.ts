@@ -5,8 +5,8 @@ import { DeviceError } from '../device/client.js';
 import { describeKind } from '../device/drivers/index.js';
 import { purgeSessions } from '../auth/index.js';
 import { needsSync, prepareCollection, syncCollection } from '../lib/collections.js';
-import { qrUrl, type Ctx } from '../lib/context.js';
-import { assignmentOptions, chooseNextImage, getAssignment, markOnline, pushImage, pushWelcome } from '../lib/display.js';
+import type { Ctx } from '../lib/context.js';
+import { assignmentOptions, chooseNextImage, deliverQueued, getAssignment, markOnline, pushImage } from '../lib/display.js';
 import { getImage } from '../lib/images.js';
 import { isDue, nextRun } from '../lib/schedule.js';
 import { pruneBatterySamples } from '../lib/stats.js';
@@ -24,13 +24,8 @@ export async function tick(ctx: Ctx, now = new Date()) {
     // Only when there is something to send; never just to poll (battery).
     const awake = (fn: () => Promise<void>) => withWake(ctx, frame, fn, { background: true });
     try {
-      if (!frame.welcomeShown) {
-        await awake(() => pushWelcome(ctx, frame, qrUrl(ctx.db)));
-        continue;
-      }
-      if (frame.pendingImageId) {
-        const pending = getImage(ctx.db, frame.pendingImageId);
-        await awake(() => pushImage(ctx, frame, pending, frame.pendingOpts ?? {}));
+      if (!frame.welcomeShown || frame.pendingImageId) {
+        await deliverQueued(ctx, frame, awake);
         continue;
       }
       const a = getAssignment(ctx.db, frame.id);

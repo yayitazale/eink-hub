@@ -305,4 +305,22 @@ describe('waking a frame', () => {
     expect(res.json()).toEqual({ method: 'queued' });
     expect(bluez.writes).toHaveLength(0);
   });
+
+  it('delivers the queued photo as soon as the Canvas is found awake (woken by the phone)', { timeout: 20_000 }, async () => {
+    const { saveLocalUpload } = await import('../src/lib/images.js');
+    const sharp = (await import('sharp')).default;
+    const photo = await sharp({ create: { width: 800, height: 600, channels: 3, background: '#e07a5f' } }).jpeg().toBuffer();
+    const imageId = (await saveLocalUpload(db, photo, 'later.jpg')).id;
+    const port = await freePort();
+    const frame = insert(`127.0.0.1:${port}`, { bleMac: MAC, welcomeShown: true });
+    const queued = await app.inject({ method: 'POST', url: `/api/frames/${frame.id}/display`, payload: { imageId } });
+    expect(queued.json()).toEqual({ method: 'queued' });
+
+    // Woken from elsewhere: the UI's refresh finds it awake.
+    sims.push(await startSimulator({ port, host: '127.0.0.1', name: 'Phone', logger: app.log }));
+    const f = (await app.inject({ method: 'POST', url: `/api/frames/${frame.id}/refresh` })).json();
+    expect(f).toMatchObject({ online: true, pendingImageId: null, currentImageId: imageId });
+    const history = (await app.inject({ url: `/api/frames/${frame.id}/history` })).json();
+    expect(history[0]).toMatchObject({ imageId, method: 'push', success: true });
+  });
 });
