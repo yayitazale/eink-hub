@@ -3,8 +3,13 @@ import { api, type BleStatus, type Collection, type Frame, type Settings } from 
 import { useToast } from '../components/ui';
 
 export const useFrames = () => useQuery({ queryKey: ['frames'], queryFn: () => api.get<Frame[]>('/api/frames'), refetchInterval: 30_000 });
+// Faster while a photo waits: it goes out the moment the Canvas is found awake (phone, button).
 export const useFrame = (id: number) =>
-  useQuery({ queryKey: ['frames', id], queryFn: () => api.get<Frame>(`/api/frames/${id}`), refetchInterval: 30_000 });
+  useQuery({
+    queryKey: ['frames', id],
+    queryFn: () => api.get<Frame>(`/api/frames/${id}`),
+    refetchInterval: (q) => (q.state.data?.pendingImageId ? 10_000 : 30_000),
+  });
 export const useCollections = () => useQuery({ queryKey: ['collections'], queryFn: () => api.get<Collection[]>('/api/collections') });
 export const useSettings = () => useQuery({ queryKey: ['settings'], queryFn: () => api.get<Settings>('/api/settings') });
 export const useImmichStatus = () =>
