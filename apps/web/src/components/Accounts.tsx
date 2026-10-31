@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Copy, Fingerprint, KeyRound, Link2, LogOut, Trash2, UserPlus } from 'lucide-react';
+import { Copy, Fingerprint, KeyRound, Link2, LogOut, Trash2, User as UserIcon, UserCog, UserPlus } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { useAction } from '../lib/hooks';
@@ -12,6 +12,8 @@ import { Select } from './Select';
 import { logout } from './Layout';
 
 const PASSKEYS_GUIDE_URL = 'https://yayitazale.github.io/eink-hub/guide/users#passkeys';
+
+const ROLE_ICONS = { admin: UserCog, member: UserIcon } satisfies Record<Role, unknown>;
 
 interface Passkey {
   id: string;
@@ -218,7 +220,19 @@ export function UsersSettings() {
   const setUserRole = useAction((b: { id: number; role: Role }) => api.patch(`/api/users/${b.id}`, { role: b.role }), { success: t('common.saved'), invalidate });
   const remove = useAction((id: number) => api.del(`/api/users/${id}`), { success: t('users.deleted'), invalidate });
   const revoke = useAction((id: string) => api.del(`/api/invites/${encodeURIComponent(id)}`), { invalidate });
-  const roleOptions = (['admin', 'member'] as const).map((r) => ({ value: r, label: t(`users.role_${r}`) }));
+  const roleOptions = (['admin', 'member'] as const).map((r) => {
+    const Icon = ROLE_ICONS[r];
+    return {
+      value: r,
+      text: t(`users.role_${r}`),
+      label: (
+        <span className="inline-flex items-center gap-1.5">
+          <Icon className="size-3.5 shrink-0" />
+          {t(`users.role_${r}`)}
+        </span>
+      ),
+    };
+  });
 
   return (
     <div className="grid gap-6">
