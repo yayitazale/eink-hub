@@ -165,6 +165,47 @@ export const migrations: string[] = [
   ALTER TABLE frames ADD COLUMN diagonal REAL;
   ALTER TABLE frames ADD COLUMN appearance TEXT NOT NULL DEFAULT '{}';
   `,
+  // v10: user accounts with roles. The single admin password becomes the user "admin";
+  // open sessions are kept and belong to it.
+  `
+  CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    password_hash TEXT,
+    role TEXT NOT NULL DEFAULT 'member',
+    created_at INTEGER NOT NULL,
+    last_login_at INTEGER
+  );
+  INSERT INTO users (username, password_hash, role, created_at)
+    SELECT 'admin', value, 'admin', CAST(strftime('%s', 'now') AS INTEGER) * 1000 FROM settings WHERE key = 'auth.hash';
+  DELETE FROM settings WHERE key = 'auth.hash';
+  ALTER TABLE sessions ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
+  UPDATE sessions SET user_id = (SELECT id FROM users ORDER BY id LIMIT 1);
+  DELETE FROM sessions WHERE user_id IS NULL;
+  CREATE TABLE invites (
+    token_hash TEXT PRIMARY KEY,
+    role TEXT NOT NULL,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL
+  );
+  `,
+  // v11: passkeys (WebAuthn), each tied to the hostname it was registered on.
+  `
+  CREATE TABLE passkeys (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    public_key BLOB NOT NULL,
+    counter INTEGER NOT NULL DEFAULT 0,
+    transports TEXT,
+    rp_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    last_used_at INTEGER
+  );
+  CREATE INDEX passkeys_user ON passkeys(user_id);
+  `,
 ];
 
 function migrate(sqlite: Database.Database) {

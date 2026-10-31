@@ -9,6 +9,7 @@ import { FrameMockup } from '../components/FrameMockup';
 import { OrientationField, type Orientation } from '../components/OrientationField';
 import { Button, Empty, Field, Modal, Pill, SectionTitle, Segmented, Spinner, inputClass } from '../components/ui';
 import { Select } from '../components/Select';
+import { useIsAdmin } from '../lib/me';
 
 export function Battery({ value }: { value: number | null }) {
   if (value == null) return null;
@@ -415,15 +416,18 @@ export function Frames() {
   const frames = useFrames();
   const [adding, setAdding] = useState(false);
   const { t, tn } = useI18n();
+  const admin = useIsAdmin();
   return (
     <>
       <SectionTitle
         title={t('canvas.mine')}
         subtitle={frames.data ? tn('canvas.count', frames.data.length) : undefined}
         action={
-          <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setAdding(true)}>
-            {t('canvas.add')}
-          </Button>
+          admin && (
+            <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setAdding(true)}>
+              {t('canvas.add')}
+            </Button>
+          )
         }
       />
       {frames.isLoading ? (

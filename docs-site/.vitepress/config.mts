@@ -46,6 +46,7 @@ export default defineConfig({
             { text: 'Collections & schedules', link: '/guide/schedules' },
             { text: 'Immich', link: '/guide/immich' },
             { text: 'Bluetooth wake', link: '/guide/bluetooth' },
+            { text: 'Users & passkeys', link: '/guide/users' },
           ],
         },
       ],

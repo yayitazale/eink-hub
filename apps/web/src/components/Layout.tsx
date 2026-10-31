@@ -6,6 +6,7 @@ import { useImmichStatus } from '../lib/hooks';
 import { AboutLinks, UpdateNotice } from './About';
 import { useI18n } from '../i18n';
 import { cx } from './ui';
+import { useMe } from '../lib/me';
 
 const allNav = [
   { to: '/', label: 'nav.canvas', icon: FrameIcon, end: true },
@@ -40,6 +41,11 @@ function useTheme() {
     } catch {}
   }, [theme]);
   return [theme, () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))] as const;
+}
+
+export async function logout() {
+  await api.post('/api/auth/logout');
+  window.location.href = '/';
 }
 
 export function Logo() {
@@ -77,10 +83,7 @@ export function Layout({ authDisabled }: { authDisabled: boolean }) {
   const [collapsed, toggleCollapsed] = useCollapsed();
   const { t } = useI18n();
   const nav = useNav();
-  const logout = async () => {
-    await api.post('/api/auth/logout');
-    window.location.href = '/';
-  };
+  const me = useMe();
   const railItem = 'flex items-center rounded-2xl py-2.5 text-[13px] font-semibold text-muted transition hover:text-ink';
   return (
     <div className="min-h-dvh md:flex">
@@ -143,8 +146,13 @@ export function Layout({ authDisabled }: { authDisabled: boolean }) {
             {!collapsed && t(theme === 'dark' ? 'layout.light' : 'layout.dark')}
           </button>
           {!authDisabled && (
-            <button onClick={logout} className={cx(railItem, collapsed ? 'justify-center' : 'ml-auto px-3')} title={t('layout.logout')}>
-              <LogOut className="size-4" />
+            <button
+              onClick={logout}
+              className={cx(railItem, collapsed ? 'justify-center' : 'ml-auto min-w-0 gap-2 px-3')}
+              title={me?.user ? `${t('layout.logout')} (${me.user.username})` : t('layout.logout')}
+            >
+              {!collapsed && me?.user && <span className="truncate">{me.user.username}</span>}
+              <LogOut className="size-4 shrink-0" />
             </button>
           )}
         </div>

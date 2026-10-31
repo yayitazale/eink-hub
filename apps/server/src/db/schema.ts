@@ -1,4 +1,4 @@
-import { sqliteTable, integer, text, real, primaryKey } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, integer, text, real, primaryKey, blob } from 'drizzle-orm/sqlite-core';
 import type { Schedule } from '../lib/schedule.js';
 import type { FrameKind, ImageFormat } from '../device/drivers/types.js';
 
@@ -184,13 +184,55 @@ export const settings = sqliteTable('settings', {
   value: text('value').notNull(),
 });
 
+export const roles = ['admin', 'member'] as const;
+export type Role = (typeof roles)[number];
+
+export const users = sqliteTable('users', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  username: text('username').notNull(),
+  /** Null: signs in with passkeys only. */
+  passwordHash: text('password_hash'),
+  role: text('role', { enum: roles }).notNull().default('member'),
+  createdAt: integer('created_at').notNull(),
+  lastLoginAt: integer('last_login_at'),
+});
+
 export const sessions = sqliteTable('sessions', {
   id: text('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
   createdAt: integer('created_at').notNull(),
   expiresAt: integer('expires_at').notNull(),
+});
+
+/** One-time sign-up links. With userId, a reset link for an existing account instead. */
+export const invites = sqliteTable('invites', {
+  tokenHash: text('token_hash').primaryKey(),
+  role: text('role', { enum: roles }).notNull(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: integer('created_at').notNull(),
+  expiresAt: integer('expires_at').notNull(),
+});
+
+export const passkeys = sqliteTable('passkeys', {
+  /** Credential ID, base64url. */
+  id: text('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  publicKey: blob('public_key', { mode: 'buffer' }).notNull(),
+  counter: integer('counter').notNull().default(0),
+  transports: text('transports', { mode: 'json' }).$type<string[]>(),
+  /** Hostname it was registered on: a passkey only works there. */
+  rpId: text('rp_id').notNull(),
+  name: text('name').notNull(),
+  createdAt: integer('created_at').notNull(),
+  lastUsedAt: integer('last_used_at'),
 });
 
 export type Frame = typeof frames.$inferSelect;
 export type Image = typeof images.$inferSelect;
 export type Collection = typeof collections.$inferSelect;
 export type Assignment = typeof assignments.$inferSelect;
+export type User = typeof users.$inferSelect;
+export type Invite = typeof invites.$inferSelect;
