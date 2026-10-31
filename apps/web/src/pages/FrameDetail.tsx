@@ -17,6 +17,7 @@ import { SchedulePicker } from '../components/SchedulePicker';
 import { Button, Card, Field, Pill, Segmented, Spinner, Toggle, cx, inputClass, useConfirm } from '../components/ui';
 import { Battery, DOCS_URL, FrameStatus, KindPill, TestPill } from './Frames';
 import { Select } from '../components/Select';
+import { useIsAdmin } from '../lib/me';
 
 type Tab = 'schedule' | 'mode' | 'connection' | 'history' | 'stats' | 'device' | 'settings';
 const TABS: Tab[] = ['schedule', 'mode', 'connection', 'history', 'stats', 'device', 'settings'];
@@ -606,6 +607,7 @@ export function FrameDetail() {
   const confirm = useConfirm();
   const id = Number(useParams().id);
   const frame = useFrame(id);
+  const admin = useIsAdmin();
   const [params] = useSearchParams();
   const [tab, setTab] = useState<Tab>(TABS.includes(params.get('tab') as Tab) ? (params.get('tab') as Tab) : 'schedule');
   const action = useAction(
@@ -751,22 +753,22 @@ export function FrameDetail() {
             className="max-w-full overflow-x-auto scrollbar-none"
             options={[
               { value: 'schedule', label: t('nav.schedule') },
-              ...(caps.pullToggle ? [{ value: 'mode' as const, label: t('detail.tab_mode') }] : []),
-              ...(f.kind !== 'bloomin8' ? [{ value: 'connection' as const, label: t('detail.tab_connection') }] : []),
+              ...(admin && caps.pullToggle ? [{ value: 'mode' as const, label: t('detail.tab_mode') }] : []),
+              ...(admin && f.kind !== 'bloomin8' ? [{ value: 'connection' as const, label: t('detail.tab_connection') }] : []),
               { value: 'history', label: t('detail.tab_history') },
               ...(settings.data?.statsEnabled ? [{ value: 'stats' as const, label: t('detail.tab_stats') }] : []),
               ...(caps.galleries ? [{ value: 'device' as const, label: t('detail.tab_device') }] : []),
-              { value: 'settings', label: t('nav.settings') },
+              ...(admin ? [{ value: 'settings' as const, label: t('nav.settings') }] : []),
             ]}
           />
           <Card className="p-6">
             {tab === 'schedule' && <AssignmentEditor key={f.assignment?.id ?? 'new'} frame={f} />}
-            {tab === 'mode' && caps.pullToggle && <ModeTab frame={f} />}
-            {tab === 'connection' && <ConnectionTab frame={f} />}
+            {tab === 'mode' && admin && caps.pullToggle && <ModeTab frame={f} />}
+            {tab === 'connection' && admin && <ConnectionTab frame={f} />}
             {tab === 'history' && <HistoryTab frame={f} />}
             {tab === 'stats' && settings.data?.statsEnabled && <StatsTab frame={f} />}
             {tab === 'device' && caps.galleries && <DeviceTab frame={f} />}
-            {tab === 'settings' && <SettingsTab frame={f} />}
+            {tab === 'settings' && admin && <SettingsTab frame={f} />}
           </Card>
         </div>
       </div>

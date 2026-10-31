@@ -10,6 +10,8 @@ info:
       They don't use the session: each frame authenticates with its own token.
     - **Management endpoints** (everything else under `/api/`) are what the web UI uses. They need a session cookie
       (`POST /api/auth/login`), unless the hub runs with `AUTH_DISABLED=true`. They may change between releases.
+      Accounts have a role: `admin` can do everything; `member` gets `403` on hub settings, adding or configuring
+      frames, logs and accounts.
   license:
     name: MIT
 servers:
@@ -28,6 +30,8 @@ tags:
   - name: Library
     description: Management (session required).
   - name: Auth
+  - name: Users
+    description: Accounts and invites (admins only).
 
 paths:
   /of/v1/display:
@@ -189,13 +193,165 @@ paths:
     post:
       tags: [Auth]
       summary: Start a session (sets the `b8hub_session` cookie)
+      description: Usernames are case-insensitive. Hubs upgraded from 0.6 or earlier have one account, `admin`, with the old password.
       requestBody:
         content:
           application/json:
-            schema: { type: object, required: [password], properties: { password: { type: string } } }
+            schema:
+              type: object
+              required: [username, password]
+              properties: { username: { type: string }, password: { type: string } }
       responses:
         '200': { description: Logged in }
-        '401': { description: Wrong password }
+        '401': { description: Wrong username or password }
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Who is signed in
+      description: Public. `passkeys` counts the passkeys registered for the hostname of the request.
+      responses:
+        '200':
+          description: Session state
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authenticated: { type: boolean }
+                  authDisabled: { type: boolean }
+                  setupRequired: { type: boolean }
+                  user:
+                    oneOf:
+                      - type: 'null'
+                      - type: object
+                        properties: { id: { type: integer }, username: { type: string }, role: { $ref: '#/components/schemas/Role' } }
+                  passkeys: { type: integer }
+                  language: { type: [string, 'null'] }
+
+  /api/auth/passkey/login/options:
+    post:
+      tags: [Auth]
+      summary: Start a passkey sign-in (WebAuthn)
+      description: Returns `PublicKeyCredentialRequestOptionsJSON` for the request's hostname and sets a short-lived `b8hub_webauthn` cookie. Needs HTTPS or localhost in the browser.
+      responses:
+        '200': { description: WebAuthn request options }
+
+  /api/auth/passkey/login/verify:
+    post:
+      tags: [Auth]
+      summary: Finish a passkey sign-in (sets the session cookie)
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [response], properties: { response: { type: object, description: AuthenticationResponseJSON } } }
+      responses:
+        '200': { description: Logged in }
+        '400': { description: No pending challenge, or it expired }
+        '401': { description: Unknown passkey or failed verification }
+
+  /api/auth/invite/{token}:
+    parameters:
+      - { name: token, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [Auth]
+      summary: Check an invite or reset link
+      responses:
+        '200':
+          description: '`username` is set for a reset link'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { valid: { type: boolean }, role: { $ref: '#/components/schemas/Role' }, username: { type: [string, 'null'] } }
+    post:
+      tags: [Auth]
+      summary: Accept an invite with a password (sets the session cookie)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties: { username: { type: string, description: Not used by reset links }, password: { type: string, minLength: 6 } }
+      responses:
+        '200': { description: Account created (or password reset) and logged in }
+        '400': { description: Invalid username or password }
+        '409': { description: Username taken }
+        '410': { description: Invite used or expired }
+
+  /api/users:
+    get:
+      tags: [Users]
+      summary: List accounts
+      security: [{ session: [] }]
+      responses:
+        '200':
+          description: Accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: integer }
+                    username: { type: string }
+                    role: { $ref: '#/components/schemas/Role' }
+                    createdAt: { type: integer }
+                    lastLoginAt: { type: [integer, 'null'] }
+                    hasPassword: { type: boolean }
+                    passkeys: { type: integer }
+
+  /api/users/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    patch:
+      tags: [Users]
+      summary: Change an account's role
+      security: [{ session: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [role], properties: { role: { $ref: '#/components/schemas/Role' } } }
+      responses:
+        '200': { description: Saved }
+        '409': { description: It is the last admin }
+    delete:
+      tags: [Users]
+      summary: Delete an account, its sessions and passkeys
+      security: [{ session: [] }]
+      responses:
+        '200': { description: Deleted }
+        '409': { description: It is the last admin }
+
+  /api/users/{id}/reset:
+    post:
+      tags: [Users]
+      summary: Create a one-time link for the account to set a new password or passkey
+      security: [{ session: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: The link, content: { application/json: { schema: { $ref: '#/components/schemas/InviteLink' } } } }
+
+  /api/invites:
+    get:
+      tags: [Users]
+      summary: Pending invites and reset links
+      security: [{ session: [] }]
+      responses:
+        '200': { description: Pending links }
+    post:
+      tags: [Users]
+      summary: Create a one-time invite link (valid 7 days)
+      security: [{ session: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, properties: { role: { $ref: '#/components/schemas/Role' } } }
+      responses:
+        '200': { description: The link, content: { application/json: { schema: { $ref: '#/components/schemas/InviteLink' } } } }
 
   /api/frames:
     get:
@@ -294,6 +450,15 @@ components:
       in: cookie
       name: b8hub_session
   schemas:
+    Role:
+      type: string
+      enum: [admin, member]
+    InviteLink:
+      type: object
+      properties:
+        url: { type: string, description: '`/invite/<token>` on the address the admin is using' }
+        qr: { type: string, description: The URL as an SVG QR code }
+        expiresAt: { type: integer }
     Palette:
       type: string
       enum: [bw, gray4, spectra6, acep7]
