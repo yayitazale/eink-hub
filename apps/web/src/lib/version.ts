@@ -1,5 +1,5 @@
 /** Set by scripts/release.mjs — do not edit by hand (see docs-site/development/versioning.md). */
-export const APP_VERSION = '0.6.0';
+export const APP_VERSION = '0.7.0';
 
 export const CHANGELOG_URL = `https://github.com/yayitazale/eink-hub/blob/v${APP_VERSION}/CHANGELOG.md`;
 export const REPO_URL = 'https://github.com/yayitazale/eink-hub';

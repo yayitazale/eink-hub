@@ -9,6 +9,17 @@ web share a single number (see `VERSION` at the repository root).
 Generated automatically from commit messages. The 0.1.0 entry is the only
 one written by hand: it summarises everything before the first release.
 
+## [0.7.0] - 2026-10-31
+
+### Added
+
+- User accounts with admin and member roles, invite links and passkey sign-in ([bdc610ac](https://github.com/yayitazale/eink-hub/commit/bdc610ac0332db9e12bb6d2cdbee49bfaa42ffcd))
+- **web**: Capitalized role names with an icon in the role pickers ([5630dca5](https://github.com/yayitazale/eink-hub/commit/5630dca59715be87053fa7279305eef75547dd59))
+
+### Fixed
+
+- Deliver the queued photo as soon as the Canvas is found awake; history refreshes with the frame ([3b5ad129](https://github.com/yayitazale/eink-hub/commit/3b5ad12949b6c7ba6f57682cbf675d7c46cb6559))
+
 ## [0.6.0] - 2026-10-23
 
 ### Added
