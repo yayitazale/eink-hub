@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { History, Trash2 } from 'lucide-react';
-import { api, type Assignment, type FitMode, type Frame, type OrderMode, type Schedule } from '../lib/api';
+import { api, type Assignment, type FitMode, type Frame, type LocationMode, type OrderMode, type Schedule } from '../lib/api';
 import { useAction, useCollections } from '../lib/hooks';
 import { SchedulePicker } from './SchedulePicker';
 import { useI18n, type MsgKey } from '../i18n';
@@ -8,6 +8,38 @@ import { BgPicker } from './BgPicker';
 import { Button, Field, Segmented, Toggle, cx, inputClass, useConfirm } from './ui';
 import { Select } from './Select';
 import { TimeField } from './TimeField';
+
+/** Where the photo was taken (from Immich): off / city / city and country, plus "leave out the home country". */
+export function LocationOptions({
+  mode,
+  onMode,
+  hideHome,
+  onHideHome,
+}: {
+  mode: LocationMode;
+  onMode: (m: LocationMode) => void;
+  hideHome: boolean;
+  onHideHome: (v: boolean) => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <div className="space-y-3">
+      <Field label={t('assign.location')} hint={t('assign.location_hint')} group>
+        <Segmented
+          fill
+          value={mode}
+          onChange={onMode}
+          options={[
+            { value: 'off', label: t('assign.location_off') },
+            { value: 'city', label: t('assign.location_city') },
+            { value: 'city_country', label: t('assign.location_city_country') },
+          ]}
+        />
+      </Field>
+      {mode === 'city_country' && <Toggle label={t('assign.hide_home_country')} hint={t('assign.hide_home_country_hint')} checked={hideHome} onChange={onHideHome} />}
+    </div>
+  );
+}
 
 const DEFAULT_SCHEDULE: Schedule = { kind: 'days', days: 1, at: '07:00' };
 
@@ -32,6 +64,8 @@ export function AssignmentEditor({ frame: fixed, choices, onSaved }: { frame?: F
   const [fit, setFit] = useState<FitMode>(a?.fit ?? 'cover');
   const [bg, setBg] = useState(a?.bg ?? '#ffffff');
   const [showDate, setShowDate] = useState(a?.showDate ?? false);
+  const [showLocation, setShowLocation] = useState<LocationMode>(a?.showLocation ?? 'off');
+  const [hideHome, setHideHome] = useState(a?.hideHomeCountry ?? false);
   const [enabled, setEnabled] = useState(a?.enabled ?? true);
 
   const collection = collections.data?.find((c) => c.id === collectionId);
@@ -57,6 +91,8 @@ export function AssignmentEditor({ frame: fixed, choices, onSaved }: { frame?: F
         fit,
         bg,
         showDate,
+        showLocation,
+        hideHomeCountry: hideHome,
         enabled,
       }),
     { success: t('assign.saved'), invalidate: [['frames']] },
@@ -152,6 +188,7 @@ export function AssignmentEditor({ frame: fixed, choices, onSaved }: { frame?: F
               label={t('assign.show_date')}
               hint={t(isMemories ? 'assign.show_date_hint_memories' : 'assign.show_date_hint')}
               checked={showDate} onChange={setShowDate} />
+            <LocationOptions mode={showLocation} onMode={setShowLocation} hideHome={hideHome} onHideHome={setHideHome} />
             {hourly && (
               <div>
                 <Toggle label={t('assign.window')} hint={t('assign.window_hint')} checked={windowOn} onChange={setWindowOn} />

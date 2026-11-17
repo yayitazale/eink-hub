@@ -206,6 +206,13 @@ export const migrations: string[] = [
   );
   CREATE INDEX passkeys_user ON passkeys(user_id);
   `,
+  // v12: optional location caption (city / country) next to the date. NULL = not looked up yet, '' = Immich has none.
+  `
+  ALTER TABLE images ADD COLUMN city TEXT;
+  ALTER TABLE images ADD COLUMN country TEXT;
+  ALTER TABLE assignments ADD COLUMN show_location TEXT NOT NULL DEFAULT 'off';
+  ALTER TABLE assignments ADD COLUMN hide_home_country INTEGER NOT NULL DEFAULT 0;
+  `,
 ];
 
 function migrate(sqlite: Database.Database) {

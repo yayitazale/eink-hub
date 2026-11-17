@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import Cropper, { type Area } from 'react-easy-crop';
 import { Eye, Send } from 'lucide-react';
-import { api, type Crop, type FitMode, type Frame } from '../lib/api';
+import { api, type Crop, type FitMode, type Frame, type LocationMode } from '../lib/api';
 import { useAction, useFrames } from '../lib/hooks';
 import { FrameMockup } from './FrameMockup';
 import { useI18n, type MsgKey } from '../i18n';
 import { BgPicker } from './BgPicker';
+import { LocationOptions } from './AssignmentEditor';
 import { Button, Modal, Segmented, Spinner, Toggle, cx } from './ui';
 
 type Mode = 'auto' | 'crop' | 'contain' | 'blur';
@@ -30,6 +31,8 @@ export function SendDialog({ imageId, open, onClose, defaultFrameId }: { imageId
   const [mode, setMode] = useState<Mode>('auto');
   const [bg, setBg] = useState('#ffffff');
   const [showDate, setShowDate] = useState(false);
+  const [showLocation, setShowLocation] = useState<LocationMode>('off');
+  const [hideHome, setHideHome] = useState(false);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [area, setArea] = useState<Crop | null>(null);
@@ -54,15 +57,18 @@ export function SendDialog({ imageId, open, onClose, defaultFrameId }: { imageId
     });
   }, [open, imageId, frame?.id]);
 
-  useEffect(() => setPreview(null), [mode, bg, area, showDate, frame?.id]);
+  useEffect(() => setPreview(null), [mode, bg, area, showDate, showLocation, hideHome, frame?.id]);
 
   const options = useMemo(() => {
-    const date = showDate ? { showDate } : {};
+    const date = {
+      ...(showDate ? { showDate } : {}),
+      ...(showLocation !== 'off' ? { showLocation, hideHomeCountry: hideHome } : {}),
+    };
     if (mode === 'crop' && area) return { fit: 'cover' as FitMode, crop: area, ...date };
     if (mode === 'contain') return { fit: 'contain' as FitMode, bg, crop: null, ...date };
     if (mode === 'blur') return { fit: 'blur' as FitMode, crop: null, ...date };
     return { fit: 'cover' as FitMode, crop: null, ...date };
-  }, [mode, area, bg, showDate]);
+  }, [mode, area, bg, showDate, showLocation, hideHome]);
 
   const showPreview = async () => {
     if (!imageId || !frame) return;
@@ -146,8 +152,9 @@ export function SendDialog({ imageId, open, onClose, defaultFrameId }: { imageId
             {mode === 'contain' && (
               <BgPicker value={bg} onChange={setBg} />
             )}
-            <div className="rounded-2xl bg-surface-2 p-4">
+            <div className="space-y-4 rounded-2xl bg-surface-2 p-4">
               <Toggle label={t('assign.show_date')} hint={t('assign.show_date_hint')} checked={showDate} onChange={setShowDate} />
+              <LocationOptions mode={showLocation} onMode={setShowLocation} hideHome={hideHome} onHideHome={setHideHome} />
             </div>
           </div>
 

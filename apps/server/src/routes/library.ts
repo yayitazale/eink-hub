@@ -3,7 +3,7 @@ import sharp from 'sharp';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { requestLang, tr } from '../i18n.js';
 import { schema } from '../db/index.js';
-import { collectionTypes, fitModes, orderModes, type CollectionType, type DisplayOptions } from '../db/schema.js';
+import { collectionTypes, fitModes, locationModes, orderModes, type CollectionType, type DisplayOptions } from '../db/schema.js';
 import { addItems, getCollection, refreshCount, syncCollection } from '../lib/collections.js';
 import { HttpError, type Ctx } from '../lib/context.js';
 import { getAssignment, getFrame } from '../lib/display.js';
@@ -174,6 +174,8 @@ export function libraryRoutes(app: FastifyInstance, ctx: Ctx) {
       fit?: (typeof fitModes)[number];
       bg?: string;
       showDate?: boolean;
+      showLocation?: (typeof locationModes)[number];
+      hideHomeCountry?: boolean;
       enabled?: boolean;
     };
   }>('/api/frames/:frameId/assignment', async (req) => {
@@ -205,6 +207,9 @@ export function libraryRoutes(app: FastifyInstance, ctx: Ctx) {
       fit: fitModes.includes(b.fit!) ? b.fit! : 'cover',
       bg: /^#[0-9a-f]{6}$/i.test(b.bg ?? '') ? b.bg! : '#ffffff',
       showDate: b.showDate ?? isMemories,
+      // Clients that predate the location options leave them out: keep what was set.
+      showLocation: locationModes.includes(b.showLocation!) ? b.showLocation! : (prev?.showLocation ?? 'off'),
+      hideHomeCountry: b.hideHomeCountry ?? prev?.hideHomeCountry ?? false,
       enabled: b.enabled ?? true,
     };
     return db

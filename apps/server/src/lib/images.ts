@@ -5,8 +5,8 @@ import sharp from 'sharp';
 import { and, eq, inArray } from 'drizzle-orm';
 import { config } from '../config.js';
 import { basqueDate, hubLang, locales, yearsAgoText, type Lang } from '../i18n.js';
-import { schema, type DB } from '../db/index.js';
-import type { DisplayOptions, Frame, Image } from '../db/schema.js';
+import { getSetting, schema, type DB } from '../db/index.js';
+import type { DisplayOptions, Frame, Image, LocationMode } from '../db/schema.js';
 import { assetSize, type ImmichAsset } from '../immich/client.js';
 import { aspectKey, formatExt, probeImage, renderForFrame, thumbnail, type CropRect } from '../imaging/pipeline.js';
 import { renderTarget } from '../device/drivers/index.js';
@@ -69,6 +69,10 @@ export function upsertImmichAssets(db: DB, assets: ImmichAsset[]): number[] {
         ...(size ? { width: size.width, height: size.height } : {}),
         ...(Number.isFinite(taken) ? { takenAt: taken } : {}),
         ...(a.isFavorite !== undefined ? { favorite: a.isFavorite } : {}),
+        // Only when the payload says something about the location; '' marks "looked up, none".
+        ...(a.exifInfo && (a.exifInfo.city !== undefined || a.exifInfo.country !== undefined)
+          ? { city: a.exifInfo.city ?? '', country: a.exifInfo.country ?? '' }
+          : {}),
       };
       const insert = tx.insert(schema.images).values({ source: 'immich', immichAssetId: a.id, createdAt: Date.now(), ...values });
       if (Object.keys(values).length) insert.onConflictDoUpdate({ target: schema.images.immichAssetId, set: values }).run();
@@ -174,6 +178,57 @@ export function yearsAgoCaption(img: Pick<Image, 'takenAt'>, lang: Lang = 'en', 
   return yearsAgoText(lang, years);
 }
 
+/**
+ * "Boechout", "Rome, Italy" … from the city/country Immich stored. The country is left out for
+ * `city` mode (unless there is no city) and for the home country when `hideHomeCountry` is set.
+ */
+export function locationText(
+  img: Pick<Image, 'city' | 'country'>,
+  mode: LocationMode | undefined,
+  opts: { hideHomeCountry?: boolean; homeCountry?: string } = {},
+): string | null {
+  if (mode !== 'city' && mode !== 'city_country') return null;
+  const city = img.city?.trim();
+  const country = img.country?.trim();
+  const home = opts.homeCountry?.trim();
+  const isHome = !!(opts.hideHomeCountry && home && country && country.localeCompare(home, undefined, { sensitivity: 'base' }) === 0);
+  const parts: string[] = [];
+  if (city) parts.push(city);
+  if (country && !isHome && (mode === 'city_country' || !city)) parts.push(country);
+  return parts.length ? parts.join(', ') : null;
+}
+
+/** The text drawn on the photo: date (or "X years ago today") and/or location, joined by " · ". */
+export function photoCaption(
+  img: Pick<Image, 'takenAt' | 'city' | 'country'>,
+  o: { lang: Lang; showDate?: boolean; memories?: boolean; location?: LocationMode; hideHomeCountry?: boolean; homeCountry?: string },
+): string | null {
+  const parts: string[] = [];
+  if (o.showDate) {
+    const date = o.memories ? yearsAgoCaption(img, o.lang) : photoDate(img, o.lang);
+    if (date) parts.push(date);
+  }
+  const place = locationText(img, o.location, o);
+  if (place) parts.push(place);
+  return parts.length ? parts.join(' · ') : null;
+}
+
+/** Immich photos picked by id carry no location yet: ask Immich once and remember the answer. */
+export async function withLocation(ctx: Ctx, img: Image): Promise<Image> {
+  if (img.source !== 'immich' || !img.immichAssetId || img.city !== null || img.country !== null) return img;
+  try {
+    const asset = await immichFor(ctx.db).asset(img.immichAssetId);
+    if (!asset.exifInfo) return img;
+    const city = asset.exifInfo.city ?? '';
+    const country = asset.exifInfo.country ?? '';
+    ctx.db.update(schema.images).set({ city, country }).where(eq(schema.images.id, img.id)).run();
+    return { ...img, city, country };
+  } catch (err) {
+    ctx.log.debug({ err, asset: img.immichAssetId }, 'immich location lookup failed');
+    return img;
+  }
+}
+
 export interface Rendered {
   hash: string;
   /** Path inside cacheDir. */
@@ -186,6 +241,7 @@ export interface Rendered {
 }
 
 export async function renderFor(ctx: Ctx, img: Image, frame: Frame, opts: DisplayOptions = {}): Promise<Rendered> {
+  if (opts.showLocation && opts.showLocation !== 'off') img = await withLocation(ctx, img);
   const landscape = frame.orientation === 'landscape';
   const crop = opts.crop !== undefined ? opts.crop : getCrop(ctx.db, img.id, frameAspect(frame));
   const target = renderTarget(frame);
@@ -200,7 +256,14 @@ export async function renderFor(ctx: Ctx, img: Image, frame: Frame, opts: Displa
     fit: crop ? 'cover' : (opts.fit ?? 'cover'),
     bg: opts.bg ?? '#ffffff',
     crop,
-    caption: opts.showDate ? (opts.memories ? yearsAgoCaption : photoDate)(img, hubLang(ctx.db)) : null,
+    caption: photoCaption(img, {
+      lang: hubLang(ctx.db),
+      showDate: opts.showDate,
+      memories: opts.memories,
+      location: opts.showLocation,
+      hideHomeCountry: opts.hideHomeCountry,
+      homeCountry: getSetting(ctx.db, 'homeCountry'),
+    }),
     // Only when not the default, so existing JPEG renders keep their hash.
     ...(ext === 'jpg' && !target.format.palette ? {} : { format: target.format }),
   } as const;

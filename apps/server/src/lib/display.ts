@@ -39,7 +39,14 @@ export function markOnline(db: DB, frameId: number, online: boolean, extra: Part
 export function assignmentOptions(db: DB, a?: Assignment): DisplayOptions {
   if (!a) return {};
   const c = db.select({ type: schema.collections.type }).from(schema.collections).where(eq(schema.collections.id, a.collectionId)).get();
-  return { fit: a.fit, bg: a.bg, showDate: a.showDate, ...(c?.type === 'immich_memories' ? { memories: true } : {}) };
+  return {
+    fit: a.fit,
+    bg: a.bg,
+    showDate: a.showDate,
+    showLocation: a.showLocation,
+    hideHomeCountry: a.hideHomeCountry,
+    ...(c?.type === 'immich_memories' ? { memories: true } : {}),
+  };
 }
 
 /** Pick the next image of the frame's assigned collection, avoiding recent repeats. */

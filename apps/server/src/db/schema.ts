@@ -13,6 +13,10 @@ export interface DisplayOptions {
   showDate?: boolean;
   /** "On this day" memories: caption reads "X years ago today" instead of the date. */
   memories?: boolean;
+  /** Overlay where the photo was taken (Immich photos only). */
+  showLocation?: LocationMode;
+  /** Leave the country out of the location when it is the hub's home country (Settings). */
+  hideHomeCountry?: boolean;
 }
 
 /** Per-kind settings that don't deserve a column. */
@@ -93,6 +97,9 @@ export const images = sqliteTable('images', {
   width: integer('width'),
   height: integer('height'),
   takenAt: integer('taken_at'),
+  /** Where the photo was taken, as Immich reverse-geocoded it. NULL = not looked up yet, '' = no location. */
+  city: text('city'),
+  country: text('country'),
   favorite: integer('favorite', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at').notNull(),
 });
@@ -143,6 +150,8 @@ export const collectionItems = sqliteTable(
 
 export const orderModes = ['random', 'sequential', 'newest'] as const;
 export type OrderMode = (typeof orderModes)[number];
+export const locationModes = ['off', 'city', 'city_country'] as const;
+export type LocationMode = (typeof locationModes)[number];
 export const fitModes = ['cover', 'contain', 'blur'] as const;
 export type FitMode = (typeof fitModes)[number];
 
@@ -158,6 +167,8 @@ export const assignments = sqliteTable('assignments', {
   fit: text('fit', { enum: fitModes }).notNull().default('cover'),
   bg: text('bg').notNull().default('#ffffff'),
   showDate: integer('show_date', { mode: 'boolean' }).notNull().default(false),
+  showLocation: text('show_location', { enum: locationModes }).notNull().default('off'),
+  hideHomeCountry: integer('hide_home_country', { mode: 'boolean' }).notNull().default(false),
   enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
   lastChange: integer('last_change'),
 });

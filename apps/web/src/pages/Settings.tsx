@@ -48,6 +48,29 @@ function LanguageSettings() {
   );
 }
 
+/** The country photos are mostly taken in: assignments can leave it out of the location caption. */
+function HomeCountrySettings() {
+  const { t } = useI18n();
+  const settings = useSettings();
+  const [country, setCountry] = useState('');
+  useEffect(() => {
+    if (settings.data) setCountry(settings.data.homeCountry ?? '');
+  }, [settings.data]);
+  const save = useAction(() => api.put('/api/settings', { homeCountry: country }), { success: t('common.saved'), invalidate: [['settings']] });
+  return (
+    <Card className="p-6">
+      <h2 className="text-lg font-bold">{t('settings.home_country')}</h2>
+      <p className="mt-1 text-sm text-muted">{t('settings.home_country_hint')}</p>
+      <div className="mt-5 space-y-4">
+        <input className={inputClass} aria-label={t('settings.home_country')} placeholder="Belgium" value={country} onChange={(e) => setCountry(e.target.value)} />
+        <Button variant="primary" loading={save.isPending} onClick={() => save.mutate()}>
+          {t('common.save')}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
 function ImmichSettings() {
   const { t } = useI18n();
   const confirm = useConfirm();
@@ -229,6 +252,7 @@ export function SettingsPage() {
           <LanguageSettings />
           {admin && (
             <>
+              <HomeCountrySettings />
               <HubSettings />
               <StatsSettings />
             </>

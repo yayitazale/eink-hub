@@ -7,7 +7,14 @@ export interface ImmichAsset {
   fileCreatedAt?: string;
   localDateTime?: string;
   isFavorite?: boolean;
-  exifInfo?: { exifImageWidth?: number | null; exifImageHeight?: number | null; orientation?: string | null } | null;
+  exifInfo?: {
+    exifImageWidth?: number | null;
+    exifImageHeight?: number | null;
+    orientation?: string | null;
+    /** Reverse-geocoded by Immich, in English. */
+    city?: string | null;
+    country?: string | null;
+  } | null;
   /** Present on newer Immich versions. */
   width?: number | null;
   height?: number | null;
@@ -132,6 +139,9 @@ export class ImmichClient {
     return this.json<{ major: number; minor: number; patch: number }>('/server/version');
   }
 
+  asset(id: string) {
+    return this.json<ImmichAsset>(`/assets/${id}`);
+  }
   albums() {
     return this.json<ImmichAlbum[]>('/albums');
   }
@@ -150,7 +160,7 @@ export class ImmichClient {
     return this.post<SearchPage>('/search/metadata', { ...q, type: 'IMAGE', page, size, withExif: true });
   }
   searchSmart(query: string, page = 1, size = 100) {
-    return this.post<SearchPage>('/search/smart', { query, type: 'IMAGE', page, size });
+    return this.post<SearchPage>('/search/smart', { query, type: 'IMAGE', page, size, withExif: true });
   }
 
   /** "On this day" memories for a local calendar day (YYYY-MM-DD). */

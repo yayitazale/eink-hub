@@ -18,6 +18,8 @@ export interface Crop {
   h: number;
 }
 
+export type LocationMode = 'off' | 'city' | 'city_country';
+
 export interface Assignment {
   id: number;
   frameId: number;
@@ -30,6 +32,8 @@ export interface Assignment {
   fit: FitMode;
   bg: string;
   showDate: boolean;
+  showLocation: LocationMode;
+  hideHomeCountry: boolean;
   enabled: boolean;
   lastChange: number | null;
 }
@@ -190,6 +194,8 @@ export interface Settings {
   /** What is actually used: cloudUrl, else externalUrl. */
   cloudUrlEffective: string;
   language: 'es' | 'eu' | 'en' | null;
+  /** Country left out of photo locations when "leave out the home country" is on. */
+  homeCountry: string;
   defaultFit: FitMode;
   /** Per-Canvas statistics tab on, and battery samples recorded. */
   statsEnabled: boolean;
