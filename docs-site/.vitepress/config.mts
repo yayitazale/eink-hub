@@ -46,6 +46,7 @@ export default defineConfig({
             { text: 'Collections & schedules', link: '/guide/schedules' },
             { text: 'Immich', link: '/guide/immich' },
             { text: 'AI images', link: '/guide/ai-images' },
+            { text: 'Weather', link: '/guide/weather' },
             { text: 'Bluetooth wake', link: '/guide/bluetooth' },
             { text: 'Users & passkeys', link: '/guide/users' },
           ],
@@ -89,6 +90,7 @@ export default defineConfig({
           items: [
             { text: 'Contributing', link: '/development/' },
             { text: 'Versioning & releases', link: '/development/versioning' },
+            { text: 'Adding a weather provider', link: '/development/weather-providers' },
           ],
         },
       ],

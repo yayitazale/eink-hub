@@ -71,4 +71,5 @@ export const zh: Catalogue = {
   schedule_conflict: '此 Canvas 的另一个计划({name})已在 {time} 切换',
   invalid_location: '位置无效：纬度应在 -90 到 90 之间，经度应在 -180 到 180 之间',
   assignment_not_found: '未找到计划 {id}',
+  weather_provider_unknown: '未知的天气来源：{provider}',
 };

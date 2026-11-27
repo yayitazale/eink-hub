@@ -74,4 +74,5 @@ export const ru: Catalogue = {
   schedule_conflict: 'Другое расписание этого Canvas ({name}) уже меняет картинку в {time}',
   invalid_location: 'Неверное местоположение: укажите широту от -90 до 90 и долготу от -180 до 180',
   assignment_not_found: 'Расписание {id} не найдено',
+  weather_provider_unknown: 'Неизвестный источник погоды: {provider}',
 };

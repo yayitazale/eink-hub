@@ -17,6 +17,7 @@ import { immichRoutes } from './routes/immich.js';
 import { libraryRoutes } from './routes/library.js';
 import { logRoutes } from './routes/logs.js';
 import { statsRoutes } from './routes/stats.js';
+import { weatherRoutes } from './routes/weather.js';
 import { createLogStream } from './lib/logbuffer.js';
 import { upstreamRoutes } from './upstream/routes.js';
 import { openFrameRoutes } from './upstream/openframe.js';
@@ -58,6 +59,7 @@ export async function buildApp(db: DB, opts: { logger?: boolean; logDir?: string
   aiRoutes(app, ctx);
   logRoutes(app, ctx);
   statsRoutes(app, ctx);
+  weatherRoutes(app, ctx);
 
   if (fs.existsSync(path.join(config.webDist, 'index.html'))) {
     await app.register(fastifyStatic, { root: config.webDist, wildcard: false });

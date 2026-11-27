@@ -3,6 +3,7 @@ import { CheckCircle2, Flower, ScrollText, Sparkles, ShieldCheck, SlidersHorizon
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, type Place } from '../lib/api';
 import { LocationPicker } from '../components/LocationPicker';
+import { WeatherSettings } from '../components/WeatherSettings';
 import { useAction, useSettings } from '../lib/hooks';
 import { AboutLinks, UpdateNotice } from '../components/About';
 import { languages, useI18n, type Lang, type MsgKey } from '../i18n';
@@ -54,7 +55,7 @@ function LanguageSettings() {
 function HubLocationSettings() {
   const { t } = useI18n();
   const settings = useSettings();
-  const save = useAction((location: Place | null) => api.put('/api/settings', { location }), { success: t('common.saved'), invalidate: [['settings']] });
+  const save = useAction((location: Place | null) => api.put('/api/settings', { location }), { success: t('common.saved'), invalidate: [['settings'], ['weather']] });
   const legacy = !settings.data?.location && settings.data?.homeCountry;
   return (
     <Card className="p-6">
@@ -249,6 +250,7 @@ export function SettingsPage() {
           {admin && (
             <>
               <HubLocationSettings />
+              <WeatherSettings />
               <HubSettings />
               <StatsSettings />
             </>

@@ -71,4 +71,5 @@ export const ja: Catalogue = {
   schedule_conflict: 'このCanvasの別のスケジュール({name})が既に {time} に切り替わります',
   invalid_location: '場所が正しくありません。緯度は -90〜90、経度は -180〜180 で指定してください',
   assignment_not_found: 'スケジュール {id} が見つかりません',
+  weather_provider_unknown: '不明な天気ソース: {provider}',
 };

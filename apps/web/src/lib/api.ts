@@ -345,3 +345,23 @@ export interface AiCollectionConfig {
   panel: string | null;
   orientation: 'portrait' | 'landscape';
 }
+
+export interface WeatherProviderInfo {
+  id: string;
+  name: string;
+  /** Whether the service needs an API key: never, may use one, or cannot work without. */
+  key: 'none' | 'optional' | 'required';
+}
+
+export interface WeatherSettings {
+  provider: string;
+  apiKeySet: boolean;
+  providers: WeatherProviderInfo[];
+}
+
+/** The weather at the hub's location right now (/api/weather). */
+export interface WeatherNow {
+  place: Place | null;
+  weather: { temperature: number; high: number | null; low: number | null; rain: number | null } | null;
+  error: string | null;
+}

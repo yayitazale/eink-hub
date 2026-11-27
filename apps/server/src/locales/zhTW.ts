@@ -71,4 +71,5 @@ export const zhTW: Catalogue = {
   schedule_conflict: '此 Canvas 的另一個排程({name})已在 {time} 切換',
   invalid_location: '位置無效：緯度應介於 -90 到 90，經度應介於 -180 到 180',
   assignment_not_found: '找不到排程 {id}',
+  weather_provider_unknown: '未知的天氣來源：{provider}',
 };

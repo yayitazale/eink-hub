@@ -74,4 +74,5 @@ export const pl: Catalogue = {
   schedule_conflict: 'Inny harmonogram tego Canvasa ({name}) zmienia obraz już o {time}',
   invalid_location: 'Nieprawidłowa lokalizacja: podaj szerokość od -90 do 90 i długość od -180 do 180',
   assignment_not_found: 'Nie znaleziono harmonogramu {id}',
+  weather_provider_unknown: 'Nieznane źródło pogody: {provider}',
 };

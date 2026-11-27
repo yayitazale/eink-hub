@@ -71,4 +71,5 @@ export const ca: Catalogue = {
   schedule_conflict: 'Una altra programació d\'aquest Canvas ({name}) ja canvia a les {time}',
   invalid_location: 'La ubicació no és vàlida: indica una latitud entre -90 i 90 i una longitud entre -180 i 180',
   assignment_not_found: 'No s\'ha trobat la programació {id}',
+  weather_provider_unknown: 'Font del temps desconeguda: {provider}',
 };

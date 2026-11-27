@@ -71,4 +71,5 @@ export const de: Catalogue = {
   schedule_conflict: 'Ein anderer Zeitplan dieses Canvas ({name}) wechselt bereits um {time}',
   invalid_location: 'Der Standort ist ungültig: Breitengrad zwischen -90 und 90 und Längengrad zwischen -180 und 180 angeben',
   assignment_not_found: 'Zeitplan {id} nicht gefunden',
+  weather_provider_unknown: 'Unbekannte Wetterquelle: {provider}',
 };

@@ -71,4 +71,5 @@ export const ko: Catalogue = {
   schedule_conflict: '이 Canvas의 다른 일정({name})이 이미 {time}에 바뀝니다',
   invalid_location: '위치가 올바르지 않습니다. 위도는 -90~90, 경도는 -180~180 사이로 입력하세요',
   assignment_not_found: '일정 {id}을(를) 찾을 수 없습니다',
+  weather_provider_unknown: '알 수 없는 날씨 소스: {provider}',
 };

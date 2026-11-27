@@ -71,4 +71,5 @@ export const gl: Catalogue = {
   schedule_conflict: 'Outra programación deste Canvas ({name}) xa cambia ás {time}',
   invalid_location: 'A localización non é válida: indica unha latitude entre -90 e 90 e unha lonxitude entre -180 e 180',
   assignment_not_found: 'Non se atopou a programación {id}',
+  weather_provider_unknown: 'Fonte do tempo descoñecida: {provider}',
 };

@@ -74,4 +74,5 @@ export const cs: Catalogue = {
   schedule_conflict: 'Jiný plán tohoto Canvasu ({name}) mění obrázek už v {time}',
   invalid_location: 'Poloha není platná: zadejte zeměpisnou šířku od -90 do 90 a délku od -180 do 180',
   assignment_not_found: 'Plán {id} nebyl nalezen',
+  weather_provider_unknown: 'Neznámý zdroj počasí: {provider}',
 };
